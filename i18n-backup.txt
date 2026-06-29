@@ -1,0 +1,428 @@
+﻿// ============================================
+// NEXUS 2030 — SYSTÈME MULTILINGUE (i18n)
+// FR / ES / EN / HT / PT
+// ============================================
+
+const translations = {
+    fr: {
+        "nav.home": "Accueil",
+        "nav.services": "Services",
+        "nav.about": "À Propos",
+        "nav.branches": "Succursales",
+        "nav.contact": "Contact",
+        "nav.login": "Connexion",
+
+        "hero.badge": "République Dominicaine",
+        "hero.title1": "Services Financiers",
+        "hero.title2": "de Confiance",
+        "hero.subtitle": "MonCash • NatCash • Change de Devises • Livrets d'Épargne • Transferts Internationaux",
+        "hero.btn1": "Nos Services",
+        "hero.btn2": "Trouver une Succursale",
+        "hero.stat1": "Provinces",
+        "hero.stat2": "Succursales",
+        "hero.stat3": "Clients",
+        "hero.stat4": "Devises",
+
+        "services.badge": "Nos Services",
+        "services.title": "Tout ce dont vous avez besoin",
+        "services.subtitle": "Des solutions financières complètes pour particuliers et entreprises",
+        "services.learn": "En savoir plus →",
+        "services.s1.title": "MonCash & NatCash",
+        "services.s1.desc": "Transferts mobiles instantanés vers Haïti et la République Dominicaine",
+        "services.s2.title": "Change de Devises",
+        "services.s2.desc": "DOP, HTG, USD, EUR, CAD aux meilleurs taux du marché",
+        "services.s3.title": "Livrets d'Épargne",
+        "services.s3.desc": "Ouvrez un livret, déposez et retirez en toute sécurité",
+        "services.s4.title": "Transferts USA",
+        "services.s4.desc": "Recevez de l'argent via CashApp et Zelle directement en succursale",
+        "services.s5.title": "Virements Bancaires",
+        "services.s5.desc": "BNC, Sogebank, Unibank — comptes HTG et USD depuis Haïti",
+        "services.s6.title": "Sécurité Maximale",
+        "services.s6.desc": "KYC, reconnaissance faciale et audit complet de chaque transaction",
+
+        "why.badge": "Pourquoi NEXUS",
+        "why.title": "La confiance avant tout",
+        "why.text": "NEXUS est une entreprise de services financiers fondée sur la transparence, la rapidité et la sécurité. Nous servons les communautés haïtiennes et dominicaines avec intégrité.",
+        "why.l1": "Transactions sécurisées et traçables",
+        "why.l2": "Personnel formé et certifié",
+        "why.l3": "Service client 24/7",
+        "why.l4": "Présence dans 32 provinces",
+        "why.btn": "En savoir plus sur NEXUS",
+        "why.c1.title": "Transfert Instantané",
+        "why.c1.desc": "En moins de 5 minutes",
+        "why.c2.title": "100% Sécurisé",
+        "why.c2.desc": "Chiffrement de bout en bout",
+        "why.c3.title": "Partout en RD",
+        "why.c3.desc": "32 provinces couvertes",
+
+        "footer.desc": "Services financiers de confiance pour les communautés haïtiennes et dominicaines.",
+        "footer.services": "Services",
+        "footer.moncash": "MonCash & NatCash",
+        "footer.change": "Change de Devises",
+        "footer.livret": "Livrets d'Épargne",
+        "footer.transfer": "Transferts USA",
+        "footer.company": "Entreprise",
+        "footer.about": "À Propos",
+        "footer.branches": "Succursales",
+        "footer.contact": "Contact",
+        "footer.faq": "FAQ",
+        "footer.contact2": "Contact",
+        "footer.rights": "© 2026 NEXUS. Tous droits réservés.",
+        "footer.privacy": "Confidentialité",
+        "footer.terms": "Conditions"
+    },
+
+    es: {
+        "nav.home": "Inicio",
+        "nav.services": "Servicios",
+        "nav.about": "Nosotros",
+        "nav.branches": "Sucursales",
+        "nav.contact": "Contacto",
+        "nav.login": "Iniciar Sesión",
+
+        "hero.badge": "República Dominicana",
+        "hero.title1": "Servicios Financieros",
+        "hero.title2": "de Confianza",
+        "hero.subtitle": "MonCash • NatCash • Cambio de Divisas • Libretas de Ahorro • Transferencias Internacionales",
+        "hero.btn1": "Nuestros Servicios",
+        "hero.btn2": "Encontrar una Sucursal",
+        "hero.stat1": "Provincias",
+        "hero.stat2": "Sucursales",
+        "hero.stat3": "Clientes",
+        "hero.stat4": "Divisas",
+
+        "services.badge": "Nuestros Servicios",
+        "services.title": "Todo lo que necesitas",
+        "services.subtitle": "Soluciones financieras completas para particulares y empresas",
+        "services.learn": "Saber más →",
+        "services.s1.title": "MonCash & NatCash",
+        "services.s1.desc": "Transferencias móviles instantáneas hacia Haití y República Dominicana",
+        "services.s2.title": "Cambio de Divisas",
+        "services.s2.desc": "DOP, HTG, USD, EUR, CAD a las mejores tasas del mercado",
+        "services.s3.title": "Libretas de Ahorro",
+        "services.s3.desc": "Abre una libreta, deposita y retira con total seguridad",
+        "services.s4.title": "Transferencias USA",
+        "services.s4.desc": "Recibe dinero vía CashApp y Zelle directamente en sucursal",
+        "services.s5.title": "Transferencias Bancarias",
+        "services.s5.desc": "BNC, Sogebank, Unibank — cuentas HTG y USD desde Haití",
+        "services.s6.title": "Seguridad Máxima",
+        "services.s6.desc": "KYC, reconocimiento facial y auditoría completa de cada transacción",
+
+        "why.badge": "Por qué NEXUS",
+        "why.title": "La confianza primero",
+        "why.text": "NEXUS es una empresa de servicios financieros basada en la transparencia, la rapidez y la seguridad. Servimos a las comunidades haitianas y dominicanas con integridad.",
+        "why.l1": "Transacciones seguras y trazables",
+        "why.l2": "Personal capacitado y certificado",
+        "why.l3": "Servicio al cliente 24/7",
+        "why.l4": "Presencia en 32 provincias",
+        "why.btn": "Saber más sobre NEXUS",
+        "why.c1.title": "Transferencia Instantánea",
+        "why.c1.desc": "En menos de 5 minutos",
+        "why.c2.title": "100% Seguro",
+        "why.c2.desc": "Cifrado de extremo a extremo",
+        "why.c3.title": "En toda RD",
+        "why.c3.desc": "32 provincias cubiertas",
+
+        "footer.desc": "Servicios financieros de confianza para las comunidades haitianas y dominicanas.",
+        "footer.services": "Servicios",
+        "footer.moncash": "MonCash & NatCash",
+        "footer.change": "Cambio de Divisas",
+        "footer.livret": "Libretas de Ahorro",
+        "footer.transfer": "Transferencias USA",
+        "footer.company": "Empresa",
+        "footer.about": "Nosotros",
+        "footer.branches": "Sucursales",
+        "footer.contact": "Contacto",
+        "footer.faq": "FAQ",
+        "footer.contact2": "Contacto",
+        "footer.rights": "© 2026 NEXUS. Todos los derechos reservados.",
+        "footer.privacy": "Privacidad",
+        "footer.terms": "Términos"
+    },
+
+    en: {
+        "nav.home": "Home",
+        "nav.services": "Services",
+        "nav.about": "About",
+        "nav.branches": "Branches",
+        "nav.contact": "Contact",
+        "nav.login": "Login",
+
+        "hero.badge": "Dominican Republic",
+        "hero.title1": "Financial Services",
+        "hero.title2": "You Can Trust",
+        "hero.subtitle": "MonCash • NatCash • Currency Exchange • Savings Accounts • International Transfers",
+        "hero.btn1": "Our Services",
+        "hero.btn2": "Find a Branch",
+        "hero.stat1": "Provinces",
+        "hero.stat2": "Branches",
+        "hero.stat3": "Clients",
+        "hero.stat4": "Currencies",
+
+        "services.badge": "Our Services",
+        "services.title": "Everything you need",
+        "services.subtitle": "Complete financial solutions for individuals and businesses",
+        "services.learn": "Learn more →",
+        "services.s1.title": "MonCash & NatCash",
+        "services.s1.desc": "Instant mobile transfers to Haiti and the Dominican Republic",
+        "services.s2.title": "Currency Exchange",
+        "services.s2.desc": "DOP, HTG, USD, EUR, CAD at the best market rates",
+        "services.s3.title": "Savings Accounts",
+        "services.s3.desc": "Open an account, deposit and withdraw safely",
+        "services.s4.title": "USA Transfers",
+        "services.s4.desc": "Receive money via CashApp and Zelle directly at a branch",
+        "services.s5.title": "Bank Transfers",
+        "services.s5.desc": "BNC, Sogebank, Unibank — HTG and USD accounts from Haiti",
+        "services.s6.title": "Maximum Security",
+        "services.s6.desc": "KYC, facial recognition and full audit of every transaction",
+
+        "why.badge": "Why NEXUS",
+        "why.title": "Trust comes first",
+        "why.text": "NEXUS is a financial services company built on transparency, speed and security. We serve Haitian and Dominican communities with integrity.",
+        "why.l1": "Secure and traceable transactions",
+        "why.l2": "Trained and certified staff",
+        "why.l3": "24/7 customer service",
+        "why.l4": "Presence in 32 provinces",
+        "why.btn": "Learn more about NEXUS",
+        "why.c1.title": "Instant Transfer",
+        "why.c1.desc": "In under 5 minutes",
+        "why.c2.title": "100% Secure",
+        "why.c2.desc": "End-to-end encryption",
+        "why.c3.title": "Everywhere in DR",
+        "why.c3.desc": "32 provinces covered",
+
+        "footer.desc": "Trusted financial services for Haitian and Dominican communities.",
+        "footer.services": "Services",
+        "footer.moncash": "MonCash & NatCash",
+        "footer.change": "Currency Exchange",
+        "footer.livret": "Savings Accounts",
+        "footer.transfer": "USA Transfers",
+        "footer.company": "Company",
+        "footer.about": "About",
+        "footer.branches": "Branches",
+        "footer.contact": "Contact",
+        "footer.faq": "FAQ",
+        "footer.contact2": "Contact",
+        "footer.rights": "© 2026 NEXUS. All rights reserved.",
+        "footer.privacy": "Privacy",
+        "footer.terms": "Terms"
+    },
+
+    ht: {
+        "nav.home": "Akèy",
+        "nav.services": "Sèvis",
+        "nav.about": "Konsènan Nou",
+        "nav.branches": "Sikisal",
+        "nav.contact": "Kontak",
+        "nav.login": "Konekte",
+
+        "hero.badge": "Repiblik Dominikèn",
+        "hero.title1": "Sèvis Finansye",
+        "hero.title2": "Ou Ka Fè Konfyans",
+        "hero.subtitle": "MonCash • NatCash • Chanjman Lajan • Liv Epay • Transfè Entènasyonal",
+        "hero.btn1": "Sèvis Nou Yo",
+        "hero.btn2": "Jwenn yon Sikisal",
+        "hero.stat1": "Pwovens",
+        "hero.stat2": "Sikisal",
+        "hero.stat3": "Kliyan",
+        "hero.stat4": "Lajan",
+
+        "services.badge": "Sèvis Nou Yo",
+        "services.title": "Tout sa w bezwen",
+        "services.subtitle": "Solisyon finansye konplè pou moun ak antrepriz",
+        "services.learn": "Aprann plis →",
+        "services.s1.title": "MonCash & NatCash",
+        "services.s1.desc": "Transfè mobil enstantane pou Ayiti ak Repiblik Dominikèn",
+        "services.s2.title": "Chanjman Lajan",
+        "services.s2.desc": "DOP, HTG, USD, EUR, CAD nan pi bon to mache a",
+        "services.s3.title": "Liv Epay",
+        "services.s3.desc": "Ouvri yon liv, depoze epi retire an tout sekirite",
+        "services.s4.title": "Transfè USA",
+        "services.s4.desc": "Resevwa lajan via CashApp ak Zelle dirèkteman nan sikisal",
+        "services.s5.title": "Transfè Bankè",
+        "services.s5.desc": "BNC, Sogebank, Unibank — kont HTG ak USD soti Ayiti",
+        "services.s6.title": "Sekirite Maksimòm",
+        "services.s6.desc": "KYC, rekonesans figi ak verifikasyon konplè chak tranzaksyon",
+
+        "why.badge": "Poukisa NEXUS",
+        "why.title": "Konfyans an premye",
+        "why.text": "NEXUS se yon antrepriz sèvis finansye ki baze sou transparans, vitès ak sekirite. Nou sèvi kominote ayisyen ak dominiken yo ak entegrite.",
+        "why.l1": "Tranzaksyon sekirize ak verifyab",
+        "why.l2": "Pèsonèl fòme ak sètifye",
+        "why.l3": "Sèvis kliyan 24/7",
+        "why.l4": "Prezans nan 32 pwovens",
+        "why.btn": "Aprann plis sou NEXUS",
+        "why.c1.title": "Transfè Enstantane",
+        "why.c1.desc": "Mwens pase 5 minit",
+        "why.c2.title": "100% Sekirize",
+        "why.c2.desc": "Kòdaj de bout an bout",
+        "why.c3.title": "Tout Kote nan RD",
+        "why.c3.desc": "32 pwovens kouvri",
+
+        "footer.desc": "Sèvis finansye serye pou kominote ayisyen ak dominiken yo.",
+        "footer.services": "Sèvis",
+        "footer.moncash": "MonCash & NatCash",
+        "footer.change": "Chanjman Lajan",
+        "footer.livret": "Liv Epay",
+        "footer.transfer": "Transfè USA",
+        "footer.company": "Antrepriz",
+        "footer.about": "Konsènan Nou",
+        "footer.branches": "Sikisal",
+        "footer.contact": "Kontak",
+        "footer.faq": "FAQ",
+        "footer.contact2": "Kontak",
+        "footer.rights": "© 2026 NEXUS. Tout dwa rezève.",
+        "footer.privacy": "Konfidansyalite",
+        "footer.terms": "Kondisyon"
+    },
+
+    pt: {
+        "nav.home": "Início",
+        "nav.services": "Serviços",
+        "nav.about": "Sobre Nós",
+        "nav.branches": "Filiais",
+        "nav.contact": "Contato",
+        "nav.login": "Entrar",
+
+        "hero.badge": "República Dominicana",
+        "hero.title1": "Serviços Financeiros",
+        "hero.title2": "de Confiança",
+        "hero.subtitle": "MonCash • NatCash • Câmbio de Moedas • Contas de Poupança • Transferências Internacionais",
+        "hero.btn1": "Nossos Serviços",
+        "hero.btn2": "Encontrar uma Filial",
+        "hero.stat1": "Províncias",
+        "hero.stat2": "Filiais",
+        "hero.stat3": "Clientes",
+        "hero.stat4": "Moedas",
+
+        "services.badge": "Nossos Serviços",
+        "services.title": "Tudo que você precisa",
+        "services.subtitle": "Soluções financeiras completas para pessoas e empresas",
+        "services.learn": "Saiba mais →",
+        "services.s1.title": "MonCash & NatCash",
+        "services.s1.desc": "Transferências móveis instantâneas para o Haiti e República Dominicana",
+        "services.s2.title": "Câmbio de Moedas",
+        "services.s2.desc": "DOP, HTG, USD, EUR, CAD nas melhores taxas do mercado",
+        "services.s3.title": "Contas de Poupança",
+        "services.s3.desc": "Abra uma conta, deposite e retire com total segurança",
+        "services.s4.title": "Transferências EUA",
+        "services.s4.desc": "Receba dinheiro via CashApp e Zelle diretamente na filial",
+        "services.s5.title": "Transferências Bancárias",
+        "services.s5.desc": "BNC, Sogebank, Unibank — contas HTG e USD do Haiti",
+        "services.s6.title": "Segurança Máxima",
+        "services.s6.desc": "KYC, reconhecimento facial e auditoria completa de cada transação",
+
+        "why.badge": "Por que NEXUS",
+        "why.title": "Confiança em primeiro lugar",
+        "why.text": "A NEXUS é uma empresa de serviços financeiros baseada em transparência, rapidez e segurança. Servimos as comunidades haitianas e dominicanas com integridade.",
+        "why.l1": "Transações seguras e rastreáveis",
+        "why.l2": "Equipe treinada e certificada",
+        "why.l3": "Atendimento ao cliente 24/7",
+        "why.l4": "Presença em 32 províncias",
+        "why.btn": "Saiba mais sobre a NEXUS",
+        "why.c1.title": "Transferência Instantânea",
+        "why.c1.desc": "Em menos de 5 minutos",
+        "why.c2.title": "100% Seguro",
+        "why.c2.desc": "Criptografia de ponta a ponta",
+        "why.c3.title": "Em toda a RD",
+        "why.c3.desc": "32 províncias cobertas",
+
+        "footer.desc": "Serviços financeiros de confiança para as comunidades haitianas e dominicanas.",
+        "footer.services": "Serviços",
+        "footer.moncash": "MonCash & NatCash",
+        "footer.change": "Câmbio de Moedas",
+        "footer.livret": "Contas de Poupança",
+        "footer.transfer": "Transferências EUA",
+        "footer.company": "Empresa",
+        "footer.about": "Sobre Nós",
+        "footer.branches": "Filiais",
+        "footer.contact": "Contato",
+        "footer.faq": "FAQ",
+        "footer.contact2": "Contato",
+        "footer.rights": "© 2026 NEXUS. Todos os direitos reservados.",
+        "footer.privacy": "Privacidade",
+        "footer.terms": "Termos"
+    }
+};
+
+// ============================================
+// LOGIQUE DU SÉLECTEUR DE LANGUE
+// ============================================
+
+const langFlags = {
+    fr: "🇫🇷",
+    es: "🇩🇴",
+    en: "🇺🇸",
+    ht: "🇭🇹",
+    pt: "🇧🇷"
+};
+
+function applyTranslations(lang) {
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (translations[lang] && translations[lang][key]) {
+            el.textContent = translations[lang][key];
+        }
+    });
+    document.documentElement.setAttribute('lang', lang);
+}
+
+function setLanguage(lang) {
+    applyTranslations(lang);
+    localStorage.setItem('nexus_lang', lang);
+
+    const currentFlag = document.getElementById('currentFlag');
+    const currentLangEl = document.getElementById('currentLang');
+    if (currentFlag) currentFlag.textContent = langFlags[lang];
+    if (currentLangEl) currentLangEl.textContent = lang.toUpperCase();
+
+    document.querySelectorAll('.lang-option').forEach(opt => {
+        opt.classList.toggle('active', opt.getAttribute('data-lang') === lang);
+    });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const savedLang = localStorage.getItem('nexus_lang') || 'fr';
+    setLanguage(savedLang);
+
+    const langBtn = document.getElementById('langBtn');
+    const langDropdown = document.getElementById('langDropdown');
+
+    if (langBtn) {
+        langBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            langDropdown.classList.toggle('open');
+        });
+    }
+
+    document.querySelectorAll('.lang-option').forEach(option => {
+        option.addEventListener('click', function() {
+            const lang = this.getAttribute('data-lang');
+            setLanguage(lang);
+            langDropdown.classList.remove('open');
+        });
+    });
+
+    document.addEventListener('click', function() {
+        if (langDropdown) langDropdown.classList.remove('open');
+    });
+
+    const mobileBtn = document.getElementById('mobileMenuBtn');
+    const navbarMenu = document.getElementById('navbarMenu');
+    if (mobileBtn && navbarMenu) {
+        mobileBtn.addEventListener('click', function() {
+            navbarMenu.classList.toggle('open');
+        });
+    }
+
+    window.addEventListener('scroll', function() {
+        const navbar = document.getElementById('navbar');
+        if (navbar) {
+            if (window.scrollY > 20) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        }
+    });
+});
