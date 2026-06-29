@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEXUS 2030 — À propos</title>
+    <link rel="stylesheet" href="main.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<!-- NAVBAR (identik ak lòt paj yo) -->
+<nav class="navbar">
+    <div class="nav-container">
+        <a href="index.html" class="nav-logo">
+            <span class="logo-nexus">NEXUS</span><span class="logo-year">2030</span>
+        </a>
+        <ul class="nav-links">
+            <li><a href="index.html" data-i18n="nav.home">Accueil</a></li>
+            <li><a href="services.html" data-i18n="nav.services">Services</a></li>
+            <li><a href="about.html" class="active" data-i18n="nav.about">À propos</a></li>
+            <li><a href="branches.html" data-i18n="nav.branches">Succursales</a></li>
+            <li><a href="contact.html" data-i18n="nav.contact">Contact</a></li>
+        </ul>
+        <div class="nav-actions">
+            <div class="lang-switcher">
+                <button class="lang-btn active" data-lang="fr">FR</button>
+                <button class="lang-btn" data-lang="es">ES</button>
+                <button class="lang-btn" data-lang="en">EN</button>
+                <button class="lang-btn" data-lang="ht">HT</button>
+                <button class="lang-btn" data-lang="pt">PT</button>
+            </div>
+        </div>
+        <button class="nav-toggle" id="navToggle">☰</button>
+    </div>
+</nav>
+
+<!-- HERO SECTION -->
+<section class="about-hero">
+    <div class="container">
+        <div class="about-hero-content">
+            <span class="section-badge" data-i18n="about.hero.badge">Notre Histoire</span>
+            <h1 data-i18n="about.hero.title">Au service de nos communautés</h1>
+            <p data-i18n="about.hero.subtitle">
+                Depuis nos débuts, NEXUS s'engage à offrir des services financiers accessibles, sûrs et transparents.
+            </p>
+        </div>
+    </div>
+</section>
+
+<!-- MISSION SECTION -->
+<section class="about-mission">
+    <div class="container">
+        <div class="mission-card">
+            <h2 data-i18n="about.mission.title">Notre Mission</h2>
+            <p data-i18n="about.mission.text">
+                Faciliter la vie financière des communautés haïtiennes et dominicaines en offrant des services rapides, fiables et accessibles à tous, peu importe où ils se trouvent.
+            </p>
+        </div>
+    </div>
+</section>
+
+<!-- VALUES SECTION -->
+<section class="about-values">
+    <div class="container">
+        <h2 class="section-title" data-i18n="about.values.title">Nos Valeurs</h2>
+        <div class="values-grid">
+            <div class="value-card">
+                <div class="value-icon">🔍</div>
+                <h3 data-i18n="about.v1.title">Transparence</h3>
+                <p data-i18n="about.v1.desc">Aucun frais caché, des taux clairs et des reçus pour chaque transaction.</p>
+            </div>
+            <div class="value-card">
+                <div class="value-icon">🔒</div>
+                <h3 data-i18n="about.v2.title">Sécurité</h3>
+                <p data-i18n="about.v2.desc">KYC rigoureux, reconnaissance faciale et chiffrement de bout en bout.</p>
+            </div>
+            <div class="value-card">
+                <div class="value-icon">📍</div>
+                <h3 data-i18n="about.v3.title">Proximité</h3>
+                <p data-i18n="about.v3.desc">Plus de 100 succursales pour être toujours près de vous.</p>
+            </div>
+            <div class="value-card">
+                <div class="value-icon">🤝</div>
+                <h3 data-i18n="about.v4.title">Intégrité</h3>
+                <p data-i18n="about.v4.desc">Nous servons nos clients avec honnêteté et respect, à chaque étape.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA SECTION -->
+<section class="about-cta">
+    <div class="container">
+        <div class="cta-box">
+            <h2 data-i18n="about.cta.title">Rejoignez la famille NEXUS</h2>
+            <p data-i18n="about.cta.sub">Trouvez la succursale la plus proche et commencez dès aujourd'hui</p>
+            <a href="branches.html" class="btn-primary" data-i18n="nav.branches">Succursales</a>
+        </div>
+    </div>
+</section>
+
+<!-- FOOTER (identik ak lòt paj yo) -->
+<footer class="footer">
+    <div class="footer-container">
+        <div class="footer-brand">
+            <span class="logo-nexus">NEXUS</span><span class="logo-year">2030</span>
+            <p data-i18n="footer.tagline">Services financiers pour tous</p>
+        </div>
+        <div class="footer-links">
+            <a href="index.html" data-i18n="nav.home">Accueil</a>
+            <a href="services.html" data-i18n="nav.services">Services</a>
+            <a href="branches.html" data-i18n="nav.branches">Succursales</a>
+            <a href="contact.html" data-i18n="nav.contact">Contact</a>
+        </div>
+        <div class="footer-legal">
+            <span data-i18n="footer.rights">© 2030 NEXUS. Tous droits réservés.</span>
+            <a href="#" data-i18n="footer.terms">Conditions</a>
+        </div>
+    </div>
+</footer>
+
+<script src="i18n.js"></script>
+<script src="main.js"></script>
+
+</body>
+</html>
