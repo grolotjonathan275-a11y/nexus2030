@@ -127,7 +127,7 @@ const translations = {
         "srv.s6.f1": "✔ Vérification KYC obligatoire",
         "srv.s6.f2": "✔ Reconnaissance faciale",
         "srv.s6.f3": "✔ Audit complet de chaque transaction",
-        "srv.s6.f4": "✔ Chiffrement de bout en bout"
+        "srv.s6.f4": "✔ Chiffrement de bout en bout",
         "branches.badge": "Nos Succursales",
         "branches.title": "Trouvez une succursale près de vous",
         "branches.subtitle": "Plus de 100 succursales en République Dominicaine et en Haïti, prêtes à vous servir.",
