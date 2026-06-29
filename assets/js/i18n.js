@@ -55,23 +55,24 @@ const translations = {
         "why.c3.title": "Partout en RD",
         "why.c3.desc": "32 provinces couvertes",
 
-     "about.badge": "Notre Histoire",
-"about.title": "Au service de nos communautés",
-"about.subtitle": "Depuis nos débuts, NEXUS s'engage à offrir des services financiers accessibles, sûrs et transparents.",
-"about.mission.title": "Notre Mission",
-"about.mission.text": "Faciliter la vie financière des communautés haïtiennes et dominicaines en offrant des services rapides, fiables et accessibles à tous.",
-"about.values.badge": "Ce qui nous guide",
-"about.values.title": "Nos Valeurs",
-"about.v1.title": "Transparence",
-"about.v1.desc": "Aucun frais caché, des taux clairs et des reçus pour chaque transaction.",
-"about.v2.title": "Sécurité",
-"about.v2.desc": "KYC rigoureux, reconnaissance faciale et chiffrement de bout en bout.",
-"about.v3.title": "Proximité",
-"about.v3.desc": "Plus de 100 succursales pour être toujours près de vous.",
-"about.v4.title": "Intégrité",
-"about.v4.desc": "Nous servons nos clients avec honnêteté et respect, à chaque étape.",
-"about.cta.title": "Rejoignez la famille NEXUS",
-"about.cta.sub": "Trouvez la succursale la plus proche et commencez dès aujourd'hui",   
+        "about.badge": "Notre Histoire",
+        "about.title": "Au service de nos communautés",
+        "about.subtitle": "Depuis nos débuts, NEXUS s'engage à offrir des services financiers accessibles, sûrs et transparents.",
+        "about.mission.title": "Notre Mission",
+        "about.mission.text": "Faciliter la vie financière des communautés haïtiennes et dominicaines en offrant des services rapides, fiables et accessibles à tous.",
+        "about.values.badge": "Ce qui nous guide",
+        "about.values.title": "Nos Valeurs",
+        "about.v1.title": "Transparence",
+        "about.v1.desc": "Aucun frais caché, des taux clairs et des reçus pour chaque transaction.",
+        "about.v2.title": "Sécurité",
+        "about.v2.desc": "KYC rigoureux, reconnaissance faciale et chiffrement de bout en bout.",
+        "about.v3.title": "Proximité",
+        "about.v3.desc": "Plus de 100 succursales pour être toujours près de vous.",
+        "about.v4.title": "Intégrité",
+        "about.v4.desc": "Nous servons nos clients avec honnêteté et respect, à chaque étape.",
+        "about.cta.title": "Rejoignez la famille NEXUS",
+        "about.cta.sub": "Trouvez la succursale la plus proche et commencez dès aujourd'hui",
+
         "footer.desc": "Services financiers de confiance pour les communautés haïtiennes et dominicaines.",
         "footer.services": "Services",
         "footer.moncash": "MonCash & NatCash",
@@ -181,22 +182,23 @@ const translations = {
         "why.c3.desc": "32 provincias cubiertas",
 
         "about.badge": "Nuestra Historia",
-"about.title": "Al servicio de nuestras comunidades",
-"about.subtitle": "Desde nuestros inicios, NEXUS se compromete a ofrecer servicios financieros accesibles, seguros y transparentes.",
-"about.mission.title": "Nuestra Misión",
-"about.mission.text": "Facilitar la vida financiera de las comunidades haitianas y dominicanas ofreciendo servicios rápidos, confiables y accesibles para todos.",
-"about.values.badge": "Lo que nos guía",
-"about.values.title": "Nuestros Valores",
-"about.v1.title": "Transparencia",
-"about.v1.desc": "Sin cargos ocultos, tarifas claras y recibos por cada transacción.",
-"about.v2.title": "Seguridad",
-"about.v2.desc": "KYC riguroso, reconocimiento facial y cifrado de extremo a extremo.",
-"about.v3.title": "Cercanía",
-"about.v3.desc": "Más de 100 sucursales para estar siempre cerca de usted.",
-"about.v4.title": "Integridad",
-"about.v4.desc": "Servimos a nuestros clientes con honestidad y respeto en cada etapa.",
-"about.cta.title": "Únase a la familia NEXUS",
-"about.cta.sub": "Encuentre la sucursal más cercana y comience hoy mismo",
+        "about.title": "Al servicio de nuestras comunidades",
+        "about.subtitle": "Desde nuestros inicios, NEXUS se compromete a ofrecer servicios financieros accesibles, seguros y transparentes.",
+        "about.mission.title": "Nuestra Misión",
+        "about.mission.text": "Facilitar la vida financiera de las comunidades haitianas y dominicanas ofreciendo servicios rápidos, confiables y accesibles para todos.",
+        "about.values.badge": "Lo que nos guía",
+        "about.values.title": "Nuestros Valores",
+        "about.v1.title": "Transparencia",
+        "about.v1.desc": "Sin cargos ocultos, tarifas claras y recibos por cada transacción.",
+        "about.v2.title": "Seguridad",
+        "about.v2.desc": "KYC riguroso, reconocimiento facial y cifrado de extremo a extremo.",
+        "about.v3.title": "Cercanía",
+        "about.v3.desc": "Más de 100 sucursales para estar siempre cerca de usted.",
+        "about.v4.title": "Integridad",
+        "about.v4.desc": "Servimos a nuestros clientes con honestidad y respeto en cada etapa.",
+        "about.cta.title": "Únase a la familia NEXUS",
+        "about.cta.sub": "Encuentre la sucursal más cercana y comience hoy mismo",
+
         "footer.desc": "Servicios financieros de confianza para las comunidades haitianas y dominicanas.",
         "footer.services": "Servicios",
         "footer.moncash": "MonCash & NatCash",
@@ -306,22 +308,23 @@ const translations = {
         "why.c3.desc": "32 provinces covered",
 
         "about.badge": "Our Story",
-"about.title": "Serving our communities",
-"about.subtitle": "Since our beginnings, NEXUS has been committed to offering accessible, secure and transparent financial services.",
-"about.mission.title": "Our Mission",
-"about.mission.text": "Make financial life easier for Haitian and Dominican communities by offering fast, reliable and accessible services for everyone.",
-"about.values.badge": "What guides us",
-"about.values.title": "Our Values",
-"about.v1.title": "Transparency",
-"about.v1.desc": "No hidden fees, clear rates and receipts for every transaction.",
-"about.v2.title": "Security",
-"about.v2.desc": "Rigorous KYC, facial recognition and end-to-end encryption.",
-"about.v3.title": "Proximity",
-"about.v3.desc": "Over 100 branches to always be close to you.",
-"about.v4.title": "Integrity",
-"about.v4.desc": "We serve our clients with honesty and respect at every step.",
-"about.cta.title": "Join the NEXUS family",
-"about.cta.sub": "Find the nearest branch and get started today",
+        "about.title": "Serving our communities",
+        "about.subtitle": "Since our beginnings, NEXUS has been committed to offering accessible, secure and transparent financial services.",
+        "about.mission.title": "Our Mission",
+        "about.mission.text": "Make financial life easier for Haitian and Dominican communities by offering fast, reliable and accessible services for everyone.",
+        "about.values.badge": "What guides us",
+        "about.values.title": "Our Values",
+        "about.v1.title": "Transparency",
+        "about.v1.desc": "No hidden fees, clear rates and receipts for every transaction.",
+        "about.v2.title": "Security",
+        "about.v2.desc": "Rigorous KYC, facial recognition and end-to-end encryption.",
+        "about.v3.title": "Proximity",
+        "about.v3.desc": "Over 100 branches to always be close to you.",
+        "about.v4.title": "Integrity",
+        "about.v4.desc": "We serve our clients with honesty and respect at every step.",
+        "about.cta.title": "Join the NEXUS family",
+        "about.cta.sub": "Find the nearest branch and get started today",
+
         "footer.desc": "Trusted financial services for Haitian and Dominican communities.",
         "footer.services": "Services",
         "footer.moncash": "MonCash & NatCash",
@@ -431,22 +434,23 @@ const translations = {
         "why.c3.desc": "32 pwovens kouvri",
 
         "about.badge": "Istwa Nou",
-"about.title": "Nan sèvis kominote nou yo",
-"about.subtitle": "Depi nan kòmansman nou, NEXUS angaje l pou ofri sèvis finansye aksesib, sekirize ak transparan.",
-"about.mission.title": "Misyon Nou",
-"about.mission.text": "Fasilite lavi finansye kominote ayisyen ak dominiken yo lè nou ofri sèvis rapid, serye ak aksesib pou tout moun.",
-"about.values.badge": "Sa ki gide nou",
-"about.values.title": "Valè Nou Yo",
-"about.v1.title": "Transparans",
-"about.v1.desc": "Pa gen frè kache, to klè ak resi pou chak tranzaksyon.",
-"about.v2.title": "Sekirite",
-"about.v2.desc": "KYC rijid, rekonesans figi ak kòdaj de bout an bout.",
-"about.v3.title": "Pwoksimite",
-"about.v3.desc": "Plis pase 100 sikisal pou toujou rete pre ou.",
-"about.v4.title": "Entegrite",
-"about.v4.desc": "Nou sèvi kliyan nou yo ak onètete ak respè nan chak etap.",
-"about.cta.title": "Vin fè pati fanmi NEXUS",
-"about.cta.sub": "Jwenn sikisal ki pi pre ou epi kòmanse jodi a",
+        "about.title": "Nan sèvis kominote nou yo",
+        "about.subtitle": "Depi nan kòmansman nou, NEXUS angaje l pou ofri sèvis finansye aksesib, sekirize ak transparan.",
+        "about.mission.title": "Misyon Nou",
+        "about.mission.text": "Fasilite lavi finansye kominote ayisyen ak dominiken yo lè nou ofri sèvis rapid, serye ak aksesib pou tout moun.",
+        "about.values.badge": "Sa ki gide nou",
+        "about.values.title": "Valè Nou Yo",
+        "about.v1.title": "Transparans",
+        "about.v1.desc": "Pa gen frè kache, to klè ak resi pou chak tranzaksyon.",
+        "about.v2.title": "Sekirite",
+        "about.v2.desc": "KYC rijid, rekonesans figi ak kòdaj de bout an bout.",
+        "about.v3.title": "Pwoksimite",
+        "about.v3.desc": "Plis pase 100 sikisal pou toujou rete pre ou.",
+        "about.v4.title": "Entegrite",
+        "about.v4.desc": "Nou sèvi kliyan nou yo ak onètete ak respè nan chak etap.",
+        "about.cta.title": "Vin fè pati fanmi NEXUS",
+        "about.cta.sub": "Jwenn sikisal ki pi pre ou epi kòmanse jodi a",
+
         "footer.desc": "Sèvis finansye serye pou kominote ayisyen ak dominiken yo.",
         "footer.services": "Sèvis",
         "footer.moncash": "MonCash & NatCash",
@@ -556,22 +560,23 @@ const translations = {
         "why.c3.desc": "32 províncias cobertas",
 
         "about.badge": "Nossa História",
-"about.title": "A serviço das nossas comunidades",
-"about.subtitle": "Desde o início, a NEXUS se compromete a oferecer serviços financeiros acessíveis, seguros e transparentes.",
-"about.mission.title": "Nossa Missão",
-"about.mission.text": "Facilitar a vida financeira das comunidades haitianas e dominicanas, oferecendo serviços rápidos, confiáveis e acessíveis para todos.",
-"about.values.badge": "O que nos guia",
-"about.values.title": "Nossos Valores",
-"about.v1.title": "Transparência",
-"about.v1.desc": "Sem taxas ocultas, tarifas claras e recibos para cada transação.",
-"about.v2.title": "Segurança",
-"about.v2.desc": "KYC rigoroso, reconhecimento facial e criptografia de ponta a ponta.",
-"about.v3.title": "Proximidade",
-"about.v3.desc": "Mais de 100 filiais para estar sempre perto de você.",
-"about.v4.title": "Integridade",
-"about.v4.desc": "Atendemos nossos clientes com honestidade e respeito em cada etapa.",
-"about.cta.title": "Junte-se à família NEXUS",
-"about.cta.sub": "Encontre a filial mais próxima e comece hoje mesmo",
+        "about.title": "A serviço das nossas comunidades",
+        "about.subtitle": "Desde o início, a NEXUS se compromete a oferecer serviços financeiros acessíveis, seguros e transparentes.",
+        "about.mission.title": "Nossa Missão",
+        "about.mission.text": "Facilitar a vida financeira das comunidades haitianas e dominicanas, oferecendo serviços rápidos, confiáveis e acessíveis para todos.",
+        "about.values.badge": "O que nos guia",
+        "about.values.title": "Nossos Valores",
+        "about.v1.title": "Transparência",
+        "about.v1.desc": "Sem taxas ocultas, tarifas claras e recibos para cada transação.",
+        "about.v2.title": "Segurança",
+        "about.v2.desc": "KYC rigoroso, reconhecimento facial e criptografia de ponta a ponta.",
+        "about.v3.title": "Proximidade",
+        "about.v3.desc": "Mais de 100 filiais para estar sempre perto de você.",
+        "about.v4.title": "Integridade",
+        "about.v4.desc": "Atendemos nossos clientes com honestidade e respeito em cada etapa.",
+        "about.cta.title": "Junte-se à família NEXUS",
+        "about.cta.sub": "Encontre a filial mais próxima e comece hoje mesmo",
+
         "footer.desc": "Serviços financeiros de confiança para as comunidades haitianas e dominicanas.",
         "footer.services": "Serviços",
         "footer.moncash": "MonCash & NatCash",
@@ -632,6 +637,7 @@ const translations = {
 
 // ============================================
 // LOGIQUE DU SÉLECTEUR DE LANGUE
+// (gardé ici car main.js a besoin de ces fonctions)
 // ============================================
 
 const langFlags = {
@@ -666,48 +672,10 @@ function setLanguage(lang) {
     });
 }
 
+// NOTE : Tout le code de clic sur langBtn / langDropdown / mobileBtn
+// a été RETIRÉ d'ici car main.js s'en occupe déjà.
+// On garde seulement le chargement de la langue sauvegardée au démarrage.
 document.addEventListener('DOMContentLoaded', function() {
     const savedLang = localStorage.getItem('nexus_lang') || 'fr';
     setLanguage(savedLang);
-
-    const langBtn = document.getElementById('langBtn');
-    const langDropdown = document.getElementById('langDropdown');
-
-    if (langBtn) {
-        langBtn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            langDropdown.classList.toggle('open');
-        });
-    }
-
-    document.querySelectorAll('.lang-option').forEach(option => {
-        option.addEventListener('click', function() {
-            const lang = this.getAttribute('data-lang');
-            setLanguage(lang);
-            langDropdown.classList.remove('open');
-        });
-    });
-
-    document.addEventListener('click', function() {
-        if (langDropdown) langDropdown.classList.remove('open');
-    });
-
-    const mobileBtn = document.getElementById('mobileMenuBtn');
-    const navbarMenu = document.getElementById('navbarMenu');
-    if (mobileBtn && navbarMenu) {
-        mobileBtn.addEventListener('click', function() {
-            navbarMenu.classList.toggle('open');
-        });
-    }
-
-    window.addEventListener('scroll', function() {
-        const navbar = document.getElementById('navbar');
-        if (navbar) {
-            if (window.scrollY > 20) {
-                navbar.classList.add('scrolled');
-            } else {
-                navbar.classList.remove('scrolled');
-            }
-        }
-    });
 });
