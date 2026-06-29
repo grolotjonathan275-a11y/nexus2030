@@ -268,7 +268,7 @@ const translations = {
         "srv.s6.f1": "✔ Verificación KYC obligatoria",
         "srv.s6.f2": "✔ Reconocimiento facial",
         "srv.s6.f3": "✔ Auditoría completa de cada transacción",
-        "srv.s6.f4": "✔ Cifrado de extremo a extremo"
+        "srv.s6.f4": "✔ Cifrado de extremo a extremo",
         "branches.badge": "Nuestras Sucursales",
         "branches.title": "Encuentra una sucursal cerca de ti",
         "branches.subtitle": "Más de 100 sucursales en República Dominicana y Haití, listas para servirte.",
@@ -409,7 +409,7 @@ const translations = {
         "srv.s6.f1": "✔ Mandatory KYC verification",
         "srv.s6.f2": "✔ Facial recognition",
         "srv.s6.f3": "✔ Complete audit of every transaction",
-        "srv.s6.f4": "✔ End-to-end encryption"
+        "srv.s6.f4": "✔ End-to-end encryption",
         "branches.badge": "Our Branches",
         "branches.title": "Find a branch near you",
         "branches.subtitle": "Over 100 branches in the Dominican Republic and Haiti, ready to serve you.",
@@ -550,7 +550,7 @@ const translations = {
         "srv.s6.f1": "✔ Verifikasyon KYC obligatwa",
         "srv.s6.f2": "✔ Rekonesans fasyal",
         "srv.s6.f3": "✔ Odit konplè chak tranzaksyon",
-        "srv.s6.f4": "✔ Chifman de bout an bout"
+        "srv.s6.f4": "✔ Chifman de bout an bout",
         "branches.badge": "Sikisal Nou Yo",
         "branches.title": "Jwenn yon sikisal pre ou",
         "branches.subtitle": "Plis pase 100 sikisal nan Repiblik Dominikèn ak Ayiti, pare pou sèvi ou.",
@@ -691,7 +691,7 @@ const translations = {
         "srv.s6.f1": "✔ Verificação KYC obrigatória",
         "srv.s6.f2": "✔ Reconhecimento facial",
         "srv.s6.f3": "✔ Auditoria completa de cada transação",
-        "srv.s6.f4": "✔ Criptografia de ponta a ponta"
+        "srv.s6.f4": "✔ Criptografia de ponta a ponta",
         "branches.badge": "Nossas Filiais",
         "branches.title": "Encontre uma filial perto de você",
         "branches.subtitle": "Mais de 100 filiais na República Dominicana e no Haiti, prontas para atendê-lo.",
