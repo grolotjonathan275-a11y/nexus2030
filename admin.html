@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEXUS 2030 - Super Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/admin.css">
+</head>
+<body>
+<div class="admin-layout">
+<aside class="sidebar" id="sidebar">
+<div class="sidebar-logo">
+<div class="logo-icon">N</div>
+<div><span class="logo-name">NEXUS</span><span class="logo-year">2030</span></div>
+</div>
+<nav class="sidebar-nav">
+<div class="nav-section">PRINCIPAL</div>
+<a href="#dashboard" class="nav-item active" onclick="showSection(this,event)"><span>📊</span>Dashboard</a>
+<a href="#transactions" class="nav-item" onclick="showSection(this,event)"><span>💸</span>Transactions</a>
+<a href="#clients" class="nav-item" onclick="showSection(this,event)"><span>👥</span>Clients</a>
+<a href="#accounts" class="nav-item" onclick="showSection(this,event)"><span>📖</span>Comptes Epargne</a>
+<a href="#branches" class="nav-item" onclick="showSection(this,event)"><span>🏦</span>Succursales</a>
+<a href="#employees" class="nav-item" onclick="showSection(this,event)"><span>👤</span>Employes</a>
+<div class="nav-section">RAPPORTS</div>
+<a href="#contacts" class="nav-item" onclick="showSection(this,event)"><span>✉️</span>Messages</a>
+<a href="#reports" class="nav-item" onclick="showSection(this,event)"><span>📈</span>Rapports</a>
+<div class="nav-section">SYSTEME</div>
+<a href="#settings" class="nav-item" onclick="showSection(this,event)"><span>⚙️</span>Parametres</a>
+<a href="index.html" class="nav-item"><span>🌐</span>Site Web</a>
+<a href="#" class="nav-item logout" onclick="logout()"><span>🚪</span>Deconnexion</a>
+</nav>
+</aside>
+<main class="main-content">
+<header class="topbar">
+<button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+<div class="topbar-title" id="pageTitle">Dashboard</div>
+<div class="topbar-right">
+<div class="admin-badge">Super Admin</div>
+<div class="admin-avatar">JG</div>
+</div>
+</header>
+<div class="content-area">
+<section class="section active" id="section-dashboard">
+<div class="stats-grid">
+<div class="stat-card"><div class="stat-icon blue">💸</div><div class="stat-info"><div class="stat-number" id="totalTransactions">0</div><div class="stat-label">Transactions</div></div></div>
+<div class="stat-card"><div class="stat-icon green">👥</div><div class="stat-info"><div class="stat-number" id="totalClients">0</div><div class="stat-label">Clients</div></div></div>
+<div class="stat-card"><div class="stat-icon orange">📖</div><div class="stat-info"><div class="stat-number" id="totalAccounts">0</div><div class="stat-label">Comptes Epargne</div></div></div>
+<div class="stat-card"><div class="stat-icon purple">✉️</div><div class="stat-info"><div class="stat-number" id="totalMessages">0</div><div class="stat-label">Messages</div></div></div>
+</div>
+<div class="dashboard-grid">
+<div class="card">
+<div class="card-header"><h3>Derniers Messages</h3><a href="#contacts" onclick="showSectionById(event,"contacts")">Voir tout</a></div>
+<div class="table-wrap"><table class="data-table"><thead><tr><th>Nom</th><th>Email</th><th>Sujet</th><th>Date</th></tr></thead><tbody id="recentMessages"><tr><td colspan="4">Chargement...</td></tr></tbody></table></div>
+</div>
+<div class="card">
+<div class="card-header"><h3>Derniers Comptes</h3><a href="#accounts" onclick="showSectionById(event,"accounts")">Voir tout</a></div>
+<div class="table-wrap"><table class="data-table"><thead><tr><th>Nom</th><th>Type</th><th>Devise</th><th>Statut</th></tr></thead><tbody id="recentAccounts"><tr><td colspan="4">Chargement...</td></tr></tbody></table></div>
+</div>
+</div>
+</section>
+<section class="section" id="section-contacts">
+<div class="card">
+<div class="card-header"><h3>Tous les Messages</h3><span class="badge" id="msgCount">0</span></div>
+<div class="table-wrap"><table class="data-table"><thead><tr><th>Nom</th><th>Email</th><th>Telephone</th><th>Sujet</th><th>Message</th><th>Date</th></tr></thead><tbody id="allMessages"><tr><td colspan="6">Chargement...</td></tr></tbody></table></div>
+</div>
+</section>
+<section class="section" id="section-accounts">
+<div class="card">
+<div class="card-header"><h3>Demandes Comptes Epargne</h3><span class="badge" id="accCount">0</span></div>
+<div class="table-wrap"><table class="data-table"><thead><tr><th>Nom</th><th>Prenom</th><th>Telephone</th><th>Type</th><th>Devise</th><th>Nationalite</th><th>Statut</th><th>Action</th></tr></thead><tbody id="allAccounts"><tr><td colspan="8">Chargement...</td></tr></tbody></table></div>
+</div>
+</section>
+<section class="section" id="section-clients">
+<div class="card">
+<div class="card-header"><h3>Clients Enregistres</h3></div>
+<div class="table-wrap"><table class="data-table"><thead><tr><th>Nom</th><th>Email</th><th>Telephone</th><th>Pays</th><th>Date</th></tr></thead><tbody id="allClients"><tr><td colspan="5">Chargement...</td></tr></tbody></table></div>
+</div>
+</section>
+<section class="section" id="section-reports">
+<div class="card">
+<div class="card-header"><h3>Rapports</h3></div>
+<div class="reports-grid">
+<div class="report-card" onclick="exportCSV("contacts")"><div class="report-icon">📧</div><h4>Messages</h4><p>Exporter CSV</p></div>
+<div class="report-card" onclick="exportCSV("account_requests")"><div class="report-icon">📖</div><h4>Comptes Epargne</h4><p>Exporter CSV</p></div>
+</div>
+</div>
+</section>
+<section class="section" id="section-branches">
+<div class="card">
+<div class="card-header"><h3>Succursales</h3></div>
+<p style="padding:1rem;color:#64748B;">Module succursales en developpement.</p>
+</div>
+</section>
+<section class="section" id="section-employees">
+<div class="card">
+<div class="card-header"><h3>Employes</h3></div>
+<p style="padding:1rem;color:#64748B;">Module employes en developpement.</p>
+</div>
+</section>
+<section class="section" id="section-transactions">
+<div class="card">
+<div class="card-header"><h3>Transactions</h3></div>
+<p style="padding:1rem;color:#64748B;">Module transactions en developpement.</p>
+</div>
+</section>
+<section class="section" id="section-settings">
+<div class="card">
+<div class="card-header"><h3>Parametres Systeme</h3></div>
+<div class="settings-grid">
+<div class="setting-item"><label>URL Supabase</label><input type="text" value="https://fnuplvbiwfvauwkpxsoc.supabase.co" readonly></div>
+<div class="setting-item"><label>Version Plateforme</label><input type="text" value="NEXUS 2030 v1.0" readonly></div>
+</div>
+</div>
+</section>
+</div>
+</main>
+</div>
+<script>
+const SUPA_URL="https://fnuplvbiwfvauwkpxsoc.supabase.co";
+const SUPA_KEY="sb_publishable_QBqdKkpcjDS3_psUdmc4uA_sMCzLqLo";
+async function fetchData(table){const r=await fetch(`${SUPA_URL}/rest/v1/${table}?order=created_at.desc`,{headers:{"apikey":SUPA_KEY,"Authorization":`Bearer ${SUPA_KEY}`}});return await r.json();}
+function fmt(d){if(!d)return "-";return new Date(d).toLocaleDateString("fr-FR");}
+function showSection(el,e){if(e)e.preventDefault();document.querySelectorAll(".nav-item").forEach(i=>i.classList.remove("active"));el.classList.add("active");const id=el.getAttribute("href").replace("#","");document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));document.getElementById("section-"+id).classList.add("active");document.getElementById("pageTitle").textContent=el.textContent.trim();}
+function showSectionById(e,id){e.preventDefault();document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));document.getElementById("section-"+id).classList.add("active");}
+function toggleSidebar(){document.getElementById("sidebar").classList.toggle("open");}
+function logout(){localStorage.removeItem("nexus_token");window.location.href="login.html";}
+async function loadDashboard(){
+const msgs=await fetchData("contacts");
+const accs=await fetchData("account_requests");
+document.getElementById("totalMessages").textContent=msgs.length||0;
+document.getElementById("totalAccounts").textContent=accs.length||0;
+const mb=document.getElementById("recentMessages");
+mb.innerHTML=msgs.slice(0,5).map(m=>`<tr><td>${m.name||"-"}</td><td>${m.email||"-"}</td><td>${m.subject||"-"}</td><td>${fmt(m.created_at)}</td></tr>`).join("")||"<tr><td colspan=4>Aucun message</td></tr>";
+const ab=document.getElementById("recentAccounts");
+ab.innerHTML=accs.slice(0,5).map(a=>`<tr><td>${a.last_name||"-"}</td><td>${a.account_type||"-"}</td><td>${a.currency||"-"}</td><td><span class="badge-status ${a.status}">${a.status||"-"}</span></td></tr>`).join("")||"<tr><td colspan=4>Aucune demande</td></tr>";
+const mb2=document.getElementById("allMessages");
+mb2.innerHTML=msgs.map(m=>`<tr><td>${m.name||"-"}</td><td>${m.email||"-"}</td><td>${m.phone||"-"}</td><td>${m.subject||"-"}</td><td>${(m.message||"").substring(0,50)}...</td><td>${fmt(m.created_at)}</td></tr>`).join("")||"<tr><td colspan=6>Aucun message</td></tr>";
+document.getElementById("msgCount").textContent=msgs.length;
+const ab2=document.getElementById("allAccounts");
+ab2.innerHTML=accs.map(a=>`<tr><td>${a.last_name||"-"}</td><td>${a.first_name||"-"}</td><td>${a.phone||"-"}</td><td>${a.account_type||"-"}</td><td>${a.currency||"-"}</td><td>${a.nationality||"-"}</td><td><span class="badge-status ${a.status}">${a.status||"-"}</span></td><td><button onclick="updateStatus(${JSON.stringify(a.id)},${JSON.stringify("approved")})" class="btn-approve">Approuver</button></td></tr>`).join("")||"<tr><td colspan=8>Aucune demande</td></tr>";
+document.getElementById("accCount").textContent=accs.length;}
+async function updateStatus(id,status){await fetch(`${SUPA_URL}/rest/v1/account_requests?id=eq.${id}`,{method:"PATCH",headers:{"apikey":SUPA_KEY,"Authorization":`Bearer ${SUPA_KEY}`,"Content-Type":"application/json","Prefer":"return=minimal"},body:JSON.stringify({status})});loadDashboard();}
+function exportCSV(table){window.open(`${SUPA_URL}/rest/v1/${table}?select=*&apikey=${SUPA_KEY}`);}
+document.addEventListener("DOMContentLoaded",loadDashboard);
+</script>
+</body>
+</html>
