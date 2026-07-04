@@ -6,7 +6,32 @@
 <title>Recu NEXUS</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
-body{font-family:Arial,sans-serif;background:#f0f0f0;display:flex;justify-content:center;padding:20px;}
-.receipt{width:380px;background:white;position:relative;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.3);}
-.security-bg{position:absolute;inset:0;opacity:0.04;background-image:repeating-linear-gradient(45deg,#003399 0px,#003399 1px,transparent 1px,transparent 10px),repeating-linear-gradient(-45deg,#003399 0px,#003399 1px,transparent 1px,transparent 10px);pointer-events:none;z-index:0;}
+body{font-family:Arial,sans-serif;background:#1a1a2e;display:flex;justify-content:center;padding:20px;min-height:100vh;align-items:flex-start;}
+.receipt{width:380px;background:white;position:relative;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,0.5);border-radius:4px;}
+.security-bg{position:absolute;inset:0;opacity:0.03;background-image:repeating-linear-gradient(45deg,#003399 0px,#003399 1px,transparent 1px,transparent 8px),repeating-linear-gradient(-45deg,#003399 0px,#003399 1px,transparent 1px,transparent 8px);pointer-events:none;z-index:0;}
 .watermark{position:absolute;top:50
+<div style="height:6px;background:repeating-linear-gradient(90deg,#003399 0px,#003399 10px,#FF6600 10px,#FF6600 20px,gold 20px,gold 30px);"></div>
+<div style="padding:14px 20px;border-bottom:1px dashed #ccc;">
+<div style="display:flex;justify-content:space-between;margin-bottom:7px;"><span style="font-size:0.7rem;color:#666;text-transform:uppercase;">No. Transaction</span><span style="font-size:0.82rem;font-weight:700;color:#001F6B;" id="txnId">NX-2026-000001</span></div>
+<div style="display:flex;justify-content:space-between;margin-bottom:7px;"><span style="font-size:0.7rem;color:#666;text-transform:uppercase;">Date</span><span style="font-size:0.82rem;font-weight:700;color:#001F6B;" id="txnDate">04/07/2026</span></div>
+<div style="display:flex;justify-content:space-between;margin-bottom:7px;"><span style="font-size:0.7rem;color:#666;text-transform:uppercase;">Heure</span><span style="font-size:0.82rem;font-weight:700;color:#001F6B;" id="txnTime">09:36</span></div>
+<div style="display:flex;justify-content:space-between;"><span style="font-size:0.7rem;color:#666;text-transform:uppercase;">Succursale</span><span style="font-size:0.82rem;font-weight:700;color:#001F6B;">Santo Domingo</span></div>
+</div>
+<div style="padding:14px 20px;border-bottom:1px dashed #ccc;">
+<div style="display:flex;justify-content:space-between;margin-bottom:7px;"><span style="font-size:0.7rem;color:#666;text-transform:uppercase;">No. Compte</span><span style="font-size:0.82rem;font-weight:700;color:#001F6B;">NEXUS-2026-001</span></div>
+<div style="display:flex;justify-content:space-between;margin-bottom:7px;"><span style="font-size:0.7rem;color:#666;text-transform:uppercase;">Titulaire</span><span style="font-size:0.82rem;font-weight:700;color:#001F6B;">JEAN DUPONT</span></div>
+<div style="display:flex;justify-content:space-between;margin-bottom:7px;"><span style="font-size:0.7rem;color:#666;text-transform:uppercase;">Type Compte</span><span style="font-size:0.82rem;font-weight:700;color:#001F6B;">Individuel - HTG</span></div>
+<div style="display:flex;justify-content:space-between;"><span style="font-size:0.7rem;color:#666;text-transform:uppercase;">Caissier</span><span style="font-size:0.82rem;font-weight:700;color:#001F6B;">Agent NEXUS</span></div>
+</div>
+<div style="padding:15px 20px;background:linear-gradient(135deg,#f0f4ff,#e0e8ff);border-bottom:1px dashed #ccc;text-align:center;">
+<div style="font-size:0.7rem;color:#666;text-transform:uppercase;letter-spacing:1px;margin-bottom:5px;">Montant</div>
+<div style="font-size:2.2rem;font-weight:900;color:#001F6B;">5,000.00 HTG</div>
+<div style="font-size:0.72rem;color:#444;font-style:italic;margin-top:4px;">Cinq mille gourdes exactement</div>
+</div>
+<div style="padding:12px 20px;border-bottom:1px dashed #ccc;">
+<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:0.78rem;"><span style="color:#666;">Solde Precedent:</span><span>10,000.00 HTG</span></div>
+<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:0.78rem;"><span style="color:#666;">Operation:</span><span style="color:#16A34A;font-weight:700;">+5,000.00 HTG</span></div>
+<div style="display:flex;justify-content:space-between;padding:6px 0;font-size:0.88rem;font-weight:700;border-top:1px solid #003399;margin-top:4px;"><span style="color:#001F6B;">Nouveau Solde:</span><span style="color:#001F6B;">15,000.00 HTG</span></div>
+</div>
+<div style="padding:15px 20px;display:flex;justify-content:space-between;border-bottom:1px dashed #ccc;">
+<div style="text-align:center;width:45
