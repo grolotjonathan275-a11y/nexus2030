@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Recu Retrait NEXUS</title>
+<style>
+body{margin:0;padding:20px;background:#e0e0e0;font-family:Arial,sans-serif;display:flex;justify-content:center;}
+.receipt{width:360px;background:white;border-radius:4px;box-shadow:0 4px 20px rgba(0,0,0,0.3);overflow:hidden;}
+.header{background:linear-gradient(135deg,#7F1D1D,#DC2626);padding:20px;text-align:center;}
+.logo{width:55px;height:55px;background:white;border-radius:50%;margin:0 auto 8px;display:flex;align-items:center;justify-content:center;font-size:1.5rem;font-weight:900;color:#DC2626;border:3px solid #FF6600;}
+.title{color:white;font-size:1.4rem;font-weight:900;letter-spacing:3px;}
+.sub{color:rgba(255,255,255,0.8);font-size:0.7rem;letter-spacing:2px;}
+.badge{background:#FF6600;color:white;padding:4px 16px;border-radius:100px;font-size:0.75rem;font-weight:700;display:inline-block;margin-top:8px;letter-spacing:1px;}
+.strip{height:6px;background:repeating-linear-gradient(90deg,#7F1D1D 0px,#7F1D1D 10px,#FF6600 10px,#FF6600 20px,gold 20px,gold 30px);}
+.section{padding:12px 18px;border-bottom:1px dashed #ccc;}
+.section-title{font-size:0.65rem;color:#DC2626;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;border-bottom:1px solid #FECACA;padding-bottom:4px;}
+.row{display:flex;justify-content:space-between;margin-bottom:6px;}
+.label{font-size:0.68rem;color:#888;text-transform:uppercase;}
+.value{font-size:0.8rem;font-weight:700;color:#7F1D1D;}
+.amount-box{padding:15px 18px;background:linear-gradient(135deg,#FFF1F1,#FFE4E4);border-bottom:1px dashed #ccc;text-align:center;}
+.amount-label{font-size:0.68rem;color:#666;text-transform:uppercase;letter-spacing:1px;}
+.amount{font-size:2rem;font-weight:900;color:#DC2626;}
+.words{font-size:0.7rem;color:#555;font-style:italic;margin-top:4px;}
+.balance{padding:12px 18px;border-bottom:1px dashed #ccc;}
+.bal-row{display:flex;justify-content:space-between;font-size:0.78rem;padding:3px 0;}
+.bal-total{font-weight:700;color:#7F1D1D;border-top:1px solid #DC2626;margin-top:4px;padding-top:4px;}
+.warning{padding:10px 18px;background:#FFF7ED;border-bottom:1px dashed #ccc;}
+.warn-title{font-size:0.65rem;color:#D97706;font-weight:700;text-transform:uppercase;margin-bottom:4px;}
+.warn-text{font-size:0.65rem;color:#666;}
+.sigs{display:flex;justify-content:space-between;padding:15px 18px;border-bottom:1px dashed #ccc;}
+.sig{text-align:center;width:45%;}
+.sig-line{border-top:1px solid #333;margin-bottom:4px;padding-top:30px;}
+.sig-label{font-size:0.62rem;color:#888;text-transform:uppercase;}
+.footer{background:#7F1D1D;padding:10px;text-align:center;}
+.serial{color:white;font-size:0.7rem;font-weight:700;letter-spacing:2px;}
+.foot-text{color:rgba(255,255,255,0.6);font-size:0.6rem;margin-top:3px;}
+.microtext{color:rgba(255,255,255,0.15);font-size:0.4rem;letter-spacing:1px;overflow:hidden;white-space:nowrap;margin-top:3px;}
+.btn{display:block;width:100%;padding:14px;background:#DC2626;color:white;border:none;font-size:1rem;font-weight:700;cursor:pointer;letter-spacing:1px;}
+@media print{.btn{display:none;}body{background:white;padding:0;}}
+</style>
+</head>
+<body>
+<div class="receipt">
+<div class="header">
+<div class="logo">N</div>
+<div class="title">NEXUS</div>
+<div class="sub">CASA DE CAMBIO</div>
+<div class="badge">RETRAIT</div>
+</div>
+<div class="strip"></div>
+<div class="section">
+<div class="section-title">Informations Transaction</div>
+<div class="row"><span class="label">No. Transaction</span><span class="value" id="txnId"></span></div>
+<div class="row"><span class="label">Date</span><span class="value" id="txnDate"></span></div>
+<div class="row"><span class="label">Heure</span><span class="value" id="txnTime"></span></div>
+<div class="row"><span class="label">Succursale</span><span class="value">Santo Domingo</span></div>
+<div class="row"><span class="label">Caissier</span><span class="value">Agent NEXUS</span></div>
+</div>
+<div class="section">
+<div class="section-title">Informations Client</div>
+<div class="row"><span class="label">No. Compte</span><span class="value">NEXUS-2026-272748</span></div>
+<div class="row"><span class="label">Titulaire</span><span class="value">JEAN DUPONT</span></div>
+<div class="row"><span class="label">Type Compte</span><span class="value">Individuel - HTG</span></div>
+<div class="row"><span class="label">Piece Identite</span><span class="value">CIN-001234</span></div>
+</div>
+<div class="amount-box">
+<div class="amount-label">Montant Retire</div>
+<div class="amount">3,000.00 HTG</div>
+<div class="words">Trois mille gourdes exactement</div>
+</div>
+<div class="balance">
+<div class="bal-row"><span>Solde Precedent:</span><span>15,000.00 HTG</span></div>
+<div class="bal-row"><span>Retrait:</span><span style="color:#DC2626;font-weight:700;">-3,000.00 HTG</span></div>
+<div class="bal-row bal-total"><span>Nouveau Solde:</span><span>12,000.00 HTG</span></div>
+</div>
+<div class="warning">
+<div class="warn-title">Important</div>
+<div class="warn-text">Verifiez le montant avant de quitter la succursale. Aucune reclamation ne sera acceptee apres depart.</div>
+</div>
+<div class="sigs">
+<div class="sig"><div class="sig-line"></div><div class="sig-label">Signature Client</div></div>
+<div class="sig"><div class="sig-line"></div><div class="sig-label">Signature Caissier</div></div>
+</div>
+<div class="footer">
+<div class="serial" id="serial">SER: NX26-0001</div>
+<div class="foot-text">Document officiel NEXUS Casa de Cambio</div>
+<div class="microtext">NEXUS NEXUS NEXUS NEXUS NEXUS NEXUS NEXUS NEXUS NEXUS NEXUS NEXUS NEXUS NEXUS NEXUS</div>
+</div>
+<button class="btn" onclick="window.print()">IMPRIMER LE RECU</button>
+</div>
+<script>
+var n=new Date();
+document.getElementById("txnDate").textContent=n.toLocaleDateString("fr-FR");
+document.getElementById("txnTime").textContent=n.toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"});
+document.getElementById("txnId").textContent="NX-"+n.getFullYear()+"-"+String(Math.floor(Math.random()*999999)).padStart(6,"0");
+document.getElementById("serial").textContent="SER: NX"+String(n.getFullYear()).slice(2)+"-"+Math.random().toString(36).substring(2,6).toUpperCase();
+</script>
+</body>
+</html>
