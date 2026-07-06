@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEXUS 2030 - Rapport Journalier</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+    --primary-50:  #EEF2FF;
+    --primary-100: #C7D7FA;
+    --primary-200: #92AEFF;
+    --primary-400: #3B6FDB;
+    --primary-600: #1A3A8F;
+    --primary-800: #0F2260;
+    --primary-900: #081440;
+
+    --secondary-50:  #FFF4ED;
+    --secondary-100: #FFD9B8;
+    --secondary-400: #FF7A20;
+    --secondary-600: #D45500;
+
+    --accent-50:  #FFFBEA;
+    --accent-400: #F5C400;
+    --accent-600: #B8900A;
+
+    --success-50:  #EDFAF3;
+    --success-100: #C0F0D4;
+    --success-400: #22C55E;
+    --success-600: #16A34A;
+    --success-800: #166534;
+
+    --gray-50:  #F9FAFB;
+    --gray-100: #F3F4F6;
+    --gray-200: #E5E7EB;
+    --gray-300: #D1D5DB;
+    --gray-500: #6B7280;
+    --gray-600: #4B5563;
+    --gray-700: #374151;
+
+    --color-bg:          #F8FAFF;
+    --color-surface:     #FFFFFF;
+    --color-border:      #E2E8F0;
+    --color-text:        #0F1729;
+    --color-text-muted:  #64748B;
+
+    --radius-md:  8px;
+    --radius-lg:  12px;
+    --radius-xl:  16px;
+    --radius-full: 9999px;
+
+    --shadow-sm: 0 1px 3px rgba(15, 23, 41, 0.08);
+    --shadow-md: 0 4px 12px rgba(15, 23, 41, 0.10);
+    --shadow-lg: 0 8px 24px rgba(15, 23, 41, 0.12);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--color-bg);
+    color: var(--color-text);
+    line-height: 1.5;
+}
+
+.page {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 4rem;
+}
+
+/* ===== HEADER ===== */
+.report-header {
+    background: linear-gradient(135deg, var(--primary-900) 0%, var(--primary-600) 100%);
+    border-radius: var(--radius-xl);
+    padding: 2rem 2.5rem;
+    color: white;
+    margin-bottom: 2rem;
+    box-shadow: var(--shadow-lg);
+}
+
+.header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 0.875rem;
+}
+
+.brand-icon {
+    width: 48px;
+    height: 48px;
+    background: var(--secondary-400);
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 1.25rem;
+    flex-shrink: 0;
+}
+
+.brand-text .brand-name {
+    font-size: 1.35rem;
+    font-weight: 800;
+    letter-spacing: 0.03em;
+}
+.brand-text .brand-name span { color: var(--accent-400); }
+
+.brand-text .brand-tagline {
+    font-size: 0.78rem;
+    color: var(--primary-200);
+    font-weight: 500;
+}
+
+.report-meta {
+    text-align: right;
+    font-size: 0.82rem;
+    color: var(--primary-200);
+}
+.report-meta .report-id {
+    display: inline-block;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    padding: 0.25rem 0.75rem;
+    border-radius: var(--radius-full);
+    color: var(--accent-200, #FFE066);
+    font-weight: 600;
+    margin-bottom: 0.4rem;
+    font-size: 0.75rem;
+}
+
+.header-title {
+    margin-top: 1.75rem;
+}
+.header-title h1 {
+    font-size: 1.9rem;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+}
+.header-title p {
+    color: var(--primary-200);
+    font-size: 0.95rem;
+    margin-top: 0.25rem;
+}
+
+/* ===== STAT CARDS ===== */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: 1.25rem 1.4rem;
+    box-shadow: var(--shadow-sm);
+    border-left: 4px solid var(--primary-400);
+}
+.stat-card.orange { border-left-color: var(--secondary-400); }
+.stat-card.gold   { border-left-color: var(--accent-400); }
+.stat-card.green  { border-left-color: var(--success-400); }
+
+.stat-label {
+    font-size: 0.78rem;
+    color: var(--color-text-muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    margin-bottom: 0.4rem;
+}
+.stat-value {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--primary-900);
+}
+.stat-sub {
+    font-size: 0.78rem;
+    color: var(--color-text-muted);
+    margin-top: 0.15rem;
+}
+
+/* ===== SECTION CARD ===== */
+.section-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    margin-bottom: 1.75rem;
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+}
+
+.section-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--color-border);
+    background: var(--gray-50);
+}
+
+.section-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.15rem;
+    flex-shrink: 0;
+}
+.section-icon.blue   { background: var(--primary-50); }
+.section-icon.orange { background: var(--secondary-50); }
+.section-icon.gold   { background: var(--accent-50); }
+
+.section-header h2 {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--primary-900);
+}
+.section-header p {
+    font-size: 0.78rem;
+    color: var(--color-text-muted);
+}
+
+/* ===== TABLE ===== */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+}
+thead th {
+    background: var(--primary-900);
+    color: white;
+    text-align: left;
+    padding: 0.7rem 1.25rem;
+    font-weight: 600;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+}
+thead th.num { text-align: right; }
+
+tbody td {
+    padding: 0.65rem 1.25rem;
+    border-bottom: 1px solid var(--color-border);
+    color: var(--color-text);
+}
+tbody td.num {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    font-weight: 500;
+}
+tbody tr:nth-child(even) { background: var(--gray-50); }
+tbody tr:hover { background: var(--primary-50); }
+
+tfoot td {
+    padding: 0.8rem 1.25rem;
+    font-weight: 800;
+    color: var(--primary-900);
+    background: var(--secondary-50);
+    border-top: 2px solid var(--secondary-400);
+}
+tfoot td.num {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+.badge {
+    display: inline-block;
+    padding: 0.15rem 0.6rem;
+    border-radius: var(--radius-full);
+    font-size: 0.7rem;
+    font-weight: 700;
+}
+.badge.usd { background: var(--primary-50); color: var(--primary-600); }
+.badge.eur { background: var(--accent-50); color: var(--accent-600); }
+.badge.gbp { background: var(--success-50); color: var(--success-600); }
+.badge.htg { background: var(--secondary-50); color: var(--secondary-600); }
+
+/* ===== SIGNATURES ===== */
+.signatures {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    margin-top: 2.5rem;
+    padding: 1.5rem 0;
+}
+.signature-block {
+    text-align: center;
+}
+.signature-line {
+    border-top: 1.5px solid var(--gray-500);
+    margin-bottom: 0.5rem;
+    padding-top: 2.5rem;
+}
+.signature-label {
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+    font-weight: 600;
+}
+
+/* ===== FOOTER ===== */
+.report-footer {
+    text-align: center;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--color-border);
+    color: var(--color-text-muted);
+    font-size: 0.78rem;
+}
+.report-footer strong { color: var(--primary-800); }
+
+/* ===== PRINT ===== */
+@media print {
+    body { background: white; }
+    .page { padding: 0; max-width: 100%; }
+    .section-card, .report-header { box-shadow: none; }
+    .no-print { display: none; }
+}
+
+.print-bar {
+    max-width: 1000px;
+    margin: 0 auto 1rem;
+    padding: 0 1.5rem;
+    display: flex;
+    justify-content: flex-end;
+}
+.btn-print {
+    background: var(--secondary-400);
+    color: white;
+    border: none;
+    padding: 0.7rem 1.4rem;
+    border-radius: var(--radius-md);
+    font-weight: 700;
+    font-size: 0.85rem;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+}
+.btn-print:hover { background: var(--secondary-600); }
+
+@media (max-width: 640px) {
+    .signatures { grid-template-columns: 1fr; }
+    .header-top { flex-direction: column; }
+    .report-meta { text-align: left; }
+    table { font-size: 0.78rem; }
+    thead th, tbody td, tfoot td { padding: 0.55rem 0.75rem; }
+}
+</style>
+</head>
+<body>
+
+<div class="print-bar no-print">
+    <button class="btn-print" onclick="window.print()">🖨️ Enprime / Save PDF</button>
+</div>
+
+<div class="page">
+
+    <!-- HEADER -->
+    <div class="report-header">
+        <div class="header-top">
+            <div class="brand">
+                <div class="brand-icon">N</div>
+                <div class="brand-text">
+                    <div class="brand-name">NEXUS <span>2030</span></div>
+                    <div class="brand-tagline">Services Financiers de Confiance</div>
+                </div>
+            </div>
+            <div class="report-meta">
+                <div class="report-id">RAPPORT #NX-20260626</div>
+                <div>Généré le 26 Juin 2026 à 14:29</div>
+                <div>Par: Admin Système</div>
+            </div>
+        </div>
+        <div class="header-title">
+            <h1>Rapport Journalier des Opérations</h1>
+            <p>Vendredi 26 Juin 2026 — Toutes succursales</p>
+        </div>
+    </div>
+
+    <!-- STAT CARDS -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-label">Total MonCash/NatCash IN</div>
+            <div class="stat-value">60,150 DOP</div>
+            <div class="stat-sub">5 agents actifs</div>
+        </div>
+        <div class="stat-card orange">
+            <div class="stat-label">Frais Collectés</div>
+            <div class="stat-value">5,413.50 DOP</div>
+            <div class="stat-sub">9.0% taux moyen</div>
+        </div>
+        <div class="stat-card gold">
+            <div class="stat-label">Total OUT (HTG)</div>
+            <div class="stat-value">98,525.70 HTG</div>
+            <div class="stat-sub">Converti aux clients</div>
+        </div>
+        <div class="stat-card green">
+            <div class="stat-label">Ventes Devises</div>
+            <div class="stat-value">34,100 DOP</div>
+            <div class="stat-sub">550 USD vendus</div>
+        </div>
+    </div>
+
+    <!-- SECTION 1: MonCash/NatCash -->
+    <div class="section-card">
+        <div class="section-header">
+            <div class="section-icon blue">💸</div>
+            <div>
+                <h2>MonCash / NatCash — Entrées &amp; Sorties</h2>
+                <p>Détail par agent, frais appliqués et montants convertis</p>
+            </div>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Agent</th>
+                    <th class="num">MonCash/NatCash IN (DOP)</th>
+                    <th class="num">Frais (DOP)</th>
+                    <th class="num">Taux Frais</th>
+                    <th class="num">MonCash/NatCash OUT (HTG)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>Barrio Nuevo</td><td class="num">5,250.00</td><td class="num">472.50</td><td class="num">9.0%</td><td class="num">8,599.50</td></tr>
+                <tr><td>Friusa</td><td class="num">8,200.00</td><td class="num">738.00</td><td class="num">9.0%</td><td class="num">13,431.60</td></tr>
+                <tr><td>Hormigon</td><td class="num">4,000.00</td><td class="num">360.00</td><td class="num">9.0%</td><td class="num">6,552.00</td></tr>
+                <tr><td>Lopez</td><td class="num">29,700.00</td><td class="num">2,673.00</td><td class="num">9.0%</td><td class="num">48,648.60</td></tr>
+                <tr><td>Quateke</td><td class="num">13,000.00</td><td class="num">1,170.00</td><td class="num">9.0%</td><td class="num">21,294.00</td></tr>
+            </tbody>
+            <tfoot>
+                <tr><td>Somme Totale</td><td class="num">60,150.00</td><td class="num">5,413.50</td><td class="num">—</td><td class="num">98,525.70</td></tr>
+            </tfoot>
+        </table>
+    </div>
+
+    <!-- SECTION 2: Change Money -->
+    <div class="section-card">
+        <div class="section-header">
+            <div class="section-icon orange">🔄</div>
+            <div>
+                <h2>Change de Devises</h2>
+                <p>Volume échangé par agent et par devise d'origine</p>
+            </div>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Agent</th>
+                    <th>Devise Origine</th>
+                    <th class="num">Total par Agent</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>Barrio Nuevo</td><td><span class="badge usd">USD</span></td><td class="num">313.00</td></tr>
+                <tr><td>Friusa</td><td><span class="badge usd">USD</span></td><td class="num">957.00</td></tr>
+                <tr><td>Hormigon</td><td><span class="badge usd">USD</span></td><td class="num">215.00</td></tr>
+                <tr><td>Lopez</td><td><span class="badge usd">USD</span></td><td class="num">523.00</td></tr>
+                <tr><td rowspan="3">Quateke</td><td><span class="badge eur">EUR</span></td><td class="num">100.00</td></tr>
+                <tr><td><span class="badge gbp">GBP</span></td><td class="num">20.00</td></tr>
+                <tr><td><span class="badge usd">USD</span></td><td class="num">148.00</td></tr>
+            </tbody>
+            <tfoot>
+                <tr><td colspan="2">Somme Totale (toutes devises)</td><td class="num">2,276.00</td></tr>
+            </tfoot>
+        </table>
+    </div>
+
+    <!-- SECTION 3: Selling -->
+    <div class="section-card">
+        <div class="section-header">
+            <div class="section-icon gold">💰</div>
+            <div>
+                <h2>Vente de Devises</h2>
+                <p>Devises vendues aux clients contre gourdes (DOP)</p>
+            </div>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Agent</th>
+                    <th>Devise Destination</th>
+                    <th class="num">Money OUT</th>
+                    <th class="num">Money IN (DOP)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>Barrio Nuevo</td><td><span class="badge usd">USD</span></td><td class="num">300.00</td><td class="num">18,600.00</td></tr>
+                <tr><td>Friusa</td><td><span class="badge usd">USD</span></td><td class="num">250.00</td><td class="num">15,500.00</td></tr>
+            </tbody>
+            <tfoot>
+                <tr><td colspan="2">Somme Totale</td><td class="num">550.00</td><td class="num">34,100.00</td></tr>
+            </tfoot>
+        </table>
+    </div>
+
+    <!-- SIGNATURES -->
+    <div class="signatures no-print">
+        <div class="signature-block">
+            <div class="signature-line"></div>
+            <div class="signature-label">Signature Agent Responsable</div>
+        </div>
+        <div class="signature-block">
+            <div class="signature-line"></div>
+            <div class="signature-label">Signature Superviseur / Admin</div>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <div class="report-footer">
+        <p><strong>NEXUS 2030</strong> — Document généré automatiquement par le système. Confidentiel — usage interne uniquement.</p>
+        <p>Pour toute question, contactez l'administration à travers le tableau de bord.</p>
+    </div>
+
+</div>
+</body>
+</html>
