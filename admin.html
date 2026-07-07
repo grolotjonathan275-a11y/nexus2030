@@ -50,11 +50,11 @@
 </div>
 <div class="dashboard-grid">
 <div class="card">
-<div class="card-header"><h3>Derniers Messages</h3><a href="#contacts" onclick="showSectionById(event,"contacts")">Voir tout</a></div>
+<div class="card-header"><h3>Derniers Messages</h3><a href="#" onclick="showSectionByName(event,'contacts')">Voir tout</a></div>
 <div class="table-wrap"><table class="data-table"><thead><tr><th>Nom</th><th>Email</th><th>Sujet</th><th>Date</th></tr></thead><tbody id="recentMessages"><tr><td colspan="4">Chargement...</td></tr></tbody></table></div>
 </div>
 <div class="card">
-<div class="card-header"><h3>Derniers Comptes</h3><a href="#accounts" onclick="showSectionById(event,"accounts")">Voir tout</a></div>
+<div class="card-header"><h3>Derniers Comptes</h3><a href="#" onclick="showSectionByName(event,'accounts')">Voir tout</a></div>
 <div class="table-wrap"><table class="data-table"><thead><tr><th>Nom</th><th>Type</th><th>Devise</th><th>Statut</th></tr></thead><tbody id="recentAccounts"><tr><td colspan="4">Chargement...</td></tr></tbody></table></div>
 </div>
 </div>
@@ -81,28 +81,19 @@
 <div class="card">
 <div class="card-header"><h3>Rapports</h3></div>
 <div class="reports-grid">
-<div class="report-card" onclick="exportCSV("contacts")"><div class="report-icon">📧</div><h4>Messages</h4><p>Exporter CSV</p></div>
-<div class="report-card" onclick="exportCSV("account_requests")"><div class="report-icon">📖</div><h4>Comptes Epargne</h4><p>Exporter CSV</p></div>
+<div class="report-card" onclick="exportData('contacts')"><div class="report-icon">📧</div><h4>Messages</h4><p>Exporter CSV</p></div>
+<div class="report-card" onclick="exportData('account_requests')"><div class="report-icon">📖</div><h4>Comptes Epargne</h4><p>Exporter CSV</p></div>
 </div>
 </div>
 </section>
 <section class="section" id="section-branches">
-<div class="card">
-<div class="card-header"><h3>Succursales</h3></div>
-<p style="padding:1rem;color:#64748B;">Module succursales en developpement.</p>
-</div>
+<div class="card"><div class="card-header"><h3>Succursales</h3></div><p style="padding:1rem;color:#64748B;">Module en developpement.</p></div>
 </section>
 <section class="section" id="section-employees">
-<div class="card">
-<div class="card-header"><h3>Employes</h3></div>
-<p style="padding:1rem;color:#64748B;">Module employes en developpement.</p>
-</div>
+<div class="card"><div class="card-header"><h3>Employes</h3></div><p style="padding:1rem;color:#64748B;">Module en developpement.</p></div>
 </section>
 <section class="section" id="section-transactions">
-<div class="card">
-<div class="card-header"><h3>Transactions</h3></div>
-<p style="padding:1rem;color:#64748B;">Module transactions en developpement.</p>
-</div>
+<div class="card"><div class="card-header"><h3>Transactions</h3></div><p style="padding:1rem;color:#64748B;">Module en developpement.</p></div>
 </section>
 <section class="section" id="section-settings">
 <div class="card">
@@ -117,32 +108,93 @@
 </main>
 </div>
 <script>
-const SUPA_URL="https://fnuplvbiwfvauwkpxsoc.supabase.co";
-const SUPA_KEY="sb_publishable_QBqdKkpcjDS3_psUdmc4uA_sMCzLqLo";
-async function fetchData(table){const r=await fetch(`${SUPA_URL}/rest/v1/${table}?order=created_at.desc`,{headers:{"apikey":SUPA_KEY,"Authorization":`Bearer ${SUPA_KEY}`}});return await r.json();}
-function fmt(d){if(!d)return "-";return new Date(d).toLocaleDateString("fr-FR");}
-function showSection(el,e){if(e)e.preventDefault();document.querySelectorAll(".nav-item").forEach(i=>i.classList.remove("active"));el.classList.add("active");const id=el.getAttribute("href").replace("#","");document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));document.getElementById("section-"+id).classList.add("active");document.getElementById("pageTitle").textContent=el.textContent.trim();}
-function showSectionById(e,id){e.preventDefault();document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));document.getElementById("section-"+id).classList.add("active");}
-function toggleSidebar(){document.getElementById("sidebar").classList.toggle("open");}
-function logout(){localStorage.removeItem("nexus_token");window.location.href="login.html";}
-async function loadDashboard(){
-const msgs=await fetchData("contacts");
-const accs=await fetchData("account_requests");
-document.getElementById("totalMessages").textContent=msgs.length||0;
-document.getElementById("totalAccounts").textContent=accs.length||0;
-const mb=document.getElementById("recentMessages");
-mb.innerHTML=msgs.slice(0,5).map(m=>`<tr><td>${m.name||"-"}</td><td>${m.email||"-"}</td><td>${m.subject||"-"}</td><td>${fmt(m.created_at)}</td></tr>`).join("")||"<tr><td colspan=4>Aucun message</td></tr>";
-const ab=document.getElementById("recentAccounts");
-ab.innerHTML=accs.slice(0,5).map(a=>`<tr><td>${a.last_name||"-"}</td><td>${a.account_type||"-"}</td><td>${a.currency||"-"}</td><td><span class="badge-status ${a.status}">${a.status||"-"}</span></td></tr>`).join("")||"<tr><td colspan=4>Aucune demande</td></tr>";
-const mb2=document.getElementById("allMessages");
-mb2.innerHTML=msgs.map(m=>`<tr><td>${m.name||"-"}</td><td>${m.email||"-"}</td><td>${m.phone||"-"}</td><td>${m.subject||"-"}</td><td>${(m.message||"").substring(0,50)}...</td><td>${fmt(m.created_at)}</td></tr>`).join("")||"<tr><td colspan=6>Aucun message</td></tr>";
-document.getElementById("msgCount").textContent=msgs.length;
-const ab2=document.getElementById("allAccounts");
-ab2.innerHTML=accs.map(a=>`<tr><td>${a.last_name||"-"}</td><td>${a.first_name||"-"}</td><td>${a.phone||"-"}</td><td>${a.account_type||"-"}</td><td>${a.currency||"-"}</td><td>${a.nationality||"-"}</td><td><span class="badge-status ${a.status}">${a.status||"-"}</span></td><td><button onclick="updateStatus(${JSON.stringify(a.id)},${JSON.stringify("approved")})" class="btn-approve">Approuver</button></td></tr>`).join("")||"<tr><td colspan=8>Aucune demande</td></tr>";
-document.getElementById("accCount").textContent=accs.length;}
-async function updateStatus(id,status){const r=await fetch(`${SUPA_URL}/rest/v1/account_requests?id=eq.${id}`,{method:"PATCH",headers:{"apikey":SUPA_KEY,"Authorization":`Bearer ${SUPA_KEY}`,"Content-Type":"application/json","Prefer":"return=minimal"},body:JSON.stringify({status})});if(status==="approved"){const rows=await fetchData("account_requests");const a=rows.find(x=>x.id===id);if(a){const accountNo="NEXUS-"+new Date().getFullYear()+"-"+String(Math.floor(Math.random()*999999)).padStart(6,"0");const p=new URLSearchParams({client_name:(a.first_name||"")+" "+(a.last_name||""),client_phone:a.phone||"",account_no:accountNo,account_type:a.account_type||"",currency:a.currency||"",branch:a.branch_city||"Santo Domingo"});window.open("receipt-open.html?"+p.toString(),"_blank");}}loadDashboard();}
-function exportCSV(table){window.open(`${SUPA_URL}/rest/v1/${table}?select=*&apikey=${SUPA_KEY}`);}
-document.addEventListener("DOMContentLoaded",loadDashboard);
+const SUPA_URL = "https://fnuplvbiwfvauwkpxsoc.supabase.co";
+const SUPA_KEY = "sb_publishable_QBqdKkpcjDS3_psUdmc4uA_sMCzLqLo";
+
+async function fetchData(table) {
+    const r = await fetch(`${SUPA_URL}/rest/v1/${table}?order=created_at.desc`, {
+        headers: {"apikey": SUPA_KEY, "Authorization": `Bearer ${SUPA_KEY}`}
+    });
+    return await r.json();
+}
+
+function fmt(d) { return d ? new Date(d).toLocaleDateString("fr-FR") : "-"; }
+
+function showSection(el, e) {
+    if (e) e.preventDefault();
+    document.querySelectorAll(".nav-item").forEach(i => i.classList.remove("active"));
+    el.classList.add("active");
+    const id = el.getAttribute("href").replace("#", "");
+    document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
+    document.getElementById("section-" + id).classList.add("active");
+    document.getElementById("pageTitle").textContent = el.textContent.trim();
+}
+
+function showSectionByName(e, id) {
+    e.preventDefault();
+    document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
+    document.getElementById("section-" + id).classList.add("active");
+}
+
+function toggleSidebar() { document.getElementById("sidebar").classList.toggle("open"); }
+function logout() { localStorage.removeItem("nexus_token"); window.location.href = "login.html"; }
+
+async function approuver(id) {
+    await fetch(`${SUPA_URL}/rest/v1/account_requests?id=eq.${id}`, {
+        method: "PATCH",
+        headers: {
+            "apikey": SUPA_KEY,
+            "Authorization": `Bearer ${SUPA_KEY}`,
+            "Content-Type": "application/json",
+            "Prefer": "return=minimal"
+        },
+        body: JSON.stringify({status: "approved"})
+    });
+    const rows = await fetchData("account_requests");
+    const a = rows.find(x => x.id === id);
+    if (a) {
+        const accountNo = "NEXUS-" + new Date().getFullYear() + "-" + String(Math.floor(Math.random()*999999)).padStart(6,"0");
+        const p = new URLSearchParams({
+            client_name: (a.first_name || "") + " " + (a.last_name || ""),
+            client_phone: a.phone || "",
+            account_no: accountNo,
+            account_type: a.account_type || "",
+            currency: a.currency || "",
+            branch: a.branch_city || "Santo Domingo"
+        });
+        location.href = "receipt-open.html?" + p.toString();
+    }
+    loadDashboard();
+}
+
+async function loadDashboard() {
+    const msgs = await fetchData("contacts");
+    const accs = await fetchData("account_requests");
+    document.getElementById("totalMessages").textContent = msgs.length || 0;
+    document.getElementById("totalAccounts").textContent = accs.length || 0;
+
+    document.getElementById("recentMessages").innerHTML = msgs.slice(0,5).map(m =>
+        `<tr><td>${m.name||"-"}</td><td>${m.email||"-"}</td><td>${m.subject||"-"}</td><td>${fmt(m.created_at)}</td></tr>`
+    ).join("") || "<tr><td colspan='4'>Aucun message</td></tr>";
+
+    document.getElementById("recentAccounts").innerHTML = accs.slice(0,5).map(a =>
+        `<tr><td>${a.last_name||"-"}</td><td>${a.account_type||"-"}</td><td>${a.currency||"-"}</td><td><span class="badge-status ${a.status}">${a.status||"-"}</span></td></tr>`
+    ).join("") || "<tr><td colspan='4'>Aucune demande</td></tr>";
+
+    document.getElementById("allMessages").innerHTML = msgs.map(m =>
+        `<tr><td>${m.name||"-"}</td><td>${m.email||"-"}</td><td>${m.phone||"-"}</td><td>${m.subject||"-"}</td><td>${(m.message||"").substring(0,50)}...</td><td>${fmt(m.created_at)}</td></tr>`
+    ).join("") || "<tr><td colspan='6'>Aucun message</td></tr>";
+    document.getElementById("msgCount").textContent = msgs.length;
+
+    document.getElementById("allAccounts").innerHTML = accs.map(a =>
+        `<tr><td>${a.last_name||"-"}</td><td>${a.first_name||"-"}</td><td>${a.phone||"-"}</td><td>${a.account_type||"-"}</td><td>${a.currency||"-"}</td><td>${a.nationality||"-"}</td><td><span class="badge-status ${a.status}">${a.status||"-"}</span></td><td><button onclick="approuver('${a.id}')" class="btn-approve">Approuver</button></td></tr>`
+    ).join("") || "<tr><td colspan='8'>Aucune demande</td></tr>";
+    document.getElementById("accCount").textContent = accs.length;
+}
+
+function exportData(table) { window.open(`${SUPA_URL}/rest/v1/${table}?select=*&apikey=${SUPA_KEY}`); }
+
+document.addEventListener("DOMContentLoaded", loadDashboard);
 </script>
 </body>
 </html>
