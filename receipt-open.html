@@ -8,7 +8,8 @@
 body{margin:0;padding:20px;background:#e0e0e0;font-family:Arial,sans-serif;display:flex;justify-content:center;}
 .receipt{width:360px;background:white;border-radius:4px;box-shadow:0 4px 20px rgba(0,0,0,0.3);overflow:hidden;}
 .header{background:linear-gradient(135deg,#001F6B,#003399);padding:20px;text-align:center;}
-.logo{width:55px;height:55px;background:white;border-radius:50%;margin:0 auto 8px;display:flex;align-items:center;justify-content:center;font-size:1.5rem;font-weight:900;color:#001F6B;border:3px solid #FF6600;}
+.logo{width:64px;height:64px;background:white;border-radius:50%;margin:0 auto 8px;display:flex;align-items:center;justify-content:center;overflow:hidden;border:3px solid #FF6600;}
+.logo img{width:100%;height:100%;object-fit:cover;}
 .title{color:white;font-size:1.4rem;font-weight:900;letter-spacing:3px;}
 .sub{color:rgba(255,255,255,0.8);font-size:0.7rem;letter-spacing:2px;}
 .badge{background:#22C55E;color:white;padding:4px 16px;border-radius:100px;font-size:0.75rem;font-weight:700;display:inline-block;margin-top:8px;letter-spacing:1px;}
@@ -35,7 +36,8 @@ body{margin:0;padding:20px;background:#e0e0e0;font-family:Arial,sans-serif;displ
 .sig-line{border-top:1px solid #333;margin-bottom:4px;padding-top:30px;}
 .sig-label{font-size:0.62rem;color:#888;text-transform:uppercase;}
 .qr-section{padding:12px 18px;border-bottom:1px dashed #ccc;display:flex;align-items:center;gap:12px;}
-.qr-box{width:60px;height:60px;background:#f0f0f0;border:1px solid #ccc;display:flex;align-items:center;justify-content:center;font-size:0.5rem;color:#666;text-align:center;flex-shrink:0;}
+.qr-box{width:70px;height:70px;flex-shrink:0;}
+.qr-box img{width:100%;height:100%;}
 .qr-text{font-size:0.68rem;color:#666;line-height:1.5;}
 .footer{background:#001F6B;padding:10px;text-align:center;}
 .serial{color:white;font-size:0.7rem;font-weight:700;letter-spacing:2px;}
@@ -48,7 +50,7 @@ body{margin:0;padding:20px;background:#e0e0e0;font-family:Arial,sans-serif;displ
 <body>
 <div class="receipt">
 <div class="header">
-<div class="logo">N</div>
+<div class="logo"><img src="assets/img/logo-nexus.jpg" alt="NEXUS" onerror="this.parentElement.innerHTML='N';this.parentElement.style.cssText+='font-size:1.5rem;font-weight:900;color:#001F6B;'"></div>
 <div class="title">NEXUS</div>
 <div class="sub">CASA DE CAMBIO</div>
 <div class="badge">OUVERTURE DE COMPTE</div>
@@ -63,23 +65,21 @@ body{margin:0;padding:20px;background:#e0e0e0;font-family:Arial,sans-serif;displ
 <div class="row"><span class="label">No. Dossier</span><span class="value" id="txnId"></span></div>
 <div class="row"><span class="label">Date Ouverture</span><span class="value" id="txnDate"></span></div>
 <div class="row"><span class="label">Heure</span><span class="value" id="txnTime"></span></div>
-<div class="row"><span class="label">Succursale</span><span class="value">Santo Domingo</span></div>
-<div class="row"><span class="label">Agent</span><span class="value">Agent NEXUS</span></div>
+<div class="row"><span class="label">Succursale</span><span class="value" id="branchName">-</span></div>
+<div class="row"><span class="label">Agent</span><span class="value" id="agentName">-</span></div>
 </div>
 <div class="section">
 <div class="section-title">Informations Client</div>
-<div class="row"><span class="label">Nom Complet</span><span class="value">JEAN DUPONT</span></div>
-<div class="row"><span class="label">Telephone</span><span class="value">+509 3700-0000</span></div>
-<div class="row"><span class="label">Nationalite</span><span class="value">Haitienne</span></div>
-<div class="row"><span class="label">Adresse</span><span class="value">Port-au-Prince, HT</span></div>
+<div class="row"><span class="label">Nom Complet</span><span class="value" id="clientName">-</span></div>
+<div class="row"><span class="label">Telephone</span><span class="value" id="clientPhone">-</span></div>
+<div class="row"><span class="label">Nationalite</span><span class="value" id="clientNat">-</span></div>
+<div class="row"><span class="label">Adresse</span><span class="value" id="clientAddress">-</span></div>
 </div>
 <div class="account-box">
 <div class="account-label">Numero de Compte</div>
-<div class="account-number" id="accountNo">NEXUS-2026-000001</div>
-<div class="account-type">Compte Individuel</div>
-<div class="currency-box">
-<div class="currency-badge">HTG Gourdes</div>
-</div>
+<div class="account-number" id="accountNo">-</div>
+<div class="account-type" id="accountType">-</div>
+<div class="currency-box"><div class="currency-badge" id="currencyBadge">-</div></div>
 </div>
 <div class="conditions">
 <div class="cond-title">Conditions du Compte</div>
@@ -89,7 +89,7 @@ body{margin:0;padding:20px;background:#e0e0e0;font-family:Arial,sans-serif;displ
 <div class="cond-item">• Service disponible dans toutes nos succursales</div>
 </div>
 <div class="qr-section">
-<div class="qr-box">QR<br>CODE<br>NEXUS</div>
+<div class="qr-box"><img id="qrImg" src="" alt="QR"></div>
 <div class="qr-text">Scannez ce code pour verifier<br>l authenticite de ce document.<br><strong>ID: </strong><span id="qrId"></span></div>
 </div>
 <div class="sigs">
@@ -97,21 +97,39 @@ body{margin:0;padding:20px;background:#e0e0e0;font-family:Arial,sans-serif;displ
 <div class="sig"><div class="sig-line"></div><div class="sig-label">Signature Agent</div></div>
 </div>
 <div class="footer">
-<div class="serial" id="serial">SER: NX26-0001</div>
-<div class="foot-text">Document officiel NEXUS Casa de Cambio — Republique Dominicaine</div>
-<div class="microtext">NEXUS NEXUS NEXUS NEXUS NEXUS NEXUS NEXUS NEXUS NEXUS NEXUS NEXUS NEXUS NEXUS NEXUS NEXUS</div>
+<div class="serial" id="serial">SER: -</div>
+<div class="foot-text">Document officiel NEXUS Casa de Cambio</div>
+<div class="microtext">NEXUS NEXUS NEXUS NEXUS NEXUS NEXUS NEXUS NEXUS NEXUS NEXUS NEXUS</div>
 </div>
 <button class="btn" onclick="window.print()">IMPRIMER LE RECU</button>
 </div>
 <script>
-var n=new Date();
-document.getElementById("txnDate").textContent=n.toLocaleDateString("fr-FR");
-document.getElementById("txnTime").textContent=n.toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"});
-var ref="NX-"+n.getFullYear()+"-"+String(Math.floor(Math.random()*999999)).padStart(6,"0");
-document.getElementById("txnId").textContent=ref;
-document.getElementById("accountNo").textContent="NEXUS-"+n.getFullYear()+"-"+String(Math.floor(Math.random()*999999)).padStart(6,"0");
-document.getElementById("serial").textContent="SER: NX"+String(n.getFullYear()).slice(2)+"-"+Math.random().toString(36).substring(2,6).toUpperCase();
-document.getElementById("qrId").textContent=ref;
+// Li paramèt yo ki soti nan URL (voye pa admin.html lè yo apwouve yon demand)
+const p = new URLSearchParams(window.location.search);
+const n = new Date();
+
+const ref = "NX-" + n.getFullYear() + "-" + String(Math.floor(Math.random()*999999)).padStart(6,"0");
+const accountNo = p.get("account_no") || ("NEXUS-" + n.getFullYear() + "-" + String(Math.floor(Math.random()*999999)).padStart(6,"0"));
+const securityCode = p.get("security_code") || Math.random().toString(36).substring(2,10).toUpperCase();
+
+document.getElementById("txnDate").textContent = n.toLocaleDateString("fr-FR");
+document.getElementById("txnTime").textContent = n.toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"});
+document.getElementById("txnId").textContent = ref;
+document.getElementById("branchName").textContent = p.get("branch") || "-";
+document.getElementById("agentName").textContent = p.get("agent") || "-";
+document.getElementById("clientName").textContent = (p.get("client_name") || "-").toUpperCase();
+document.getElementById("clientPhone").textContent = p.get("client_phone") || "-";
+document.getElementById("clientNat").textContent = p.get("client_nat") || "-";
+document.getElementById("clientAddress").textContent = p.get("client_address") || "-";
+document.getElementById("accountNo").textContent = accountNo;
+document.getElementById("accountType").textContent = p.get("account_type") || "Compte Individuel";
+document.getElementById("currencyBadge").textContent = p.get("currency") || "HTG";
+document.getElementById("qrId").textContent = securityCode;
+document.getElementById("serial").textContent = "SER: " + securityCode;
+
+// Jenere QR code reyèl (API gratis, ka eskane vre) ak done resi a ladan
+const qrData = encodeURIComponent(`NEXUS|${accountNo}|${securityCode}|${ref}`);
+document.getElementById("qrImg").src = `https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${qrData}`;
 </script>
 </body>
 </html>
