@@ -132,17 +132,20 @@
     </div>
 </main>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="assets/js/i18n.js"></script>
 <script src="assets/js/main.js"></script>
 <script>
 const SUPA_URL = "https://fnuplvbiwfvauwkpxsoc.supabase.co";
 const SUPA_KEY = "sb_publishable_QBqdKkpcjDS3_psUdmc4uA_sMCzLqLo";
+const supabaseClient = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 // REDIREKSYON PA WOL
 const ROLE_REDIRECTS = {
     super_admin: 'admin.html',
     ceo: 'ceo.html',
     secretaire: 'secretaire.html',
+    superviseur: 'superviseur.html',
     caissier: 'cashier.html',
     agent: 'agent.html',
     client: 'client.html'
@@ -188,7 +191,33 @@ document.getElementById("loginSubmit").addEventListener("click", async function(
     btn.disabled = true;
 
     try {
-        // Etap 1: Chèche nan savings_accounts (kliyan)
+        // Etap 1: Eseye konekte kòm anplwaye (Super Admin, CEO, Secretaire, Superviseur, Caissier, Agent)
+        // atravè Supabase Auth — modpas verifye ak chifre otomatikman pa Supabase
+        const { data: authData, error: authError } = await supabaseClient.auth.signInWithPassword({ email, password });
+
+        if (!authError && authData.session) {
+            const { data: profile } = await supabaseClient
+                .from("profiles")
+                .select("*")
+                .eq("id", authData.user.id)
+                .single();
+
+            if (profile && profile.status === "active" && ROLE_REDIRECTS[profile.role]) {
+                localStorage.setItem("nexus_role", profile.role);
+                localStorage.setItem("nexus_staff", JSON.stringify(profile));
+                showSuccess();
+                setTimeout(() => { window.location.href = ROLE_REDIRECTS[profile.role]; }, 1500);
+                return;
+            } else {
+                await supabaseClient.auth.signOut();
+                alert("Compte inactif ou role invalide. Contactez l'administrateur.");
+                btn.textContent = originalText;
+                btn.disabled = false;
+                return;
+            }
+        }
+
+        // Etap 2: Si se pa yon anplwaye, chèche nan kliyan yo (savings_accounts)
         const clientRes = await fetch(`${SUPA_URL}/rest/v1/savings_accounts?email=eq.${encodeURIComponent(email)}&select=*`, {
             headers: {"apikey": SUPA_KEY, "Authorization": `Bearer ${SUPA_KEY}`}
         });
@@ -203,7 +232,6 @@ document.getElementById("loginSubmit").addEventListener("click", async function(
                 return;
             }
             if(client.password_hash === btoa(password)){
-                // Kliyan konekte
                 localStorage.setItem("nexus_client", JSON.stringify(client));
                 localStorage.setItem("nexus_role", "client");
                 showSuccess();
@@ -217,26 +245,6 @@ document.getElementById("loginSubmit").addEventListener("click", async function(
             }
         }
 
-        // Etap 2: Chèche nan staff (admin, CEO, caissier etc.)
-        // Verifye kont staff yo pa email ak mot de passe
-        // Pou MVP — kont staff yo defini isit
-        const STAFF_ACCOUNTS = [
-            {email: "admin@nexus2030.com", password: "nexus2030", role: "super_admin", name: "Super Admin"},
-            {email: "ceo@nexus2030.com", password: "nexus2030ceo", role: "ceo", name: "Directeur General"},
-            {email: "secretaire@nexus2030.com", password: "nexus2030sec", role: "secretaire", name: "Secretaire"},
-            {email: "caissier@nexus2030.com", password: "nexus2030cash", role: "caissier", name: "Agent Caissier"},
-            {email: "agent@nexus2030.com", password: "nexus2030agent", role: "agent", name: "Agent Autorise"}
-        ];
-
-        const staff = STAFF_ACCOUNTS.find(s => s.email === email && s.password === password);
-        if(staff){
-            localStorage.setItem("nexus_staff", JSON.stringify(staff));
-            localStorage.setItem("nexus_role", staff.role);
-            showSuccess();
-            setTimeout(() => { window.location.href = ROLE_REDIRECTS[staff.role]; }, 1500);
-            return;
-        }
-
         alert("Email ou mot de passe incorrect.");
         btn.textContent = originalText;
         btn.disabled = false;
@@ -248,7 +256,7 @@ document.getElementById("loginSubmit").addEventListener("click", async function(
     }
 });
 
-// REGISTER
+// REGISTER (kliyan sèlman — pa chanje)
 document.getElementById("registerSubmit").addEventListener("click", async function(){
     const firstName = document.getElementById("regFirstName").value.trim();
     const lastName = document.getElementById("regLastName").value.trim();
@@ -322,10 +330,20 @@ function showSuccess(){
 }
 
 // CHECK SESSION
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
+    // Kliyan (ansyen sistèm localStorage)
     const role = localStorage.getItem("nexus_role");
-    if(role && ROLE_REDIRECTS[role]){
+    if(role === "client" && ROLE_REDIRECTS[role]){
         window.location.href = ROLE_REDIRECTS[role];
+        return;
+    }
+    // Anplwaye (sesyon Supabase Auth)
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (session) {
+        const { data: profile } = await supabaseClient.from("profiles").select("role,status").eq("id", session.user.id).single();
+        if (profile && profile.status === "active" && ROLE_REDIRECTS[profile.role]) {
+            window.location.href = ROLE_REDIRECTS[profile.role];
+        }
     }
 });
 </script>
