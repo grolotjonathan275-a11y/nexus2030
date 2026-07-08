@@ -425,7 +425,7 @@ function showSection(el,e){
 }
 
 function toggleSidebar(){document.getElementById("sidebar").classList.toggle("open");}
-function logout(){localStorage.removeItem('nexus_role');localStorage.removeItem('nexus_staff');localStorage.removeItem('nexus_client');localStorage.removeItem('nexus_token');window.location.href="login.html";}
+function logout(){localStorage.clear();window.location.href="login.html";}
 
 async function loadOverview(){
     const clients=await sf("savings_accounts","GET",null,"?order=created_at.desc");
@@ -697,4 +697,5 @@ document.addEventListener("DOMContentLoaded",loadOverview);
 
 <div style='position:fixed;bottom:0;left:0;right:0;background:#081440;color:rgba(255,255,255,0.7);text-align:center;padding:6px;font-size:0.72rem;font-family:Inter,sans-serif;z-index:9999;border-top:1px solid rgba(255,255,255,0.1)'>Developed by <strong style=color:white>Jonathan Grolot</strong> (+1 849 453 6553). All rights reserved until full payment is received.</div></body>
 </html>
+
 
