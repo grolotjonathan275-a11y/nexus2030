@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEXUS 2030 - Validateur</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/secretaire.css">
+</head>
+<body>
+<div class="sec-layout">
+
+<aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+        <div class="logo-icon">N</div>
+        <div><span class="logo-name">NEXUS</span><span class="logo-year">2030</span></div>
+    </div>
+    <div class="sec-badge-side">
+        <div class="sec-avatar">VAL</div>
+        <div>
+            <div class="sec-name" id="validName">Validateur</div>
+            <div class="sec-title">Validation des Transactions</div>
+        </div>
+    </div>
+    <nav class="sidebar-nav">
+        <div class="nav-section">TABLEAU DE BORD</div>
+        <a href="#overview" class="nav-item active" onclick="showSection(this,event)"><span>📊</span>Vue d'ensemble</a>
+        <div class="nav-section">VALIDATION</div>
+        <a href="#pending" class="nav-item" onclick="showSection(this,event)"><span>⏳</span>Transactions en Attente</a>
+        <a href="#history" class="nav-item" onclick="showSection(this,event)"><span>📋</span>Historique</a>
+        <div class="nav-section">SYSTEME</div>
+        <a href="index.html" class="nav-item"><span>🌐</span>Site Web</a>
+        <a href="#" class="nav-item logout" onclick="logout()"><span>🚪</span>Deconnexion</a>
+    </nav>
+</aside>
+
+<main class="main-content">
+    <header class="topbar">
+        <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+        <div class="topbar-title" id="pageTitle">Vue d'ensemble</div>
+        <div class="topbar-right">
+            <div class="time-display" id="secTime"></div>
+            <div class="date-display" id="secDate"></div>
+            <div class="sec-badge-top">Validateur</div>
+        </div>
+    </header>
+
+    <div class="content-area">
+
+        <!-- VUE D'ENSEMBLE -->
+        <section class="section active" id="section-overview">
+            <div class="welcome-banner">
+                <div>
+                    <div class="wb-greeting" id="wbGreeting">Bonjour,</div>
+                    <div class="wb-subtitle">Voici les transactions a valider</div>
+                </div>
+                <div class="wb-date" id="wbDate"></div>
+            </div>
+            <div class="kpi-grid">
+                <div class="kpi-card orange"><div class="kpi-icon">⏳</div><div class="kpi-info"><div class="kpi-number" id="ovPending">0</div><div class="kpi-label">En attente</div></div></div>
+                <div class="kpi-card green"><div class="kpi-icon">✅</div><div class="kpi-info"><div class="kpi-number" id="ovApprovedToday">0</div><div class="kpi-label">Approuves aujourd'hui</div></div></div>
+                <div class="kpi-card red"><div class="kpi-icon">❌</div><div class="kpi-info"><div class="kpi-number" id="ovRejectedToday">0</div><div class="kpi-label">Rejetes aujourd'hui</div></div></div>
+                <div class="kpi-card blue"><div class="kpi-icon">💵</div><div class="kpi-info"><div class="kpi-number" id="ovVolumeToday">0</div><div class="kpi-label">Volume DOP aujourd'hui</div></div></div>
+            </div>
+            <div class="card">
+                <div class="card-header"><h3>Transactions Urgentes (en attente)</h3><a href="#" onclick="goSec('pending')">Voir tout</a></div>
+                <div class="table-wrap">
+                    <table class="data-table">
+                        <thead><tr><th>Heure</th><th>Service</th><th>Soumis par</th><th>Client</th><th>Montant DOP</th><th>Temps ecoule</th></tr></thead>
+                        <tbody id="recentPending"><tr><td colspan="6">Chargement...</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- TRANSACTIONS EN ATTENTE -->
+        <section class="section" id="section-pending">
+            <h2 class="section-title">⏳ Transactions en Attente de Validation</h2>
+            <div class="kyc-info-banner">
+                <span>ℹ️</span>
+                <span>Verifiez chaque transaction avant de valider. Delai maximum recommande: 2 heures.</span>
+            </div>
+            <div id="pendingList"></div>
+        </section>
+
+        <!-- HISTORIQUE -->
+        <section class="section" id="section-history">
+            <h2 class="section-title">📋 Historique des Validations</h2>
+            <div class="card">
+                <div class="card-header"><h3>Toutes les transactions traitees</h3><span class="badge" id="histCount">0</span></div>
+                <div class="table-wrap">
+                    <table class="data-table">
+                        <thead><tr><th>Date</th><th>Heure</th><th>Service</th><th>Soumis par</th><th>Client</th><th>Montant DOP</th><th>Statut</th></tr></thead>
+                        <tbody id="histList"><tr><td colspan="7">Chargement...</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+    </div>
+</main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPA_URL="https://fnuplvbiwfvauwkpxsoc.supabase.co";
+const SUPA_KEY="sb_publishable_QBqdKkpcjDS3_psUdmc4uA_sMCzLqLo";
+const supabaseClient = supabase.createClient(SUPA_URL, SUPA_KEY);
+
+function fmt(d){return d?new Date(d).toLocaleDateString("fr-FR"):"-";}
+function fmtT(d){return d?new Date(d).toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"}):"-";}
+function fmtA(n){return Number(n||0).toLocaleString("fr-FR",{minimumFractionDigits:2});}
+
+function elapsedTime(created){
+    const diffMs=new Date()-new Date(created);
+    const mins=Math.floor(diffMs/60000);
+    if(mins<60)return mins+" min";
+    const h=Math.floor(mins/60);
+    const m=mins%60;
+    return h+"h "+m+"min";
+}
+
+setInterval(()=>{
+    const t=document.getElementById("secTime");
+    const d=document.getElementById("secDate");
+    const now=new Date();
+    if(t)t.textContent=now.toLocaleTimeString("fr-FR");
+    if(d)d.textContent=now.toLocaleDateString("fr-FR",{weekday:"short",day:"numeric",month:"short"});
+},1000);
+
+function showSection(el,e){
+    if(e)e.preventDefault();
+    document.querySelectorAll(".nav-item").forEach(i=>i.classList.remove("active"));
+    el.classList.add("active");
+    const id=el.getAttribute("href").replace("#","");
+    document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
+    document.getElementById("section-"+id).classList.add("active");
+    document.getElementById("pageTitle").textContent=el.textContent.trim();
+    if(id==="pending")loadPending();
+    if(id==="history")loadHistory();
+}
+
+function goSec(id){
+    document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
+    document.getElementById("section-"+id).classList.add("active");
+}
+
+function toggleSidebar(){document.getElementById("sidebar").classList.toggle("open");}
+
+async function logout(){
+    await supabaseClient.auth.signOut();
+    localStorage.clear();
+    window.location.href="login.html";
+}
+
+async function loadOverview(){
+    const h=new Date().getHours();
+    const gr=h<12?"Bonjour":h<18?"Bon apres-midi":"Bonsoir";
+    document.getElementById("wbGreeting").textContent=gr+" — Bienvenue";
+    document.getElementById("wbDate").textContent=new Date().toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
+
+    const { data: all } = await supabaseClient
+        .from("mobile_money_transactions")
+        .select("*, profiles(full_name)")
+        .order("created_at",{ascending:false});
+
+    if(!all)return;
+
+    const pending = all.filter(t=>t.status==="pending_validation");
+    const today = new Date().toDateString();
+    const todayT = all.filter(t=>new Date(t.created_at).toDateString()===today);
+    const approvedToday = todayT.filter(t=>t.status==="approved");
+    const rejectedToday = todayT.filter(t=>t.status==="rejected"||t.status==="wrong_number");
+    const volumeToday = todayT.reduce((s,t)=>s+Number(t.amount_dop),0);
+
+    document.getElementById("ovPending").textContent=pending.length;
+    document.getElementById("ovApprovedToday").textContent=approvedToday.length;
+    document.getElementById("ovRejectedToday").textContent=rejectedToday.length;
+    document.getElementById("ovVolumeToday").textContent=fmtA(volumeToday);
+
+    document.getElementById("recentPending").innerHTML=pending.slice(0,5).map(t=>`
+        <tr>
+            <td>${fmtT(t.created_at)}</td>
+            <td>${t.service_type==="moncash"?"📱 MonCash":"💳 NatCash"}</td>
+            <td>${t.profiles?.full_name||"-"}</td>
+            <td>${t.sender_full_name}</td>
+            <td>${fmtA(t.amount_dop)} DOP</td>
+            <td>${elapsedTime(t.created_at)}</td>
+        </tr>`).join("")||"<tr><td colspan='6'>Aucune transaction en attente</td></tr>";
+}
+
+async function loadPending(){
+    const { data, error } = await supabaseClient
+        .from("mobile_money_transactions")
+        .select("*, profiles(full_name, phone)")
+        .eq("status","pending_validation")
+        .order("created_at",{ascending:true});
+
+    const container=document.getElementById("pendingList");
+
+    if(error){
+        container.innerHTML="<p style='color:#DC2626'>Erreur: "+error.message+"</p>";
+        return;
+    }
+
+    if(!data||data.length===0){
+        container.innerHTML="<div class='card'><p style='padding:2rem;text-align:center;color:#64748B'>✅ Aucune transaction en attente. Tout est a jour!</p></div>";
+        return;
+    }
+
+    container.innerHTML=data.map(t=>{
+        const isMoncash=t.service_type==="moncash";
+        const elapsed=elapsedTime(t.created_at);
+        const urgent=(new Date()-new Date(t.created_at))>(90*60*1000);
+        return `
+        <div class="card" style="margin-bottom:1rem;border-left:4px solid ${urgent?'#DC2626':(isMoncash?'#E85D04':'#0EA5E9')}">
+            <div style="padding:1.25rem">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+                    <div style="font-size:1.1rem;font-weight:700">
+                        ${isMoncash?"📱 MonCash":"💳 NatCash"} — ${fmtA(t.amount_dop)} DOP
+                    </div>
+                    <div style="font-size:0.85rem;color:${urgent?'#DC2626':'#64748B'};font-weight:${urgent?'700':'400'}">
+                        ⏱️ ${elapsed} ${urgent?'⚠️ URGENT':''}
+                    </div>
+                </div>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:0.75rem;font-size:0.9rem;margin-bottom:1rem">
+                    <div><span style="color:#64748B">Soumis par:</span> <strong>${t.profiles?.full_name||"-"}</strong></div>
+                    <div><span style="color:#64748B">Succursale:</span> <strong>${t.branch||"-"}</strong></div>
+                    <div><span style="color:#64748B">Client:</span> <strong>${t.sender_full_name}</strong></div>
+                    <div><span style="color:#64748B">WhatsApp:</span> <strong>${t.sender_whatsapp}</strong></div>
+                    <div><span style="color:#64748B">Numero ${isMoncash?"MonCash":"NatCash"}:</span> <strong>${t.mobile_number}</strong></div>
+                    <div><span style="color:#64748B">Taux:</span> <strong>1 DOP = ${t.rate} HTG</strong></div>
+                    <div><span style="color:#64748B">Montant HTG:</span> <strong>${fmtA(t.amount_htg)} HTG</strong></div>
+                    <div><span style="color:#64748B">Frais (${t.fee_percent}%):</span> <strong>${fmtA(t.fee_dop)} DOP</strong></div>
+                    <div><span style="color:#64748B">Total charge:</span> <strong>${fmtA(t.total_charged_dop)} DOP</strong></div>
+                    <div><span style="color:#64748B">Heure:</span> <strong>${fmtT(t.created_at)}, ${fmt(t.created_at)}</strong></div>
+                </div>
+                <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
+                    <button class="btn-approve" style="background:#10B981" onclick="processTransaction('${t.id}','approved')">✅ Approuve</button>
+                    <button class="btn-approve" style="background:#DC2626" onclick="processTransaction('${t.id}','rejected')">❌ Rejete</button>
+                    <button class="btn-approve" style="background:#F59E0B" onclick="processTransaction('${t.id}','wrong_number')">⚠️ Numero Faux</button>
+                </div>
+            </div>
+        </div>`;
+    }).join("");
+}
+
+async function processTransaction(id,newStatus){
+    const labels={approved:"approuver",rejected:"rejeter",wrong_number:"marquer comme numero faux"};
+    if(!confirm(`Confirmer: ${labels[newStatus]} cette transaction?`))return;
+
+    const { error } = await supabaseClient
+        .from("mobile_money_transactions")
+        .update({status:newStatus})
+        .eq("id",id);
+
+    if(error){
+        alert("Erreur: "+error.message);
+        return;
+    }
+
+    alert("✅ Transaction mise a jour.");
+    loadPending();
+    loadOverview();
+}
+
+async function loadHistory(){
+    const { data, error } = await supabaseClient
+        .from("mobile_money_transactions")
+        .select("*, profiles(full_name)")
+        .neq("status","pending_validation")
+        .order("created_at",{ascending:false})
+        .limit(100);
+
+    if(error){
+        document.getElementById("histList").innerHTML="<tr><td colspan='7'>Erreur: "+error.message+"</td></tr>";
+        return;
+    }
+
+    const statusLabels={
+        approved:"✅ Approuve",
+        rejected:"❌ Rejete",
+        wrong_number:"⚠️ Numero Faux",
+        cancelled:"🚫 Annule"
+    };
+
+    document.getElementById("histCount").textContent=data.length;
+    document.getElementById("histList").innerHTML=data.map(t=>`
+        <tr>
+            <td>${fmt(t.created_at)}</td>
+            <td>${fmtT(t.created_at)}</td>
+            <td>${t.service_type==="moncash"?"📱 MonCash":"💳 NatCash"}</td>
+            <td>${t.profiles?.full_name||"-"}</td>
+            <td>${t.sender_full_name}</td>
+            <td>${fmtA(t.amount_dop)} DOP</td>
+            <td><span class="status-sm">${statusLabels[t.status]||t.status}</span></td>
+        </tr>`).join("")||"<tr><td colspan='7'>Aucune transaction traitee</td></tr>";
+}
+
+document.addEventListener("DOMContentLoaded",async ()=>{
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if(!session){
+        window.location.href="login.html";
+        return;
+    }
+    const { data: profile } = await supabaseClient.from("profiles").select("*").eq("id",session.user.id).single();
+    if(!profile || profile.role!=="validateur"){
+        window.location.href="login.html";
+        return;
+    }
+    document.getElementById("validName").textContent=profile.full_name;
+    loadOverview();
+    loadPending();
+});
+
+// Rafrechi lis la chak 30 segond pou wè nouvo tranzaksyon
+setInterval(()=>{
+    const activeSection=document.querySelector(".section.active");
+    if(activeSection && activeSection.id==="section-pending")loadPending();
+    if(activeSection && activeSection.id==="section-overview")loadOverview();
+},30000);
+</script>
+
+<div style='position:fixed;bottom:0;left:0;right:0;background:#081440;color:rgba(255,255,255,0.7);text-align:center;padding:6px;font-size:0.72rem;font-family:Inter,sans-serif;z-index:9999;border-top:1px solid rgba(255,255,255,0.1)'>Developed by <strong style=color:white>Jonathan Grolot</strong> (+1 849 453 6553). All rights reserved until full payment is received.</div></body>
+</html>
