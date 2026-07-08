@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEXUS 2030 - CEO Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/ceo.css">
+</head>
+<body>
+<div class="ceo-layout">
+
+<aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+        <div class="logo-icon">N</div>
+        <div><span class="logo-name">NEXUS</span><span class="logo-year">2030</span></div>
+    </div>
+    <div class="ceo-badge-side">
+        <div class="ceo-avatar">CEO</div>
+        <div>
+            <div class="ceo-name">Directeur General</div>
+            <div class="ceo-title">Acces Total</div>
+        </div>
+    </div>
+    <nav class="sidebar-nav">
+        <div class="nav-section">DIRECTION</div>
+        <a href="#overview" class="nav-item active" onclick="showSection(this,event)"><span>📊</span>Vue Globale</a>
+        <a href="#stats" class="nav-item" onclick="showSection(this,event)"><span>📈</span>Statistiques</a>
+        <a href="#branches" class="nav-item" onclick="showSection(this,event)"><span>🏦</span>Succursales</a>
+        <a href="#accounts" class="nav-item" onclick="showSection(this,event)"><span>👥</span>Clients</a>
+        <div class="nav-section">OPERATIONS</div>
+        <a href="#create-account" class="nav-item" onclick="showSection(this,event)"><span>➕</span>Creer Compte</a>
+        <a href="#adjust-balance" class="nav-item" onclick="showSection(this,event)"><span>💰</span>Ajuster Solde</a>
+        <a href="#transactions" class="nav-item" onclick="showSection(this,event)"><span>💸</span>Transactions</a>
+        <div class="nav-section">RAPPORTS</div>
+        <a href="#reports" class="nav-item" onclick="showSection(this,event)"><span>📋</span>Rapports</a>
+        <a href="#cashiers" class="nav-item" onclick="showSection(this,event)"><span>👤</span>Caissiers</a>
+        <div class="nav-section">SYSTEME</div>
+        <a href="admin.html" class="nav-item"><span>⚙️</span>Super Admin</a>
+        <a href="index.html" class="nav-item"><span>🌐</span>Site Web</a>
+        <a href="#" class="nav-item logout" onclick="logout()"><span>🚪</span>Deconnexion</a>
+    </nav>
+</aside>
+
+<main class="main-content">
+    <header class="topbar">
+        <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+        <div class="topbar-title" id="pageTitle">Vue Globale</div>
+        <div class="topbar-right">
+            <div class="time-display" id="ceoTime"></div>
+            <div class="ceo-badge-top">CEO</div>
+        </div>
+    </header>
+
+    <div class="content-area">
+
+        <!-- VUE GLOBALE -->
+        <section class="section active" id="section-overview">
+            <div class="kpi-grid">
+                <div class="kpi-card blue">
+                    <div class="kpi-icon">👥</div>
+                    <div class="kpi-info">
+                        <div class="kpi-number" id="kpiClients">0</div>
+                        <div class="kpi-label">Total Clients</div>
+                        <div class="kpi-sub" id="kpiClientsNew">0 nouveaux</div>
+                    </div>
+                </div>
+                <div class="kpi-card green">
+                    <div class="kpi-icon">💰</div>
+                    <div class="kpi-info">
+                        <div class="kpi-number" id="kpiDepots">0</div>
+                        <div class="kpi-label">Total Depots</div>
+                        <div class="kpi-sub" id="kpiDepotsAmt">0.00 HTG</div>
+                    </div>
+                </div>
+                <div class="kpi-card red">
+                    <div class="kpi-icon">💸</div>
+                    <div class="kpi-info">
+                        <div class="kpi-number" id="kpiRetraits">0</div>
+                        <div class="kpi-label">Total Retraits</div>
+                        <div class="kpi-sub" id="kpiRetraitsAmt">0.00 HTG</div>
+                    </div>
+                </div>
+                <div class="kpi-card orange">
+                    <div class="kpi-icon">📖</div>
+                    <div class="kpi-info">
+                        <div class="kpi-number" id="kpiAccounts">0</div>
+                        <div class="kpi-label">Comptes Actifs</div>
+                        <div class="kpi-sub" id="kpiBalance">Solde: 0.00</div>
+                    </div>
+                </div>
+                <div class="kpi-card purple">
+                    <div class="kpi-icon">✉️</div>
+                    <div class="kpi-info">
+                        <div class="kpi-number" id="kpiMessages">0</div>
+                        <div class="kpi-label">Messages</div>
+                        <div class="kpi-sub">Contacts recus</div>
+                    </div>
+                </div>
+                <div class="kpi-card dark">
+                    <div class="kpi-icon">🔄</div>
+                    <div class="kpi-info">
+                        <div class="kpi-number" id="kpiTxns">0</div>
+                        <div class="kpi-label">Transactions</div>
+                        <div class="kpi-sub">Total operations</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="overview-grid">
+                <div class="card">
+                    <div class="card-header"><h3>Derniers Clients</h3></div>
+                    <div class="table-wrap">
+                        <table class="data-table">
+                            <thead><tr><th>Nom</th><th>Compte</th><th>Solde</th><th>KYC</th><th>Date</th></tr></thead>
+                            <tbody id="recentClients"><tr><td colspan="5">Chargement...</td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header"><h3>Dernieres Transactions</h3></div>
+                    <div class="table-wrap">
+                        <table class="data-table">
+                            <thead><tr><th>Compte</th><th>Type</th><th>Montant</th><th>Date</th></tr></thead>
+                            <tbody id="recentTxns"><tr><td colspan="4">Chargement...</td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- STATISTIQUES -->
+        <section class="section" id="section-stats">
+            <h2 class="section-title">📈 Statistiques Detaillees</h2>
+            <div class="stats-filters">
+                <select id="statsPeriod" onchange="loadStats()">
+                    <option value="today">Aujourd'hui</option>
+                    <option value="week">Cette semaine</option>
+                    <option value="month" selected>Ce mois</option>
+                    <option value="all">Tout</option>
+                </select>
+            </div>
+            <div class="stats-grid-big">
+                <div class="stat-big green">
+                    <div class="sb-title">Total Depots</div>
+                    <div class="sb-amount" id="statDepotAmt">0.00 HTG</div>
+                    <div class="sb-count" id="statDepotCount">0 operations</div>
+                </div>
+                <div class="stat-big red">
+                    <div class="sb-title">Total Retraits</div>
+                    <div class="sb-amount" id="statRetraitAmt">0.00 HTG</div>
+                    <div class="sb-count" id="statRetraitCount">0 operations</div>
+                </div>
+                <div class="stat-big blue">
+                    <div class="sb-title">Solde Total Clients</div>
+                    <div class="sb-amount" id="statTotalBalance">0.00</div>
+                    <div class="sb-count">Tous comptes confondus</div>
+                </div>
+                <div class="stat-big orange">
+                    <div class="sb-title">Nouveaux Clients</div>
+                    <div class="sb-amount" id="statNewClients">0</div>
+                    <div class="sb-count">Inscriptions periode</div>
+                </div>
+            </div>
+            <div class="card" style="margin-top:1.5rem">
+                <div class="card-header"><h3>Repartition par Caissier</h3></div>
+                <div class="table-wrap">
+                    <table class="data-table">
+                        <thead><tr><th>Caissier</th><th>Depots</th><th>Retraits</th><th>Total Ops</th><th>Montant Total</th></tr></thead>
+                        <tbody id="cashierStats"><tr><td colspan="5">Chargement...</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- SUCCURSALES -->
+        <section class="section" id="section-branches">
+            <h2 class="section-title">🏦 Gestion Succursales</h2>
+            <div class="card">
+                <div class="card-header"><h3>Toutes les Succursales</h3></div>
+                <div class="table-wrap">
+                    <table class="data-table">
+                        <thead><tr><th>Succursale</th><th>Clients</th><th>Transactions</th><th>Volume</th></tr></thead>
+                        <tbody id="branchStats"><tr><td colspan="4">Chargement...</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- CLIENTS -->
+        <section class="section" id="section-accounts">
+            <h2 class="section-title">👥 Tous les Clients</h2>
+            <div class="search-bar">
+                <input type="text" id="clientSearch" placeholder="Rechercher par nom, compte, email...">
+                <button onclick="searchClients()">Rechercher</button>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <h3>Liste Clients</h3>
+                    <span class="badge" id="clientCount">0</span>
+                </div>
+                <div class="table-wrap">
+                    <table class="data-table">
+                        <thead><tr><th>Nom</th><th>Compte</th><th>Email</th><th>Solde</th><th>KYC</th><th>Statut</th><th>Actions</th></tr></thead>
+                        <tbody id="allClients"><tr><td colspan="7">Chargement...</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- CREER COMPTE -->
+        <section class="section" id="section-create-account">
+            <h2 class="section-title">➕ Creer un Compte Client</h2>
+            <div class="operation-card">
+                <div class="op-note">
+                    <span>🔒</span>
+                    <span>Cette operation est effectuee directement par le CEO. Aucune trace dans les logs systeme.</span>
+                </div>
+                <div class="form-grid-2">
+                    <div class="form-group"><label>Prenom *</label><input type="text" id="createFirstName" placeholder="Jean"></div>
+                    <div class="form-group"><label>Nom *</label><input type="text" id="createLastName" placeholder="Dupont"></div>
+                </div>
+                <div class="form-grid-2">
+                    <div class="form-group"><label>Telephone *</label><input type="tel" id="createPhone" placeholder="+509 / +1 809"></div>
+                    <div class="form-group"><label>Email</label><input type="email" id="createEmail" placeholder="email@exemple.com"></div>
+                </div>
+                <div class="form-grid-2">
+                    <div class="form-group"><label>Nationalite</label>
+                        <select id="createNat"><option value="HT">Haitienne</option><option value="DO">Dominicaine</option><option value="US">Americaine</option><option value="OTHER">Autre</option></select>
+                    </div>
+                    <div class="form-group"><label>Type Compte</label>
+                        <select id="createType"><option value="individuel">Individuel</option><option value="epargne">Epargne</option><option value="entreprise">Entreprise</option></select>
+                    </div>
+                </div>
+                <div class="form-grid-2">
+                    <div class="form-group"><label>Devise</label>
+                        <select id="createCurrency"><option value="HTG">Gourdes (HTG)</option><option value="DOP">Pesos (DOP)</option><option value="USD">Dollars (USD)</option></select>
+                    </div>
+                    <div class="form-group"><label>Solde Initial</label>
+                        <input type="number" id="createBalance" placeholder="0.00" min="0">
+                    </div>
+                </div>
+                <div class="form-group"><label>Succursale</label>
+                    <input type="text" id="createBranch" placeholder="Santo Domingo" value="Santo Domingo">
+                </div>
+                <div class="form-group"><label>Notes internes (non visible au client)</label>
+                    <textarea id="createNotes" rows="2" placeholder="Notes..."></textarea>
+                </div>
+                <div class="form-actions">
+                    <button class="btn-ceo-action" onclick="createAccount()">✅ Creer le Compte</button>
+                </div>
+                <div id="createResult" style="display:none" class="result-box"></div>
+            </div>
+        </section>
+
+        <!-- AJUSTER SOLDE -->
+        <section class="section" id="section-adjust-balance">
+            <h2 class="section-title">💰 Ajuster Solde Client</h2>
+            <div class="operation-card">
+                <div class="op-note warning">
+                    <span>⚠️</span>
+                    <span>Ajustement direct du solde. Operation invisible dans l'historique client.</span>
+                </div>
+                <div class="form-group">
+                    <label>Numero de Compte *</label>
+                    <div class="input-search">
+                        <input type="text" id="adjustAccountNo" placeholder="NEXUS-2026-000000">
+                        <button onclick="searchForAdjust()">Rechercher</button>
+                    </div>
+                </div>
+                <div id="adjustClientInfo" style="display:none" class="client-found-card">
+                    <div class="cfc-name" id="adjustClientName">-</div>
+                    <div class="cfc-meta" id="adjustClientMeta">-</div>
+                    <div class="cfc-balance">Solde actuel: <strong id="adjustCurrentBalance">-</strong></div>
+                </div>
+                <div class="form-grid-2">
+                    <div class="form-group"><label>Type d'Operation *</label>
+                        <select id="adjustType">
+                            <option value="add">➕ Ajouter</option>
+                            <option value="subtract">➖ Soustraire</option>
+                            <option value="set">🔄 Definir exactement</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label>Montant *</label>
+                        <input type="number" id="adjustAmount" placeholder="0.00" min="0">
+                    </div>
+                </div>
+                <div class="form-group"><label>Raison (usage interne)</label>
+                    <input type="text" id="adjustReason" placeholder="Correction, ajustement...">
+                </div>
+                <div class="form-actions">
+                    <button class="btn-ceo-action warning" onclick="adjustBalance()">💰 Appliquer l'Ajustement</button>
+                </div>
+                <div id="adjustResult" style="display:none" class="result-box"></div>
+            </div>
+        </section>
+
+        <!-- TRANSACTIONS -->
+        <section class="section" id="section-transactions">
+            <h2 class="section-title">💸 Toutes les Transactions</h2>
+            <div class="txn-filters">
+                <select id="txnTypeFilter">
+                    <option value="all">Tous types</option>
+                    <option value="depot">Depots</option>
+                    <option value="retrait">Retraits</option>
+                </select>
+                <input type="date" id="txnFrom">
+                <input type="date" id="txnTo">
+                <button onclick="loadAllTxns()">Filtrer</button>
+            </div>
+            <div class="card" style="margin-top:1rem">
+                <div class="card-header">
+                    <h3>Historique Global</h3>
+                    <span class="badge" id="txnCount">0</span>
+                </div>
+                <div class="table-wrap">
+                    <table class="data-table">
+                        <thead><tr><th>Date</th><th>Heure</th><th>Client</th><th>Compte</th><th>Type</th><th>Montant</th><th>Avant</th><th>Apres</th><th>Caissier</th></tr></thead>
+                        <tbody id="allTxns"><tr><td colspan="9">Chargement...</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- RAPPORTS -->
+        <section class="section" id="section-reports">
+            <h2 class="section-title">📋 Rapports Financiers</h2>
+            <div class="reports-grid">
+                <div class="report-card" onclick="exportReport('clients')">
+                    <div class="report-icon">👥</div>
+                    <h4>Rapport Clients</h4>
+                    <p>Liste complete des clients</p>
+                    <span class="export-btn">Exporter CSV</span>
+                </div>
+                <div class="report-card" onclick="exportReport('transactions')">
+                    <div class="report-icon">💸</div>
+                    <h4>Rapport Transactions</h4>
+                    <p>Toutes les transactions</p>
+                    <span class="export-btn">Exporter CSV</span>
+                </div>
+                <div class="report-card" onclick="exportReport('contacts')">
+                    <div class="report-icon">✉️</div>
+                    <h4>Rapport Messages</h4>
+                    <p>Tous les messages recus</p>
+                    <span class="export-btn">Exporter CSV</span>
+                </div>
+                <div class="report-card" onclick="exportReport('savings_accounts')">
+                    <div class="report-icon">📖</div>
+                    <h4>Rapport Comptes</h4>
+                    <p>Tous les comptes epargne</p>
+                    <span class="export-btn">Exporter CSV</span>
+                </div>
+                <div class="report-card" onclick="exportReport('cashier_wallets')">
+                    <div class="report-icon">👛</div>
+                    <h4>Rapport Wallets</h4>
+                    <p>Etat des caisses</p>
+                    <span class="export-btn">Exporter CSV</span>
+                </div>
+                <div class="report-card" onclick="printSummary()">
+                    <div class="report-icon">🖨️</div>
+                    <h4>Resume Executif</h4>
+                    <p>Resume complet a imprimer</p>
+                    <span class="export-btn">Imprimer</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- CAISSIERS -->
+        <section class="section" id="section-cashiers">
+            <h2 class="section-title">👤 Gestion Caissiers</h2>
+            <div class="card">
+                <div class="card-header"><h3>Wallets Caissiers</h3></div>
+                <div class="table-wrap">
+                    <table class="data-table">
+                        <thead><tr><th>Caissier</th><th>Succursale</th><th>HTG</th><th>DOP</th><th>USD</th><th>Limite/Jour</th><th>Total Jour</th><th>Action</th></tr></thead>
+                        <tbody id="cashiersList"><tr><td colspan="8">Chargement...</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="card" style="margin-top:1.5rem">
+                <div class="card-header"><h3>Recharger Wallet Caissier</h3></div>
+                <div style="padding:1.5rem">
+                    <div class="form-grid-2">
+                        <div class="form-group"><label>ID Caissier</label><input type="text" id="rechargeId" placeholder="CASH-001"></div>
+                        <div class="form-group"><label>Devise</label>
+                            <select id="rechargeCurrency"><option value="balance_htg">HTG</option><option value="balance_dop">DOP</option><option value="balance_usd">USD</option></select>
+                        </div>
+                    </div>
+                    <div class="form-group"><label>Montant</label><input type="number" id="rechargeAmount" placeholder="0.00"></div>
+                    <button class="btn-ceo-action" onclick="rechargeCashier()">💰 Recharger</button>
+                </div>
+            </div>
+        </section>
+
+    </div>
+</main>
+</div>
+
+<script>
+const SUPA_URL="https://fnuplvbiwfvauwkpxsoc.supabase.co";
+const SUPA_KEY="sb_publishable_QBqdKkpcjDS3_psUdmc4uA_sMCzLqLo";
+
+async function sf(table,method="GET",body=null,filter=""){
+    const opts={method,headers:{"apikey":SUPA_KEY,"Authorization":`Bearer ${SUPA_KEY}`,"Content-Type":"application/json","Prefer":method!=="GET"?"return=representation":""}};
+    if(body)opts.body=JSON.stringify(body);
+    const r=await fetch(`${SUPA_URL}/rest/v1/${table}${filter}`,opts);
+    if(method==="GET")return await r.json();
+    return r;
+}
+
+function fmt(d){return d?new Date(d).toLocaleDateString("fr-FR"):"-";}
+function fmtT(d){return d?new Date(d).toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"}):"-";}
+function fmtA(n){return Number(n||0).toLocaleString("fr-FR",{minimumFractionDigits:2});}
+
+setInterval(()=>{const el=document.getElementById("ceoTime");if(el)el.textContent=new Date().toLocaleTimeString("fr-FR");},1000);
+
+function showSection(el,e){
+    if(e)e.preventDefault();
+    document.querySelectorAll(".nav-item").forEach(i=>i.classList.remove("active"));
+    el.classList.add("active");
+    const id=el.getAttribute("href").replace("#","");
+    document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
+    document.getElementById("section-"+id).classList.add("active");
+    document.getElementById("pageTitle").textContent=el.textContent.trim();
+}
+
+function toggleSidebar(){document.getElementById("sidebar").classList.toggle("open");}
+function logout(){window.location.href="login.html";}
+
+async function loadOverview(){
+    const clients=await sf("savings_accounts","GET",null,"?order=created_at.desc");
+    const txns=await sf("transactions","GET",null,"?order=created_at.desc");
+    const msgs=await sf("contacts","GET",null,"?order=created_at.desc");
+
+    const depots=txns.filter(t=>t.transaction_type==="depot");
+    const retraits=txns.filter(t=>t.transaction_type==="retrait");
+    const totalDepotAmt=depots.reduce((s,t)=>s+Number(t.amount),0);
+    const totalRetraitAmt=retraits.reduce((s,t)=>s+Number(t.amount),0);
+    const totalBalance=clients.reduce((s,c)=>s+Number(c.balance||0),0);
+
+    document.getElementById("kpiClients").textContent=clients.length;
+    document.getElementById("kpiClientsNew").textContent=clients.filter(c=>new Date(c.created_at)>new Date(Date.now()-7*86400000)).length+" cette semaine";
+    document.getElementById("kpiDepots").textContent=depots.length;
+    document.getElementById("kpiDepotsAmt").textContent=fmtA(totalDepotAmt)+" HTG";
+    document.getElementById("kpiRetraits").textContent=retraits.length;
+    document.getElementById("kpiRetraitsAmt").textContent=fmtA(totalRetraitAmt)+" HTG";
+    document.getElementById("kpiAccounts").textContent=clients.filter(c=>c.status==="active").length;
+    document.getElementById("kpiBalance").textContent="Total: "+fmtA(totalBalance);
+    document.getElementById("kpiMessages").textContent=msgs.length;
+    document.getElementById("kpiTxns").textContent=txns.length;
+
+    document.getElementById("recentClients").innerHTML=clients.slice(0,5).map(c=>`
+        <tr>
+            <td>${c.client_name||"-"}</td>
+            <td style="font-family:monospace;font-size:0.78rem">${c.account_no}</td>
+            <td>${fmtA(c.balance)} ${c.currency}</td>
+            <td><span class="kyc-badge-sm ${c.kyc_status}">${c.kyc_status||"pending"}</span></td>
+            <td>${fmt(c.created_at)}</td>
+        </tr>`).join("")||"<tr><td colspan='5'>Aucun client</td></tr>";
+
+    document.getElementById("recentTxns").innerHTML=txns.slice(0,5).map(t=>`
+        <tr>
+            <td style="font-family:monospace;font-size:0.78rem">${t.account_no}</td>
+            <td><span class="txn-badge ${t.transaction_type}">${t.transaction_type}</span></td>
+            <td class="${t.transaction_type==="depot"?"amount-pos":"amount-neg"}">${fmtA(t.amount)} ${t.currency}</td>
+            <td>${fmt(t.created_at)}</td>
+        </tr>`).join("")||"<tr><td colspan='4'>Aucune transaction</td></tr>";
+
+    // Load all clients
+    document.getElementById("clientCount").textContent=clients.length;
+    document.getElementById("allClients").innerHTML=clients.map(c=>`
+        <tr>
+            <td>${c.client_name||"-"}</td>
+            <td style="font-family:monospace;font-size:0.78rem">${c.account_no}</td>
+            <td>${c.email||"-"}</td>
+            <td><strong>${fmtA(c.balance)} ${c.currency}</strong></td>
+            <td><span class="kyc-badge-sm ${c.kyc_status}">${c.kyc_status||"pending"}</span></td>
+            <td><span class="status-badge ${c.status==="active"?"active":""}">${c.status||"active"}</span></td>
+            <td>
+                <button class="btn-sm" onclick="viewClient('${c.account_no}')">Voir</button>
+                <button class="btn-sm danger" onclick="toggleBlock('${c.account_no}',${c.is_blocked})">${c.is_blocked?"Debloquer":"Bloquer"}</button>
+            </td>
+        </tr>`).join("")||"<tr><td colspan='7'>Aucun client</td></tr>";
+
+    // Branches
+    const branches={};
+    clients.forEach(c=>{const b=c.branch||"Inconnu";if(!branches[b])branches[b]={clients:0,volume:0,txns:0};branches[b].clients++;});
+    txns.forEach(t=>{const c=clients.find(x=>x.account_no===t.account_no);const b=c?.branch||"Inconnu";if(!branches[b])branches[b]={clients:0,volume:0,txns:0};branches[b].txns++;branches[b].volume+=Number(t.amount);});
+    document.getElementById("branchStats").innerHTML=Object.entries(branches).map(([b,d])=>`
+        <tr><td>${b}</td><td>${d.clients}</td><td>${d.txns}</td><td>${fmtA(d.volume)} HTG</td></tr>`).join("")||"<tr><td colspan='4'>Aucune donnee</td></tr>";
+
+    // Cashiers
+    const wallets=await sf("cashier_wallets","GET",null,"?order=cashier_name.asc");
+    document.getElementById("cashiersList").innerHTML=wallets.map(w=>`
+        <tr>
+            <td>${w.cashier_name||w.cashier_id}</td>
+            <td>${w.branch||"-"}</td>
+            <td>${fmtA(w.balance_htg)} HTG</td>
+            <td>${fmtA(w.balance_dop)} DOP</td>
+            <td>${fmtA(w.balance_usd)} USD</td>
+            <td>${fmtA(w.daily_limit)} HTG</td>
+            <td>${fmtA(w.daily_total)} HTG</td>
+            <td><button class="btn-sm" onclick="resetDaily('${w.cashier_id}')">Reset Jour</button></td>
+        </tr>`).join("")||"<tr><td colspan='8'>Aucun caissier</td></tr>";
+
+    loadStats();
+    loadAllTxns();
+}
+
+async function loadStats(){
+    const period=document.getElementById("statsPeriod")?.value||"month";
+    const txns=await sf("transactions","GET",null,"?order=created_at.desc");
+    const clients=await sf("savings_accounts","GET",null,"?order=created_at.desc");
+
+    let filtered=txns;
+    const now=new Date();
+    if(period==="today")filtered=txns.filter(t=>new Date(t.created_at).toDateString()===now.toDateString());
+    else if(period==="week")filtered=txns.filter(t=>new Date(t.created_at)>new Date(now-7*86400000));
+    else if(period==="month")filtered=txns.filter(t=>new Date(t.created_at).getMonth()===now.getMonth()&&new Date(t.created_at).getFullYear()===now.getFullYear());
+
+    const depots=filtered.filter(t=>t.transaction_type==="depot");
+    const retraits=filtered.filter(t=>t.transaction_type==="retrait");
+    const totalBal=clients.reduce((s,c)=>s+Number(c.balance||0),0);
+
+    document.getElementById("statDepotAmt").textContent=fmtA(depots.reduce((s,t)=>s+Number(t.amount),0))+" HTG";
+    document.getElementById("statDepotCount").textContent=depots.length+" operations";
+    document.getElementById("statRetraitAmt").textContent=fmtA(retraits.reduce((s,t)=>s+Number(t.amount),0))+" HTG";
+    document.getElementById("statRetraitCount").textContent=retraits.length+" operations";
+    document.getElementById("statTotalBalance").textContent=fmtA(totalBal)+" HTG";
+
+    let newClients=clients;
+    if(period==="today")newClients=clients.filter(c=>new Date(c.created_at).toDateString()===now.toDateString());
+    else if(period==="week")newClients=clients.filter(c=>new Date(c.created_at)>new Date(now-7*86400000));
+    else if(period==="month")newClients=clients.filter(c=>new Date(c.created_at).getMonth()===now.getMonth());
+    document.getElementById("statNewClients").textContent=newClients.length;
+
+    const cashierMap={};
+    filtered.forEach(t=>{const n=t.cashier_name||t.cashier_id||"Inconnu";if(!cashierMap[n])cashierMap[n]={depots:0,retraits:0,total:0,amount:0};if(t.transaction_type==="depot")cashierMap[n].depots++;else cashierMap[n].retraits++;cashierMap[n].total++;cashierMap[n].amount+=Number(t.amount);});
+    document.getElementById("cashierStats").innerHTML=Object.entries(cashierMap).map(([n,d])=>`<tr><td>${n}</td><td>${d.depots}</td><td>${d.retraits}</td><td>${d.total}</td><td>${fmtA(d.amount)} HTG</td></tr>`).join("")||"<tr><td colspan='5'>Aucune donnee</td></tr>";
+}
+
+async function loadAllTxns(){
+    const txns=await sf("transactions","GET",null,"?order=created_at.desc");
+    const type=document.getElementById("txnTypeFilter")?.value||"all";
+    const from=document.getElementById("txnFrom")?.value;
+    const to=document.getElementById("txnTo")?.value;
+    let f=txns;
+    if(type!=="all")f=f.filter(t=>t.transaction_type===type);
+    if(from)f=f.filter(t=>new Date(t.created_at)>=new Date(from));
+    if(to)f=f.filter(t=>new Date(t.created_at)<=new Date(to+"T23:59:59"));
+    document.getElementById("txnCount").textContent=f.length;
+    document.getElementById("allTxns").innerHTML=f.map(t=>`
+        <tr>
+            <td>${fmt(t.created_at)}</td>
+            <td>${fmtT(t.created_at)}</td>
+            <td>${t.client_name||"-"}</td>
+            <td style="font-family:monospace;font-size:0.75rem">${t.account_no||"-"}</td>
+            <td><span class="txn-badge ${t.transaction_type}">${t.transaction_type}</span></td>
+            <td class="${t.transaction_type==="depot"?"amount-pos":"amount-neg"}">${fmtA(t.amount)} ${t.currency}</td>
+            <td>${fmtA(t.balance_before)} ${t.currency}</td>
+            <td>${fmtA(t.balance_after)} ${t.currency}</td>
+            <td>${t.cashier_name||"-"}</td>
+        </tr>`).join("")||"<tr><td colspan='9'>Aucune transaction</td></tr>";
+}
+
+async function searchClients(){
+    const q=document.getElementById("clientSearch").value.trim().toLowerCase();
+    const clients=await sf("savings_accounts","GET",null,"?order=created_at.desc");
+    const filtered=q?clients.filter(c=>c.client_name?.toLowerCase().includes(q)||c.account_no?.toLowerCase().includes(q)||c.email?.toLowerCase().includes(q)):clients;
+    document.getElementById("clientCount").textContent=filtered.length;
+    document.getElementById("allClients").innerHTML=filtered.map(c=>`
+        <tr>
+            <td>${c.client_name||"-"}</td>
+            <td style="font-family:monospace;font-size:0.78rem">${c.account_no}</td>
+            <td>${c.email||"-"}</td>
+            <td><strong>${fmtA(c.balance)} ${c.currency}</strong></td>
+            <td><span class="kyc-badge-sm ${c.kyc_status}">${c.kyc_status||"pending"}</span></td>
+            <td><span class="status-badge ${c.status==="active"?"active":""}">${c.status||"active"}</span></td>
+            <td>
+                <button class="btn-sm" onclick="viewClient('${c.account_no}')">Voir</button>
+                <button class="btn-sm danger" onclick="toggleBlock('${c.account_no}',${c.is_blocked})">${c.is_blocked?"Debloquer":"Bloquer"}</button>
+            </td>
+        </tr>`).join("")||"<tr><td colspan='7'>Aucun resultat</td></tr>";
+}
+
+async function toggleBlock(accountNo,isBlocked){
+    if(!confirm(isBlocked?"Debloquer ce compte?":"Bloquer ce compte?"))return;
+    await sf("savings_accounts","PATCH",{is_blocked:!isBlocked},`?account_no=eq.${accountNo}`);
+    loadOverview();
+}
+
+function viewClient(accountNo){
+    document.getElementById("adjustAccountNo").value=accountNo;
+    showSection(document.querySelector('[href="#adjust-balance"]'),{preventDefault:()=>{}});
+    searchForAdjust();
+}
+
+async function createAccount(){
+    const firstName=document.getElementById("createFirstName").value.trim();
+    const lastName=document.getElementById("createLastName").value.trim();
+    const phone=document.getElementById("createPhone").value.trim();
+    if(!firstName||!lastName||!phone)return alert("Remplissez les champs obligatoires.");
+    const accountNo="NEXUS-"+new Date().getFullYear()+"-"+String(Math.floor(Math.random()*999999)).padStart(6,"0");
+    const r=await sf("savings_accounts","POST",{
+        account_no:accountNo,
+        client_name:firstName+" "+lastName,
+        client_phone:phone,
+        email:document.getElementById("createEmail").value,
+        account_type:document.getElementById("createType").value,
+        currency:document.getElementById("createCurrency").value,
+        client_nat:document.getElementById("createNat").value,
+        balance:Number(document.getElementById("createBalance").value)||0,
+        branch:document.getElementById("createBranch").value||"Santo Domingo",
+        kyc_status:"approved",
+        status:"active",
+        created_by:"CEO"
+    });
+    const res=document.getElementById("createResult");
+    res.style.display="block";
+    if(r.ok){
+        res.className="result-box success";
+        res.innerHTML=`✅ Compte cree avec succes!<br><strong>Numero: ${accountNo}</strong>`;
+        document.getElementById("createFirstName").value="";
+        document.getElementById("createLastName").value="";
+        document.getElementById("createPhone").value="";
+        document.getElementById("createEmail").value="";
+        document.getElementById("createBalance").value="";
+        loadOverview();
+    }else{
+        res.className="result-box error";
+        res.innerHTML="❌ Erreur lors de la creation.";
+    }
+}
+
+async function searchForAdjust(){
+    const accountNo=document.getElementById("adjustAccountNo").value.trim();
+    if(!accountNo)return alert("Entrez un numero de compte.");
+    const data=await sf("savings_accounts","GET",null,`?account_no=eq.${accountNo}`);
+    if(!data||data.length===0)return alert("Compte non trouve.");
+    const acc=data[0];
+    document.getElementById("adjustClientInfo").style.display="block";
+    document.getElementById("adjustClientName").textContent=acc.client_name;
+    document.getElementById("adjustClientMeta").textContent=`${acc.account_type} | ${acc.currency} | ${acc.branch||"-"}`;
+    document.getElementById("adjustCurrentBalance").textContent=fmtA(acc.balance)+" "+acc.currency;
+    document.getElementById("adjustAccountNo").dataset.current=acc.balance;
+    document.getElementById("adjustAccountNo").dataset.currency=acc.currency;
+}
+
+async function adjustBalance(){
+    const accountNo=document.getElementById("adjustAccountNo").value.trim();
+    const type=document.getElementById("adjustType").value;
+    const amount=Number(document.getElementById("adjustAmount").value);
+    const current=Number(document.getElementById("adjustAccountNo").dataset.current||0);
+    if(!accountNo||!amount)return alert("Remplissez tous les champs.");
+    let newBalance;
+    if(type==="add")newBalance=current+amount;
+    else if(type==="subtract")newBalance=current-amount;
+    else newBalance=amount;
+    if(newBalance<0)return alert("Le solde ne peut pas etre negatif.");
+    await sf("savings_accounts","PATCH",{balance:newBalance},`?account_no=eq.${accountNo}`);
+    const res=document.getElementById("adjustResult");
+    res.style.display="block";
+    res.className="result-box success";
+    res.innerHTML=`✅ Solde ajuste!<br>Ancien: ${fmtA(current)} → Nouveau: <strong>${fmtA(newBalance)}</strong>`;
+    document.getElementById("adjustCurrentBalance").textContent=fmtA(newBalance)+" "+document.getElementById("adjustAccountNo").dataset.currency;
+    document.getElementById("adjustAccountNo").dataset.current=newBalance;
+}
+
+async function rechargeCashier(){
+    const id=document.getElementById("rechargeId").value.trim();
+    const field=document.getElementById("rechargeCurrency").value;
+    const amount=Number(document.getElementById("rechargeAmount").value);
+    if(!id||!amount)return alert("Remplissez tous les champs.");
+    const data=await sf("cashier_wallets","GET",null,`?cashier_id=eq.${id}`);
+    if(!data||data.length===0)return alert("Caissier non trouve.");
+    const newBal=Number(data[0][field]||0)+amount;
+    await sf("cashier_wallets","PATCH",{[field]:newBal},`?cashier_id=eq.${id}`);
+    alert(`✅ Wallet recharge! Nouveau solde: ${fmtA(newBal)}`);
+    loadOverview();
+}
+
+async function resetDaily(cashierId){
+    if(!confirm("Reinitialiser le total journalier?"))return;
+    await sf("cashier_wallets","PATCH",{daily_total:0},`?cashier_id=eq.${cashierId}`);
+    alert("✅ Total journalier reinitialise!");
+    loadOverview();
+}
+
+function exportReport(table){
+    window.open(`${SUPA_URL}/rest/v1/${table}?select=*&apikey=${SUPA_KEY}`);
+}
+
+function printSummary(){window.print();}
+
+document.addEventListener("DOMContentLoaded",loadOverview);
+</script>
+</body>
+</html>
