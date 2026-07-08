@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEXUS 2030 - Superviseur</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/secretaire.css">
+</head>
+<body>
+<div class="sec-layout">
+
+<aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+        <div class="logo-icon">N</div>
+        <div><span class="logo-name">NEXUS</span><span class="logo-year">2030</span></div>
+    </div>
+    <div class="sec-badge-side">
+        <div class="sec-avatar">SUP</div>
+        <div>
+            <div class="sec-name">Superviseur</div>
+            <div class="sec-title">Supervision des Operations</div>
+        </div>
+    </div>
+    <nav class="sidebar-nav">
+        <div class="nav-section">TABLEAU DE BORD</div>
+        <a href="#overview" class="nav-item active" onclick="showSection(this,event)"><span>📊</span>Vue d'ensemble</a>
+        <div class="nav-section">SUPERVISION</div>
+        <a href="#requests" class="nav-item" onclick="showSection(this,event)"><span>📋</span>Demandes en Attente</a>
+        <a href="#accounts" class="nav-item" onclick="showSection(this,event)"><span>📖</span>Comptes Epargne</a>
+        <a href="#transactions" class="nav-item" onclick="showSection(this,event)"><span>💸</span>Transactions</a>
+        <a href="#kyc" class="nav-item" onclick="showSection(this,event)"><span>🪪</span>Suivi KYC</a>
+        <div class="nav-section">RAPPORTS</div>
+        <a href="#reports" class="nav-item" onclick="showSection(this,event)"><span>📈</span>Rapports</a>
+        <div class="nav-section">SYSTEME</div>
+        <a href="index.html" class="nav-item"><span>🌐</span>Site Web</a>
+        <a href="#" class="nav-item logout" onclick="logout()"><span>🚪</span>Deconnexion</a>
+    </nav>
+</aside>
+
+<main class="main-content">
+    <header class="topbar">
+        <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+        <div class="topbar-title" id="pageTitle">Vue d'ensemble</div>
+        <div class="topbar-right">
+            <div class="time-display" id="secTime"></div>
+            <div class="date-display" id="secDate"></div>
+            <div class="sec-badge-top">Superviseur</div>
+        </div>
+    </header>
+
+    <div class="content-area">
+
+        <!-- VUE D'ENSEMBLE -->
+        <section class="section active" id="section-overview">
+            <div class="welcome-banner">
+                <div>
+                    <div class="wb-greeting" id="wbGreeting">Bonjour,</div>
+                    <div class="wb-subtitle">Voici un apercu general des operations</div>
+                </div>
+                <div class="wb-date" id="wbDate"></div>
+            </div>
+            <div class="kpi-grid">
+                <div class="kpi-card blue"><div class="kpi-icon">👥</div><div class="kpi-info"><div class="kpi-number" id="ovClients">0</div><div class="kpi-label">Total Clients</div></div></div>
+                <div class="kpi-card orange"><div class="kpi-icon">📋</div><div class="kpi-info"><div class="kpi-number" id="ovRequests">0</div><div class="kpi-label">Demandes en attente</div></div></div>
+                <div class="kpi-card red"><div class="kpi-icon">🪪</div><div class="kpi-info"><div class="kpi-number" id="ovKyc">0</div><div class="kpi-label">KYC a verifier</div></div></div>
+                <div class="kpi-card green"><div class="kpi-icon">📖</div><div class="kpi-info"><div class="kpi-number" id="ovAccounts">0</div><div class="kpi-label">Comptes Actifs</div></div></div>
+            </div>
+            <div class="overview-grid">
+                <div class="card">
+                    <div class="card-header"><h3>Demandes Recentes</h3><a href="#" onclick="goSec('requests')">Voir tout</a></div>
+                    <div class="table-wrap">
+                        <table class="data-table">
+                            <thead><tr><th>Nom</th><th>Type</th><th>Devise</th><th>Statut</th><th>Date</th></tr></thead>
+                            <tbody id="recentRequests"><tr><td colspan="5">Chargement...</td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header"><h3>Comptes Recents</h3><a href="#" onclick="goSec('accounts')">Voir tout</a></div>
+                    <div class="table-wrap">
+                        <table class="data-table">
+                            <thead><tr><th>Titulaire</th><th>Type</th><th>Devise</th><th>Statut</th></tr></thead>
+                            <tbody id="recentAccounts"><tr><td colspan="4">Chargement...</td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- DEMANDES -->
+        <section class="section" id="section-requests">
+            <h2 class="section-title">📋 Demandes d'Ouverture de Compte</h2>
+            <div class="card">
+                <div class="card-header"><h3>Toutes les demandes</h3><span class="badge" id="requestCount">0</span></div>
+                <div class="table-wrap">
+                    <table class="data-table">
+                        <thead><tr><th>Nom</th><th>Prenom</th><th>Telephone</th><th>Type</th><th>Devise</th><th>Nationalite</th><th>Statut</th><th>Date</th><th>Action</th></tr></thead>
+                        <tbody id="requestsList"><tr><td colspan="9">Chargement...</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- COMPTES EPARGNE -->
+        <section class="section" id="section-accounts">
+            <h2 class="section-title">📖 Comptes Epargne</h2>
+            <div class="card">
+                <div class="card-header"><h3>Tous les comptes</h3><span class="badge" id="accountCount">0</span></div>
+                <div class="table-wrap">
+                    <table class="data-table">
+                        <thead><tr><th>Titulaire</th><th>Numero Compte</th><th>Type</th><th>Devise</th><th>Solde</th><th>Succursale</th><th>Statut</th><th>Ouverture</th></tr></thead>
+                        <tbody id="accountsList"><tr><td colspan="8">Chargement...</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- TRANSACTIONS -->
+        <section class="section" id="section-transactions">
+            <h2 class="section-title">💸 Transactions</h2>
+            <div class="card"><div class="card-header"><h3>Historique des Transactions</h3></div><p style="padding:1.5rem;color:#64748B;">Module en developpement.</p></div>
+        </section>
+
+        <!-- SUIVI KYC -->
+        <section class="section" id="section-kyc">
+            <h2 class="section-title">🪪 Suivi KYC</h2>
+            <div class="kyc-info-banner">
+                <span>ℹ️</span>
+                <span>Vue d'ensemble des verifications KYC effectuees par l'equipe.</span>
+            </div>
+            <div class="card">
+                <div class="card-header"><h3>Statut KYC de tous les clients</h3><span class="badge" id="kycCount">0</span></div>
+                <div class="table-wrap">
+                    <table class="data-table">
+                        <thead><tr><th>Nom</th><th>Compte</th><th>Telephone</th><th>Date inscription</th><th>Statut KYC</th></tr></thead>
+                        <tbody id="kycList"><tr><td colspan="5">Chargement...</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- RAPPORTS -->
+        <section class="section" id="section-reports">
+            <h2 class="section-title">📈 Rapports</h2>
+            <div class="docs-actions">
+                <div class="doc-action-card" onclick="exportData('savings_accounts')">
+                    <div class="dac-icon">📖</div>
+                    <h4>Comptes Epargne</h4>
+                    <p>Exporter CSV</p>
+                </div>
+                <div class="doc-action-card" onclick="exportData('account_requests')">
+                    <div class="dac-icon">📋</div>
+                    <h4>Demandes</h4>
+                    <p>Exporter CSV</p>
+                </div>
+                <div class="doc-action-card" onclick="exportData('contacts')">
+                    <div class="dac-icon">✉️</div>
+                    <h4>Messages</h4>
+                    <p>Exporter CSV</p>
+                </div>
+            </div>
+        </section>
+
+    </div>
+</main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPA_URL="https://fnuplvbiwfvauwkpxsoc.supabase.co";
+const SUPA_KEY="sb_publishable_QBqdKkpcjDS3_psUdmc4uA_sMCzLqLo";
+const supabaseClient = supabase.createClient(SUPA_URL, SUPA_KEY);
+
+async function sf(table,method="GET",body=null,filter=""){
+    const opts={method,headers:{"apikey":SUPA_KEY,"Authorization":`Bearer ${SUPA_KEY}`,"Content-Type":"application/json","Prefer":method!=="GET"?"return=representation":""}};
+    if(body)opts.body=JSON.stringify(body);
+    const r=await fetch(`${SUPA_URL}/rest/v1/${table}${filter}`,opts);
+    if(method==="GET")return await r.json();
+    return r;
+}
+
+function fmt(d){return d?new Date(d).toLocaleDateString("fr-FR"):"-";}
+function fmtA(n){return Number(n||0).toLocaleString("fr-FR",{minimumFractionDigits:2});}
+
+setInterval(()=>{
+    const t=document.getElementById("secTime");
+    const d=document.getElementById("secDate");
+    const now=new Date();
+    if(t)t.textContent=now.toLocaleTimeString("fr-FR");
+    if(d)d.textContent=now.toLocaleDateString("fr-FR",{weekday:"short",day:"numeric",month:"short"});
+},1000);
+
+function showSection(el,e){
+    if(e)e.preventDefault();
+    document.querySelectorAll(".nav-item").forEach(i=>i.classList.remove("active"));
+    el.classList.add("active");
+    const id=el.getAttribute("href").replace("#","");
+    document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
+    document.getElementById("section-"+id).classList.add("active");
+    document.getElementById("pageTitle").textContent=el.textContent.trim();
+    if(id==="requests")loadRequests();
+    if(id==="accounts")loadAccounts();
+    if(id==="kyc")loadKyc();
+}
+
+function goSec(id){
+    document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
+    document.getElementById("section-"+id).classList.add("active");
+}
+
+function toggleSidebar(){document.getElementById("sidebar").classList.toggle("open");}
+
+async function logout(){
+    await supabaseClient.auth.signOut();
+    localStorage.clear();
+    window.location.href="login.html";
+}
+
+async function loadOverview(){
+    const h=new Date().getHours();
+    const gr=h<12?"Bonjour":h<18?"Bon apres-midi":"Bonsoir";
+    document.getElementById("wbGreeting").textContent=gr+" — Bienvenue";
+    document.getElementById("wbDate").textContent=new Date().toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
+
+    const clients=await sf("savings_accounts","GET",null,"?order=created_at.desc");
+    const requests=await sf("account_requests","GET",null,"?order=created_at.desc");
+
+    const pendingKyc=clients.filter(c=>c.kyc_status==="pending");
+    const pendingReq=requests.filter(r=>r.status==="pending");
+    const activeAccounts=clients.filter(c=>c.status==="active");
+
+    document.getElementById("ovClients").textContent=clients.length;
+    document.getElementById("ovRequests").textContent=pendingReq.length;
+    document.getElementById("ovKyc").textContent=pendingKyc.length;
+    document.getElementById("ovAccounts").textContent=activeAccounts.length;
+
+    document.getElementById("recentRequests").innerHTML=requests.slice(0,5).map(r=>`
+        <tr>
+            <td>${r.last_name||""} ${r.first_name||""}</td>
+            <td>${r.account_type||"-"}</td>
+            <td>${r.currency||"-"}</td>
+            <td><span class="status-sm ${r.status}">${r.status}</span></td>
+            <td>${fmt(r.created_at)}</td>
+        </tr>`).join("")||"<tr><td colspan='5'>Aucune demande</td></tr>";
+
+    document.getElementById("recentAccounts").innerHTML=clients.slice(0,5).map(c=>`
+        <tr>
+            <td>${c.client_name||"-"}</td>
+            <td>${c.account_type||"-"}</td>
+            <td>${c.currency||"-"}</td>
+            <td><span class="status-sm ${c.status==="active"?"active":""}">${c.status||"-"}</span></td>
+        </tr>`).join("")||"<tr><td colspan='4'>Aucun compte</td></tr>";
+}
+
+async function loadRequests(){
+    const requests=await sf("account_requests","GET",null,"?order=created_at.desc");
+    document.getElementById("requestCount").textContent=requests.length;
+    document.getElementById("requestsList").innerHTML=requests.map(r=>`
+        <tr>
+            <td>${r.last_name||"-"}</td>
+            <td>${r.first_name||"-"}</td>
+            <td>${r.phone||"-"}</td>
+            <td>${r.account_type||"-"}</td>
+            <td>${r.currency||"-"}</td>
+            <td>${r.nationality||"-"}</td>
+            <td><span class="status-sm ${r.status}">${r.status}</span></td>
+            <td>${fmt(r.created_at)}</td>
+            <td>
+                ${r.status==="pending"?`<button class="btn-xs blue" onclick="approveRequest('${r.id}')">Approuver</button>
+                <button class="btn-xs red" onclick="rejectRequest('${r.id}')">Rejeter</button>`:"<span style='color:#9CA3AF;font-size:0.78rem'>Traite</span>"}
+            </td>
+        </tr>`).join("")||"<tr><td colspan='9'>Aucune demande</td></tr>";
+}
+
+async function approveRequest(id){
+    const data=await sf("account_requests","GET",null,`?id=eq.${id}`);
+    if(!data||!data[0])return;
+    const req=data[0];
+    const accountNo="NEXUS-"+new Date().getFullYear()+"-"+String(Math.floor(Math.random()*999999)).padStart(6,"0");
+    await sf("savings_accounts","POST",{
+        account_no:accountNo,client_name:(req.first_name||"")+" "+(req.last_name||""),
+        client_phone:req.phone,email:req.email||"",account_type:req.account_type,
+        currency:req.currency,client_nat:req.nationality,balance:0,
+        kyc_status:"pending",status:"active",branch:req.branch_city||"Santo Domingo"
+    });
+    await sf("account_requests","PATCH",{status:"approved"},`?id=eq.${id}`);
+    alert("✅ Compte cree! Numero: "+accountNo);
+    loadRequests();
+}
+
+async function rejectRequest(id){
+    if(!confirm("Rejeter cette demande?"))return;
+    await sf("account_requests","PATCH",{status:"rejected"},`?id=eq.${id}`);
+    loadRequests();
+}
+
+async function loadAccounts(){
+    const accounts=await sf("savings_accounts","GET",null,"?order=created_at.desc");
+    document.getElementById("accountCount").textContent=accounts.length;
+    document.getElementById("accountsList").innerHTML=accounts.map(a=>`
+        <tr>
+            <td><strong>${a.client_name||"-"}</strong></td>
+            <td style="font-family:monospace;font-size:0.78rem">${a.account_no}</td>
+            <td>${a.account_type||"-"}</td>
+            <td>${a.currency||"-"}</td>
+            <td><strong>${fmtA(a.balance)} ${a.currency}</strong></td>
+            <td>${a.branch||"-"}</td>
+            <td><span class="status-sm ${a.status==="active"?"active":""}">${a.status||"active"}</span></td>
+            <td>${fmt(a.created_at)}</td>
+        </tr>`).join("")||"<tr><td colspan='8'>Aucun compte</td></tr>";
+}
+
+async function loadKyc(){
+    const clients=await sf("savings_accounts","GET",null,"?order=created_at.desc");
+    document.getElementById("kycCount").textContent=clients.length;
+    document.getElementById("kycList").innerHTML=clients.map(c=>`
+        <tr>
+            <td><strong>${c.client_name||"-"}</strong></td>
+            <td style="font-family:monospace;font-size:0.78rem">${c.account_no}</td>
+            <td>${c.client_phone||"-"}</td>
+            <td>${fmt(c.created_at)}</td>
+            <td><span class="kyc-sm ${c.kyc_status||"pending"}">${c.kyc_status||"pending"}</span></td>
+        </tr>`).join("")||"<tr><td colspan='5'>Aucun client</td></tr>";
+}
+
+function exportData(table){window.open(`${SUPA_URL}/rest/v1/${table}?select=*&apikey=${SUPA_KEY}`);}
+
+document.addEventListener("DOMContentLoaded",()=>{loadOverview();});
+</script>
+
+<div style='position:fixed;bottom:0;left:0;right:0;background:#081440;color:rgba(255,255,255,0.7);text-align:center;padding:6px;font-size:0.72rem;font-family:Inter,sans-serif;z-index:9999;border-top:1px solid rgba(255,255,255,0.1)'>Developed by <strong style=color:white>Jonathan Grolot</strong> (+1 849 453 6553). All rights reserved until full payment is received.</div></body>
+</html>
