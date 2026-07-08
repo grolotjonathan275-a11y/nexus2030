@@ -36,6 +36,7 @@
         <a href="#reports" class="nav-item" onclick="showSection(this,event)"><span>📋</span>Rapports</a>
         <a href="#cashiers" class="nav-item" onclick="showSection(this,event)"><span>👤</span>Caissiers</a>
         <div class="nav-section">SYSTEME</div>
+        <a href="#mm-settings" class="nav-item" onclick="showSection(this,event)"><span>📱</span>Parametres MonCash/NatCash</a>
         <a href="admin.html" class="nav-item"><span>⚙️</span>Super Admin</a>
         <a href="index.html" class="nav-item"><span>🌐</span>Site Web</a>
         <a href="#" class="nav-item logout" onclick="logout()"><span>🚪</span>Deconnexion</a>
@@ -392,13 +393,67 @@
             </div>
         </section>
 
+        <!-- PARAMETRES MONCASH / NATCASH -->
+        <section class="section" id="section-mm-settings">
+            <h2 class="section-title">📱 Parametres MonCash / NatCash</h2>
+            <div class="card">
+                <div class="card-header"><h3>Taux et Frais Actifs</h3></div>
+                <div style="padding:1.5rem">
+                    <div id="mmSettingsMsg" style="display:none;padding:0.75rem 1rem;border-radius:8px;margin-bottom:1rem;font-size:0.9rem;"></div>
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label>Taux MonCash (1 DOP = ? HTG)</label>
+                            <input type="number" id="setMoncashRate" step="0.01" placeholder="1.8">
+                        </div>
+                        <div class="form-group">
+                            <label>Taux NatCash (1 DOP = ? HTG)</label>
+                            <input type="number" id="setNatcashRate" step="0.01" placeholder="1.8">
+                        </div>
+                    </div>
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label>Frais Client (%)</label>
+                            <input type="number" id="setFeePercent" step="0.1" placeholder="10">
+                        </div>
+                        <div class="form-group">
+                            <label>&nbsp;</label>
+                        </div>
+                    </div>
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label>Service MonCash</label>
+                            <select id="setMoncashEnabled">
+                                <option value="true">Active</option>
+                                <option value="false">Desactive</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Service NatCash</label>
+                            <select id="setNatcashEnabled">
+                                <option value="true">Active</option>
+                                <option value="false">Desactive</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div style="background:#F8FAFC;border-radius:10px;padding:1rem;margin:1rem 0;font-size:0.85rem;color:#475569">
+                        <strong>Exemple avec les valeurs actuelles:</strong> Un client envoie <span id="exAmount">1000</span> DOP →
+                        le beneficiaire recoit <strong id="exHtg">-- HTG</strong>, le client paie <strong id="exFee">--</strong> DOP de frais,
+                        soit un total de <strong id="exTotal">--</strong> DOP.
+                    </div>
+                    <button class="btn-ceo-action" onclick="saveMoneyServiceSettings()">💾 Enregistrer les Parametres</button>
+                </div>
+            </div>
+        </section>
+
     </div>
 </main>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 const SUPA_URL="https://fnuplvbiwfvauwkpxsoc.supabase.co";
 const SUPA_KEY="sb_publishable_QBqdKkpcjDS3_psUdmc4uA_sMCzLqLo";
+const supabaseClient = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 async function sf(table,method="GET",body=null,filter=""){
     const opts={method,headers:{"apikey":SUPA_KEY,"Authorization":`Bearer ${SUPA_KEY}`,"Content-Type":"application/json","Prefer":method!=="GET"?"return=representation":""}};
@@ -422,10 +477,16 @@ function showSection(el,e){
     document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
     document.getElementById("section-"+id).classList.add("active");
     document.getElementById("pageTitle").textContent=el.textContent.trim();
+    if(id==="mm-settings")loadMoneyServiceSettings();
 }
 
 function toggleSidebar(){document.getElementById("sidebar").classList.toggle("open");}
-function logout(){localStorage.clear();window.location.href="login.html";}
+
+async function logout(){
+    await supabaseClient.auth.signOut();
+    localStorage.clear();
+    window.location.href="login.html";
+}
 
 async function loadOverview(){
     const clients=await sf("savings_accounts","GET",null,"?order=created_at.desc");
@@ -466,7 +527,6 @@ async function loadOverview(){
             <td>${fmt(t.created_at)}</td>
         </tr>`).join("")||"<tr><td colspan='4'>Aucune transaction</td></tr>";
 
-    // Load all clients
     document.getElementById("clientCount").textContent=clients.length;
     document.getElementById("allClients").innerHTML=clients.map(c=>`
         <tr>
@@ -482,14 +542,12 @@ async function loadOverview(){
             </td>
         </tr>`).join("")||"<tr><td colspan='7'>Aucun client</td></tr>";
 
-    // Branches
     const branches={};
     clients.forEach(c=>{const b=c.branch||"Inconnu";if(!branches[b])branches[b]={clients:0,volume:0,txns:0};branches[b].clients++;});
     txns.forEach(t=>{const c=clients.find(x=>x.account_no===t.account_no);const b=c?.branch||"Inconnu";if(!branches[b])branches[b]={clients:0,volume:0,txns:0};branches[b].txns++;branches[b].volume+=Number(t.amount);});
     document.getElementById("branchStats").innerHTML=Object.entries(branches).map(([b,d])=>`
         <tr><td>${b}</td><td>${d.clients}</td><td>${d.txns}</td><td>${fmtA(d.volume)} HTG</td></tr>`).join("")||"<tr><td colspan='4'>Aucune donnee</td></tr>";
 
-    // Cashiers
     const wallets=await sf("cashier_wallets","GET",null,"?order=cashier_name.asc");
     document.getElementById("cashiersList").innerHTML=wallets.map(w=>`
         <tr>
@@ -692,10 +750,74 @@ function exportReport(table){
 
 function printSummary(){window.print();}
 
+// ===== PARAMETRES MONCASH / NATCASH =====
+
+function updateSettingsExample(){
+    const rate = Number(document.getElementById("setMoncashRate").value) || 1.8;
+    const fee = Number(document.getElementById("setFeePercent").value) || 10;
+    const amount = 1000;
+    const htg = amount * rate;
+    const feeDop = amount * (fee/100);
+    const total = amount + feeDop;
+    document.getElementById("exHtg").textContent = htg.toLocaleString("fr-FR",{minimumFractionDigits:2}) + " HTG";
+    document.getElementById("exFee").textContent = feeDop.toLocaleString("fr-FR",{minimumFractionDigits:2});
+    document.getElementById("exTotal").textContent = total.toLocaleString("fr-FR",{minimumFractionDigits:2});
+}
+
+async function loadMoneyServiceSettings(){
+    const { data, error } = await supabaseClient.from("mobile_money_settings").select("*").eq("id",1).single();
+    if(error || !data) return;
+    document.getElementById("setMoncashRate").value = data.moncash_rate;
+    document.getElementById("setNatcashRate").value = data.natcash_rate;
+    document.getElementById("setFeePercent").value = data.fee_percent;
+    document.getElementById("setMoncashEnabled").value = String(data.moncash_enabled);
+    document.getElementById("setNatcashEnabled").value = String(data.natcash_enabled);
+    updateSettingsExample();
+
+    ["setMoncashRate","setFeePercent"].forEach(id=>{
+        document.getElementById(id).oninput = updateSettingsExample;
+    });
+}
+
+async function saveMoneyServiceSettings(){
+    const moncashRate = Number(document.getElementById("setMoncashRate").value);
+    const natcashRate = Number(document.getElementById("setNatcashRate").value);
+    const feePercent = Number(document.getElementById("setFeePercent").value);
+    const moncashEnabled = document.getElementById("setMoncashEnabled").value === "true";
+    const natcashEnabled = document.getElementById("setNatcashEnabled").value === "true";
+
+    if(!moncashRate || !natcashRate || feePercent === null || isNaN(feePercent)){
+        showSettingsMsg("Remplissez tous les champs avec des valeurs valides.", true);
+        return;
+    }
+
+    const { error } = await supabaseClient.from("mobile_money_settings").update({
+        moncash_rate: moncashRate,
+        natcash_rate: natcashRate,
+        fee_percent: feePercent,
+        moncash_enabled: moncashEnabled,
+        natcash_enabled: natcashEnabled,
+        updated_at: new Date().toISOString()
+    }).eq("id",1);
+
+    if(error){
+        showSettingsMsg("Erreur: " + error.message, true);
+        return;
+    }
+
+    showSettingsMsg("✅ Parametres enregistres avec succes! Les nouvelles valeurs s'appliquent immediatement pour toutes les prochaines transactions.", false);
+}
+
+function showSettingsMsg(text, isError){
+    const el = document.getElementById("mmSettingsMsg");
+    el.style.display = "block";
+    el.style.background = isError ? "#FEE2E2" : "#DCFCE7";
+    el.style.color = isError ? "#991B1B" : "#166534";
+    el.textContent = text;
+}
+
 document.addEventListener("DOMContentLoaded",loadOverview);
 </script>
 
 <div style='position:fixed;bottom:0;left:0;right:0;background:#081440;color:rgba(255,255,255,0.7);text-align:center;padding:6px;font-size:0.72rem;font-family:Inter,sans-serif;z-index:9999;border-top:1px solid rgba(255,255,255,0.1)'>Developed by <strong style=color:white>Jonathan Grolot</strong> (+1 849 453 6553). All rights reserved until full payment is received.</div></body>
 </html>
-
-
