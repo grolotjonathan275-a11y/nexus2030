@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Connexion ó NEXUS 2030</title>
+<title>Connexion ‚Äî NEXUS 2030</title>
 <link rel="stylesheet" href="assets/css/design-system.css">
 <link rel="stylesheet" href="assets/css/navbar.css">
 <link rel="stylesheet" href="assets/css/login.css">
@@ -40,22 +40,22 @@
                 <p data-i18n="login.brand.sub">Accedez a vos comptes, suivez vos transactions et gerez vos finances en toute securite.</p>
                 <div class="login-features">
                     <div class="login-feature">
-                        <span>??</span>
+                        <span>üîí</span>
                         <span>Connexion securisee SSL</span>
                     </div>
                     <div class="login-feature">
-                        <span>?</span>
+                        <span>‚úÖ</span>
                         <span>Verification en 2 etapes</span>
                     </div>
                     <div class="login-feature">
-                        <span>?</span>
+                        <span>‚ö°</span>
                         <span>Acces instantane a vos comptes</span>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- RIGHT SIDE ó FORM -->
+        <!-- RIGHT SIDE ‚Äî FORM -->
         <div class="login-form-side">
             <div class="login-box">
 
@@ -74,8 +74,8 @@
                     <div class="form-group">
                         <label>Mot de passe</label>
                         <div class="input-password">
-                            <input type="password" class="form-input" id="loginPassword" placeholder="ïïïïïïïï">
-                            <button type="button" class="toggle-password" id="togglePassword">??</button>
+                            <input type="password" class="form-input" id="loginPassword" placeholder="‚Ä¢‚Ä¢‚Ä¢‚Ä¢‚Ä¢‚Ä¢‚Ä¢‚Ä¢">
+                            <button type="button" class="toggle-password" id="togglePassword">üëÅ</button>
                         </div>
                     </div>
                     <div class="login-options">
@@ -122,7 +122,7 @@
 
                 <!-- SUCCESS MESSAGE -->
                 <div class="login-success" id="loginSuccess" style="display:none">
-                    <div class="success-icon">?</div>
+                    <div class="success-icon">‚úÖ</div>
                     <h3>Connexion reussie!</h3>
                     <p>Bienvenue sur NEXUS 2030. Redirection en cours...</p>
                 </div>
@@ -169,7 +169,7 @@ document.getElementById("tabRegister").addEventListener("click", function(){
 document.getElementById("togglePassword").addEventListener("click", function(){
     const inp = document.getElementById("loginPassword");
     inp.type = inp.type === "password" ? "text" : "password";
-    this.textContent = inp.type === "password" ? "??" : "??";
+    this.textContent = inp.type === "password" ? "üëÅ" : "üôà";
 });
 
 // LOGIN
@@ -188,7 +188,7 @@ document.getElementById("loginSubmit").addEventListener("click", async function(
     btn.disabled = true;
 
     try {
-        // Etap 1: ChËche nan savings_accounts (kliyan)
+        // Etap 1: Ch√®che nan savings_accounts (kliyan)
         const clientRes = await fetch(`${SUPA_URL}/rest/v1/savings_accounts?email=eq.${encodeURIComponent(email)}&select=*`, {
             headers: {"apikey": SUPA_KEY, "Authorization": `Bearer ${SUPA_KEY}`}
         });
@@ -217,9 +217,9 @@ document.getElementById("loginSubmit").addEventListener("click", async function(
             }
         }
 
-        // Etap 2: ChËche nan staff (admin, CEO, caissier etc.)
+        // Etap 2: Ch√®che nan staff (admin, CEO, caissier etc.)
         // Verifye kont staff yo pa email ak mot de passe
-        // Pou MVP ó kont staff yo defini isit
+        // Pou MVP ‚Äî kont staff yo defini isit
         const STAFF_ACCOUNTS = [
             {email: "admin@nexus2030.com", password: "nexus2030", role: "super_admin", name: "Super Admin"},
             {email: "ceo@nexus2030.com", password: "nexus2030ceo", role: "ceo", name: "Directeur General"},
@@ -299,7 +299,7 @@ document.getElementById("registerSubmit").addEventListener("click", async functi
             const data = await r.json();
             localStorage.setItem("nexus_client", JSON.stringify(data[0]));
             localStorage.setItem("nexus_role", "client");
-            alert("? Compte cree! Numero: " + accountNo + "\nRedirection vers votre espace client...");
+            alert("‚úÖ Compte cree! Numero: " + accountNo + "\nRedirection vers votre espace client...");
             showSuccess();
             setTimeout(() => { window.location.href = "client.html"; }, 1500);
         } else {
@@ -332,4 +332,3 @@ document.addEventListener("DOMContentLoaded", () => {
 
 </body>
 </html>
-
