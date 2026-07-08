@@ -26,6 +26,7 @@
 <a href="#contacts" class="nav-item" onclick="showSection(this,event)"><span>✉️</span>Messages</a>
 <a href="#reports" class="nav-item" onclick="showSection(this,event)"><span>📈</span>Rapports</a>
 <div class="nav-section">SYSTEME</div>
+<a href="#users" class="nav-item" onclick="showSection(this,event)"><span>🔐</span>Gestion Utilisateurs</a>
 <a href="#settings" class="nav-item" onclick="showSection(this,event)"><span>⚙️</span>Parametres</a>
 <a href="index.html" class="nav-item"><span>🌐</span>Site Web</a>
 <a href="#" class="nav-item logout" onclick="logout()"><span>🚪</span>Deconnexion</a>
@@ -95,6 +96,53 @@
 <section class="section" id="section-transactions">
 <div class="card"><div class="card-header"><h3>Transactions</h3></div><p style="padding:1rem;color:#64748B;">Module en developpement.</p></div>
 </section>
+
+<!-- ===== NOUVO SEKSYON: GESTION UTILISATEURS ===== -->
+<section class="section" id="section-users">
+<div class="card">
+<div class="card-header"><h3>Creer un Nouveau Compte</h3></div>
+<div style="padding:1.5rem;">
+<div id="createUserMsg" style="display:none;padding:0.75rem 1rem;border-radius:8px;margin-bottom:1rem;font-size:0.9rem;"></div>
+<div class="settings-grid">
+<div class="setting-item">
+<label>Nom Complet *</label>
+<input type="text" id="newFullName" placeholder="Jean Dupont">
+</div>
+<div class="setting-item">
+<label>Email *</label>
+<input type="email" id="newEmail" placeholder="jean@nexus2030.com">
+</div>
+<div class="setting-item">
+<label>Telephone</label>
+<input type="tel" id="newPhone" placeholder="+509 / +1 809">
+</div>
+<div class="setting-item">
+<label>Mot de Passe *</label>
+<input type="text" id="newPassword" placeholder="Min. 8 caracteres">
+</div>
+<div class="setting-item">
+<label>Role *</label>
+<select id="newRole" style="width:100%;padding:0.6rem;border-radius:8px;border:1px solid #CBD5E1;font-family:inherit;">
+<option value="">-- Choisir un role --</option>
+<option value="super_admin">Super Admin</option>
+<option value="ceo">CEO / Directeur General</option>
+<option value="secretaire">Secretaire</option>
+<option value="superviseur">Superviseur</option>
+<option value="caissier">Caissier</option>
+<option value="agent">Agent</option>
+</select>
+</div>
+</div>
+<button class="btn-approve" style="margin-top:1rem;padding:0.7rem 1.5rem;" onclick="createNewUser()">➕ Creer le Compte</button>
+</div>
+</div>
+
+<div class="card" style="margin-top:1.5rem;">
+<div class="card-header"><h3>Comptes de l'Equipe</h3><span class="badge" id="usersCount">0</span></div>
+<div class="table-wrap"><table class="data-table"><thead><tr><th>Nom</th><th>Email</th><th>Telephone</th><th>Role</th><th>Statut</th><th>Action</th></tr></thead><tbody id="allUsers"><tr><td colspan="6">Chargement...</td></tr></tbody></table></div>
+</div>
+</section>
+
 <section class="section" id="section-settings">
 <div class="card">
 <div class="card-header"><h3>Parametres Systeme</h3></div>
@@ -107,9 +155,22 @@
 </div>
 </main>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 const SUPA_URL = "https://fnuplvbiwfvauwkpxsoc.supabase.co";
 const SUPA_KEY = "sb_publishable_QBqdKkpcjDS3_psUdmc4uA_sMCzLqLo";
+const supabaseClient = supabase.createClient(SUPA_URL, SUPA_KEY);
+
+const ROLE_LABELS = {
+    super_admin: "Super Admin",
+    ceo: "CEO",
+    secretaire: "Secretaire",
+    superviseur: "Superviseur",
+    caissier: "Caissier",
+    agent: "Agent",
+    client: "Client"
+};
 
 async function fetchData(table) {
     const r = await fetch(`${SUPA_URL}/rest/v1/${table}?order=created_at.desc`, {
@@ -128,6 +189,7 @@ function showSection(el, e) {
     document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
     document.getElementById("section-" + id).classList.add("active");
     document.getElementById("pageTitle").textContent = el.textContent.trim();
+    if (id === "users") loadUsers();
 }
 
 function showSectionByName(e, id) {
@@ -138,7 +200,8 @@ function showSectionByName(e, id) {
 
 function toggleSidebar() { document.getElementById("sidebar").classList.toggle("open"); }
 
-function logout() {
+async function logout() {
+    await supabaseClient.auth.signOut();
     localStorage.clear();
     window.location.href = "login.html";
 }
@@ -197,6 +260,117 @@ async function loadDashboard() {
 }
 
 function exportData(table) { window.open(`${SUPA_URL}/rest/v1/${table}?select=*&apikey=${SUPA_KEY}`); }
+
+// ===== GESTION UTILISATEURS =====
+
+function showCreateMsg(text, isError) {
+    const el = document.getElementById("createUserMsg");
+    el.style.display = "block";
+    el.style.background = isError ? "#FEE2E2" : "#DCFCE7";
+    el.style.color = isError ? "#991B1B" : "#166534";
+    el.textContent = text;
+}
+
+async function createNewUser() {
+    const full_name = document.getElementById("newFullName").value.trim();
+    const email = document.getElementById("newEmail").value.trim();
+    const phone = document.getElementById("newPhone").value.trim();
+    const password = document.getElementById("newPassword").value;
+    const role = document.getElementById("newRole").value;
+
+    if (!full_name || !email || !password || !role) {
+        showCreateMsg("Remplissez tous les champs obligatoires (*).", true);
+        return;
+    }
+    if (password.length < 8) {
+        showCreateMsg("Le mot de passe doit avoir au moins 8 caracteres.", true);
+        return;
+    }
+
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (!session) {
+        showCreateMsg("Session expiree. Reconnectez-vous.", true);
+        return;
+    }
+
+    try {
+        const res = await fetch(`${SUPA_URL}/functions/v1/create-user`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${session.access_token}`
+            },
+            body: JSON.stringify({ full_name, email, phone, password, role })
+        });
+        const result = await res.json();
+
+        if (!res.ok) {
+            showCreateMsg("Erreur: " + (result.error || "Impossible de creer le compte."), true);
+            return;
+        }
+
+        showCreateMsg(`✅ Compte cree avec succes pour ${full_name} (${ROLE_LABELS[role]}). Communiquez les identifiants a la personne.`, false);
+        document.getElementById("newFullName").value = "";
+        document.getElementById("newEmail").value = "";
+        document.getElementById("newPhone").value = "";
+        document.getElementById("newPassword").value = "";
+        document.getElementById("newRole").value = "";
+        loadUsers();
+    } catch (err) {
+        showCreateMsg("Erreur de connexion: " + err.message, true);
+    }
+}
+
+async function loadUsers() {
+    const { data: users, error } = await supabaseClient
+        .from("profiles")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+    if (error) {
+        document.getElementById("allUsers").innerHTML = `<tr><td colspan="6">Erreur: ${error.message}</td></tr>`;
+        return;
+    }
+
+    document.getElementById("usersCount").textContent = users.length;
+    document.getElementById("allUsers").innerHTML = users.map(u => `
+        <tr>
+            <td>${u.full_name || "-"}</td>
+            <td>${u.email || "-"}</td>
+            <td>${u.phone || "-"}</td>
+            <td>${ROLE_LABELS[u.role] || u.role}</td>
+            <td><span class="badge-status ${u.status === 'active' ? 'approved' : 'pending'}">${u.status || "-"}</span></td>
+            <td>
+                <button onclick="toggleUserStatus('${u.id}','${u.status}')" class="btn-approve" style="background:${u.status === 'active' ? '#F59E0B' : '#10B981'};">
+                    ${u.status === 'active' ? 'Desactiver' : 'Activer'}
+                </button>
+                <button onclick="deleteUser('${u.id}','${u.full_name}')" class="btn-approve" style="background:#EF4444;margin-left:0.4rem;">
+                    Supprimer
+                </button>
+            </td>
+        </tr>
+    `).join("") || "<tr><td colspan='6'>Aucun utilisateur</td></tr>";
+}
+
+async function toggleUserStatus(id, currentStatus) {
+    const newStatus = currentStatus === "active" ? "inactive" : "active";
+    const { error } = await supabaseClient.from("profiles").update({ status: newStatus }).eq("id", id);
+    if (error) {
+        alert("Erreur: " + error.message);
+        return;
+    }
+    loadUsers();
+}
+
+async function deleteUser(id, name) {
+    if (!confirm(`Supprimer le compte de ${name}? Cette action retire l'acces au tableau de bord (le compte de connexion reste dans Supabase Auth, a supprimer manuellement si necessaire).`)) return;
+    const { error } = await supabaseClient.from("profiles").delete().eq("id", id);
+    if (error) {
+        alert("Erreur: " + error.message);
+        return;
+    }
+    loadUsers();
+}
 
 document.addEventListener("DOMContentLoaded", loadDashboard);
 </script>
