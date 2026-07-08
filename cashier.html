@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEXUS 2030 - Caissier</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/cashier.css">
+</head>
+<body>
+<div class="cashier-layout">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-logo">
+            <div class="logo-icon">N</div>
+            <div><span class="logo-name">NEXUS</span><span class="logo-year">2030</span></div>
+        </div>
+        <div class="cashier-info" id="cashierInfo">
+            <div class="cashier-avatar">JG</div>
+            <div class="cashier-details">
+                <div class="cashier-name" id="cashierName">Caissier</div>
+                <div class="cashier-branch" id="cashierBranch">Santo Domingo</div>
+            </div>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="nav-section">OPERATIONS</div>
+            <a href="#dashboard" class="nav-item active" onclick="showSection(this,event)"><span>📊</span>Tableau de Bord</a>
+            <a href="#depot" class="nav-item" onclick="showSection(this,event)"><span>💰</span>Depot</a>
+            <a href="#retrait" class="nav-item" onclick="showSection(this,event)"><span>💸</span>Retrait</a>
+            <a href="#search" class="nav-item" onclick="showSection(this,event)"><span>🔍</span>Recherche Client</a>
+            <a href="#history" class="nav-item" onclick="showSection(this,event)"><span>📋</span>Historique</a>
+            <div class="nav-section">CAISSE</div>
+            <a href="#wallet" class="nav-item" onclick="showSection(this,event)"><span>👛</span>Mon Wallet</a>
+            <a href="#receipts" class="nav-item" onclick="showSection(this,event)"><span>🧾</span>Recus</a>
+            <div class="nav-section">COMPTE</div>
+            <a href="index.html" class="nav-item"><span>🌐</span>Site Web</a>
+            <a href="#" class="nav-item logout" onclick="logout()"><span>🚪</span>Deconnexion</a>
+        </nav>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="main-content">
+        <header class="topbar">
+            <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+            <div class="topbar-title" id="pageTitle">Tableau de Bord</div>
+            <div class="topbar-right">
+                <div class="time-display" id="timeDisplay"></div>
+                <div class="cashier-badge">Caissier</div>
+            </div>
+        </header>
+
+        <div class="content-area">
+
+            <!-- DASHBOARD -->
+            <section class="section active" id="section-dashboard">
+                <div class="stats-grid">
+                    <div class="stat-card green">
+                        <div class="stat-icon">💰</div>
+                        <div class="stat-info">
+                            <div class="stat-number" id="totalDepots">0</div>
+                            <div class="stat-label">Depots Aujourd'hui</div>
+                        </div>
+                    </div>
+                    <div class="stat-card red">
+                        <div class="stat-icon">💸</div>
+                        <div class="stat-info">
+                            <div class="stat-number" id="totalRetraits">0</div>
+                            <div class="stat-label">Retraits Aujourd'hui</div>
+                        </div>
+                    </div>
+                    <div class="stat-card blue">
+                        <div class="stat-icon">🔄</div>
+                        <div class="stat-info">
+                            <div class="stat-number" id="totalOps">0</div>
+                            <div class="stat-label">Total Operations</div>
+                        </div>
+                    </div>
+                    <div class="stat-card orange">
+                        <div class="stat-icon">💵</div>
+                        <div class="stat-info">
+                            <div class="stat-number" id="totalAmount">0</div>
+                            <div class="stat-label">Montant Total HTG</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- WALLET RAPIDE -->
+                <div class="wallet-quick">
+                    <h3>💼 Mon Wallet</h3>
+                    <div class="wallet-currencies">
+                        <div class="wallet-currency htg">
+                            <div class="currency-flag">🇭🇹</div>
+                            <div class="currency-info">
+                                <div class="currency-name">Gourdes</div>
+                                <div class="currency-amount" id="walletHTG">0.00</div>
+                            </div>
+                        </div>
+                        <div class="wallet-currency dop">
+                            <div class="currency-flag">🇩🇴</div>
+                            <div class="currency-info">
+                                <div class="currency-name">Pesos</div>
+                                <div class="currency-amount" id="walletDOP">0.00</div>
+                            </div>
+                        </div>
+                        <div class="wallet-currency usd">
+                            <div class="currency-flag">🇺🇸</div>
+                            <div class="currency-info">
+                                <div class="currency-name">Dollars</div>
+                                <div class="currency-amount" id="walletUSD">0.00</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- DENIE TRANZAKSYON -->
+                <div class="card mt-2">
+                    <div class="card-header">
+                        <h3>Dernieres Transactions</h3>
+                        <a href="#history" onclick="showSectionByName(event,'history')">Voir tout</a>
+                    </div>
+                    <div class="table-wrap">
+                        <table class="data-table">
+                            <thead><tr><th>Heure</th><th>Client</th><th>Type</th><th>Montant</th><th>Statut</th></tr></thead>
+                            <tbody id="recentTxns"><tr><td colspan="5">Chargement...</td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- DEPOT -->
+            <section class="section" id="section-depot">
+                <div class="operation-card">
+                    <div class="op-header green">
+                        <div class="op-icon">💰</div>
+                        <div>
+                            <h2>Effectuer un Depot</h2>
+                            <p>Deposer de l'argent sur un compte client</p>
+                        </div>
+                    </div>
+                    <div class="op-form">
+                        <div class="form-group">
+                            <label>Numero de Compte *</label>
+                            <div class="input-search">
+                                <input type="text" id="depotAccountNo" placeholder="NEXUS-2026-000000">
+                                <button onclick="searchAccount('depot')">Rechercher</button>
+                            </div>
+                        </div>
+                        <div class="client-found" id="depotClientInfo" style="display:none">
+                            <div class="client-card">
+                                <div class="client-avatar">👤</div>
+                                <div>
+                                    <div class="client-name" id="depotClientName"></div>
+                                    <div class="client-meta" id="depotClientMeta"></div>
+                                    <div class="client-balance">Solde actuel: <strong id="depotCurrentBalance"></strong></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Montant a Deposer *</label>
+                            <div class="amount-input">
+                                <input type="number" id="depotAmount" placeholder="0.00" min="1">
+                                <select id="depotCurrency">
+                                    <option value="HTG">HTG</option>
+                                    <option value="DOP">DOP</option>
+                                    <option value="USD">USD</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Notes (optionnel)</label>
+                            <input type="text" id="depotNotes" placeholder="Raison du depot...">
+                        </div>
+                        <div class="form-actions">
+                            <button class="btn-cancel" onclick="resetForm('depot')">Annuler</button>
+                            <button class="btn-confirm green" onclick="executeDepot()">✅ Confirmer le Depot</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- RETRAIT -->
+            <section class="section" id="section-retrait">
+                <div class="operation-card">
+                    <div class="op-header red">
+                        <div class="op-icon">💸</div>
+                        <div>
+                            <h2>Effectuer un Retrait</h2>
+                            <p>Retirer de l'argent d'un compte client</p>
+                        </div>
+                    </div>
+                    <div class="op-form">
+                        <div class="form-group">
+                            <label>Numero de Compte *</label>
+                            <div class="input-search">
+                                <input type="text" id="retraitAccountNo" placeholder="NEXUS-2026-000000">
+                                <button onclick="searchAccount('retrait')">Rechercher</button>
+                            </div>
+                        </div>
+                        <div class="client-found" id="retraitClientInfo" style="display:none">
+                            <div class="client-card">
+                                <div class="client-avatar">👤</div>
+                                <div>
+                                    <div class="client-name" id="retraitClientName"></div>
+                                    <div class="client-meta" id="retraitClientMeta"></div>
+                                    <div class="client-balance">Solde actuel: <strong id="retraitCurrentBalance"></strong></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Montant a Retirer *</label>
+                            <div class="amount-input">
+                                <input type="number" id="retraitAmount" placeholder="0.00" min="1">
+                                <select id="retraitCurrency">
+                                    <option value="HTG">HTG</option>
+                                    <option value="DOP">DOP</option>
+                                    <option value="USD">USD</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Piece d'Identite *</label>
+                            <input type="text" id="retraitId" placeholder="Numero CIN / Passeport...">
+                        </div>
+                        <div class="form-group">
+                            <label>Notes (optionnel)</label>
+                            <input type="text" id="retraitNotes" placeholder="Raison du retrait...">
+                        </div>
+                        <div class="form-actions">
+                            <button class="btn-cancel" onclick="resetForm('retrait')">Annuler</button>
+                            <button class="btn-confirm red" onclick="executeRetrait()">✅ Confirmer le Retrait</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- RECHERCHE CLIENT -->
+            <section class="section" id="section-search">
+                <div class="card">
+                    <div class="card-header"><h3>🔍 Recherche Client</h3></div>
+                    <div style="padding:1.5rem">
+                        <div class="search-bar">
+                            <input type="text" id="searchInput" placeholder="Nom, numero compte, telephone...">
+                            <button onclick="searchClient()">Rechercher</button>
+                        </div>
+                        <div id="searchResults" class="search-results"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- HISTORIQUE -->
+            <section class="section" id="section-history">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>📋 Historique Transactions</h3>
+                        <span class="badge" id="historyCount">0</span>
+                    </div>
+                    <div class="table-wrap">
+                        <table class="data-table">
+                            <thead><tr><th>Date/Heure</th><th>Client</th><th>Compte</th><th>Type</th><th>Montant</th><th>Solde Apres</th><th>Statut</th></tr></thead>
+                            <tbody id="allTxns"><tr><td colspan="7">Chargement...</td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- WALLET -->
+            <section class="section" id="section-wallet">
+                <div class="wallet-card">
+                    <div class="wallet-header">
+                        <h2>👛 Mon Wallet</h2>
+                        <p>Etat de votre caisse en temps reel</p>
+                    </div>
+                    <div class="wallet-grid">
+                        <div class="wallet-item htg">
+                            <div class="wallet-item-header">
+                                <span>🇭🇹 Gourdes Haitiennes</span>
+                                <span class="currency-code">HTG</span>
+                            </div>
+                            <div class="wallet-balance" id="fullWalletHTG">0.00</div>
+                            <div class="wallet-label">Disponible en caisse</div>
+                        </div>
+                        <div class="wallet-item dop">
+                            <div class="wallet-item-header">
+                                <span>🇩🇴 Pesos Dominicains</span>
+                                <span class="currency-code">DOP</span>
+                            </div>
+                            <div class="wallet-balance" id="fullWalletDOP">0.00</div>
+                            <div class="wallet-label">Disponible en caisse</div>
+                        </div>
+                        <div class="wallet-item usd">
+                            <div class="wallet-item-header">
+                                <span>🇺🇸 Dollars Americains</span>
+                                <span class="currency-code">USD</span>
+                            </div>
+                            <div class="wallet-balance" id="fullWalletUSD">0.00</div>
+                            <div class="wallet-label">Disponible en caisse</div>
+                        </div>
+                    </div>
+                    <div class="wallet-stats">
+                        <div class="wallet-stat">
+                            <div class="ws-label">Limite Journaliere</div>
+                            <div class="ws-value" id="dailyLimit">100,000.00 HTG</div>
+                        </div>
+                        <div class="wallet-stat">
+                            <div class="ws-label">Total Traite Aujourd'hui</div>
+                            <div class="ws-value" id="dailyTotal">0.00 HTG</div>
+                        </div>
+                        <div class="wallet-stat">
+                            <div class="ws-label">Reste Disponible</div>
+                            <div class="ws-value" id="dailyRemaining">100,000.00 HTG</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- RECUS -->
+            <section class="section" id="section-receipts">
+                <div class="card">
+                    <div class="card-header"><h3>🧾 Recus Imprimes</h3></div>
+                    <div style="padding:1rem;color:#64748B;text-align:center;">
+                        <p>Les recus sont generes automatiquement apres chaque transaction.</p>
+                        <p style="margin-top:0.5rem">Utilisez les boutons dans l'historique pour reimprimer.</p>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+    </main>
+</div>
+
+<!-- MODAL CONFIRMATION -->
+<div class="modal" id="confirmModal" style="display:none">
+    <div class="modal-content">
+        <div class="modal-icon" id="modalIcon">⚠️</div>
+        <h3 id="modalTitle">Confirmer</h3>
+        <p id="modalMessage"></p>
+        <div class="modal-actions">
+            <button class="btn-cancel" onclick="closeModal()">Annuler</button>
+            <button class="btn-confirm" id="modalConfirm">Confirmer</button>
+        </div>
+    </div>
+</div>
+
+<script>
+const SUPA_URL = "https://fnuplvbiwfvauwkpxsoc.supabase.co";
+const SUPA_KEY = "sb_publishable_QBqdKkpcjDS3_psUdmc4uA_sMCzLqLo";
+const CASHIER_ID = "CASH-001";
+const CASHIER_NAME = "Agent NEXUS";
+
+// FETCH
+async function supaFetch(table, method="GET", body=null, filter="") {
+    const opts = {
+        method,
+        headers: {
+            "apikey": SUPA_KEY,
+            "Authorization": `Bearer ${SUPA_KEY}`,
+            "Content-Type": "application/json",
+            "Prefer": method !== "GET" ? "return=representation" : ""
+        }
+    };
+    if (body) opts.body = JSON.stringify(body);
+    const r = await fetch(`${SUPA_URL}/rest/v1/${table}${filter}`, opts);
+    if (method === "GET") return await r.json();
+    return r;
+}
+
+function fmt(d) { return d ? new Date(d).toLocaleString("fr-FR") : "-"; }
+function fmtAmount(n) { return Number(n).toLocaleString("fr-FR", {minimumFractionDigits:2}) }
+
+function showSection(el, e) {
+    if (e) e.preventDefault();
+    document.querySelectorAll(".nav-item").forEach(i => i.classList.remove("active"));
+    el.classList.add("active");
+    const id = el.getAttribute("href").replace("#", "");
+    document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
+    document.getElementById("section-" + id).classList.add("active");
+    document.getElementById("pageTitle").textContent = el.textContent.trim();
+}
+
+function showSectionByName(e, id) {
+    e.preventDefault();
+    document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
+    document.getElementById("section-" + id).classList.add("active");
+}
+
+function toggleSidebar() { document.getElementById("sidebar").classList.toggle("open"); }
+function logout() { window.location.href = "login.html"; }
+function closeModal() { document.getElementById("confirmModal").style.display = "none"; }
+
+// CLOCK
+function updateClock() {
+    document.getElementById("timeDisplay").textContent = new Date().toLocaleTimeString("fr-FR");
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// LOAD WALLET
+async function loadWallet() {
+    const data = await supaFetch("cashier_wallets", "GET", null, `?cashier_id=eq.${CASHIER_ID}`);
+    if (data && data[0]) {
+        const w = data[0];
+        document.getElementById("walletHTG").textContent = fmtAmount(w.balance_htg) + " HTG";
+        document.getElementById("walletDOP").textContent = fmtAmount(w.balance_dop) + " DOP";
+        document.getElementById("walletUSD").textContent = fmtAmount(w.balance_usd) + " USD";
+        document.getElementById("fullWalletHTG").textContent = fmtAmount(w.balance_htg);
+        document.getElementById("fullWalletDOP").textContent = fmtAmount(w.balance_dop);
+        document.getElementById("fullWalletUSD").textContent = fmtAmount(w.balance_usd);
+        document.getElementById("dailyLimit").textContent = fmtAmount(w.daily_limit) + " HTG";
+        document.getElementById("dailyTotal").textContent = fmtAmount(w.daily_total) + " HTG";
+        document.getElementById("dailyRemaining").textContent = fmtAmount(w.daily_limit - w.daily_total) + " HTG";
+    }
+}
+
+// LOAD TRANSACTIONS
+async function loadTransactions() {
+    const txns = await supaFetch("transactions", "GET", null, `?cashier_id=eq.${CASHIER_ID}&order=created_at.desc`);
+    const today = new Date().toDateString();
+    const todayTxns = txns.filter(t => new Date(t.created_at).toDateString() === today);
+    const depots = todayTxns.filter(t => t.transaction_type === "depot");
+    const retraits = todayTxns.filter(t => t.transaction_type === "retrait");
+    const totalAmt = todayTxns.reduce((s, t) => s + Number(t.amount), 0);
+
+    document.getElementById("totalDepots").textContent = depots.length;
+    document.getElementById("totalRetraits").textContent = retraits.length;
+    document.getElementById("totalOps").textContent = todayTxns.length;
+    document.getElementById("totalAmount").textContent = fmtAmount(totalAmt);
+    document.getElementById("historyCount").textContent = txns.length;
+
+    document.getElementById("recentTxns").innerHTML = txns.slice(0,5).map(t =>
+        `<tr><td>${new Date(t.created_at).toLocaleTimeString("fr-FR")}</td><td>${t.client_name||"-"}</td><td><span class="txn-badge ${t.transaction_type}">${t.transaction_type}</span></td><td>${fmtAmount(t.amount)} ${t.currency}</td><td><span class="status-badge">${t.status}</span></td></tr>`
+    ).join("") || "<tr><td colspan='5'>Aucune transaction</td></tr>";
+
+    document.getElementById("allTxns").innerHTML = txns.map(t =>
+        `<tr><td>${fmt(t.created_at)}</td><td>${t.client_name||"-"}</td><td>${t.account_no||"-"}</td><td><span class="txn-badge ${t.transaction_type}">${t.transaction_type}</span></td><td>${fmtAmount(t.amount)} ${t.currency}</td><td>${fmtAmount(t.balance_after)} ${t.currency}</td><td><span class="status-badge">${t.status}</span></td></tr>`
+    ).join("") || "<tr><td colspan='7'>Aucune transaction</td></tr>";
+}
+
+// SEARCH ACCOUNT
+async function searchAccount(type) {
+    const accountNo = document.getElementById(type + "AccountNo").value.trim();
+    if (!accountNo) return alert("Entrez un numero de compte");
+    const data = await supaFetch("savings_accounts", "GET", null, `?account_no=eq.${accountNo}`);
+    if (!data || data.length === 0) {
+        alert("Compte non trouve. Verifiez le numero.");
+        return;
+    }
+    const acc = data[0];
+    document.getElementById(type + "ClientInfo").style.display = "block";
+    document.getElementById(type + "ClientName").textContent = acc.client_name;
+    document.getElementById(type + "ClientMeta").textContent = `${acc.account_type} | ${acc.currency} | ${acc.branch||""}`;
+    document.getElementById(type + "CurrentBalance").textContent = fmtAmount(acc.balance) + " " + acc.currency;
+    document.getElementById(type + "AccountNo").dataset.found = JSON.stringify(acc);
+}
+
+// EXECUTE DEPOT
+async function executeDepot() {
+    const accData = document.getElementById("depotAccountNo").dataset.found;
+    if (!accData) return alert("Recherchez d'abord le compte client");
+    const acc = JSON.parse(accData);
+    const amount = parseFloat(document.getElementById("depotAmount").value);
+    const currency = document.getElementById("depotCurrency").value;
+    const notes = document.getElementById("depotNotes").value;
+    if (!amount || amount <= 0) return alert("Entrez un montant valide");
+
+    const balanceBefore = Number(acc.balance);
+    const balanceAfter = balanceBefore + amount;
+
+    // Update balance
+    await supaFetch("savings_accounts", "PATCH", {balance: balanceAfter}, `?account_no=eq.${acc.account_no}`);
+
+    // Record transaction
+    await supaFetch("transactions", "POST", {
+        account_no: acc.account_no,
+        client_name: acc.client_name,
+        transaction_type: "depot",
+        amount: amount,
+        balance_before: balanceBefore,
+        balance_after: balanceAfter,
+        currency: currency,
+        cashier_id: CASHIER_ID,
+        cashier_name: CASHIER_NAME,
+        branch: acc.branch || "Santo Domingo",
+        notes: notes,
+        status: "completed"
+    });
+
+    // Update wallet
+    const walletField = "balance_" + currency.toLowerCase();
+    const walletData = await supaFetch("cashier_wallets", "GET", null, `?cashier_id=eq.${CASHIER_ID}`);
+    if (walletData && walletData[0]) {
+        const newBal = Number(walletData[0][walletField]) + amount;
+        const newDaily = Number(walletData[0].daily_total) + amount;
+        await supaFetch("cashier_wallets", "PATCH",
+            {[walletField]: newBal, daily_total: newDaily},
+            `?cashier_id=eq.${CASHIER_ID}`
+        );
+    }
+
+    // Ouvri resi
+    const p = new URLSearchParams({
+        client_name: acc.client_name,
+        account_no: acc.account_no,
+        amount: amount,
+        currency: currency,
+        balance_before: balanceBefore,
+        balance_after: balanceAfter,
+        type: "depot"
+    });
+    window.open("receipt.html?" + p.toString(), "_blank");
+
+    alert("Depot effectue avec succes!");
+    resetForm("depot");
+    loadDashboard();
+}
+
+// EXECUTE RETRAIT
+async function executeRetrait() {
+    const accData = document.getElementById("retraitAccountNo").dataset.found;
+    if (!accData) return alert("Recherchez d'abord le compte client");
+    const acc = JSON.parse(accData);
+    const amount = parseFloat(document.getElementById("retraitAmount").value);
+    const currency = document.getElementById("retraitCurrency").value;
+    const idDoc = document.getElementById("retraitId").value;
+    const notes = document.getElementById("retraitNotes").value;
+
+    if (!amount || amount <= 0) return alert("Entrez un montant valide");
+    if (!idDoc) return alert("Piece d'identite obligatoire pour un retrait");
+    if (amount > Number(acc.balance)) return alert("Solde insuffisant! Solde: " + fmtAmount(acc.balance) + " " + acc.currency);
+
+    const balanceBefore = Number(acc.balance);
+    const balanceAfter = balanceBefore - amount;
+
+    // Update balance
+    await supaFetch("savings_accounts", "PATCH", {balance: balanceAfter}, `?account_no=eq.${acc.account_no}`);
+
+    // Record transaction
+    await supaFetch("transactions", "POST", {
+        account_no: acc.account_no,
+        client_name: acc.client_name,
+        transaction_type: "retrait",
+        amount: amount,
+        balance_before: balanceBefore,
+        balance_after: balanceAfter,
+        currency: currency,
+        cashier_id: CASHIER_ID,
+        cashier_name: CASHIER_NAME,
+        branch: acc.branch || "Santo Domingo",
+        notes: notes + " | ID: " + idDoc,
+        status: "completed"
+    });
+
+    // Update wallet
+    const walletField = "balance_" + currency.toLowerCase();
+    const walletData = await supaFetch("cashier_wallets", "GET", null, `?cashier_id=eq.${CASHIER_ID}`);
+    if (walletData && walletData[0]) {
+        const newBal = Number(walletData[0][walletField]) - amount;
+        const newDaily = Number(walletData[0].daily_total) + amount;
+        await supaFetch("cashier_wallets", "PATCH",
+            {[walletField]: newBal, daily_total: newDaily},
+            `?cashier_id=eq.${CASHIER_ID}`
+        );
+    }
+
+    // Ouvri resi
+    const p = new URLSearchParams({
+        client_name: acc.client_name,
+        account_no: acc.account_no,
+        amount: amount,
+        currency: currency,
+        balance_before: balanceBefore,
+        balance_after: balanceAfter,
+        type: "retrait"
+    });
+    window.open("receipt-withdrawal.html?" + p.toString(), "_blank");
+
+    alert("Retrait effectue avec succes!");
+    resetForm("retrait");
+    loadDashboard();
+}
+
+// SEARCH CLIENT
+async function searchClient() {
+    const q = document.getElementById("searchInput").value.trim().toLowerCase();
+    if (!q) return;
+    const data = await supaFetch("savings_accounts", "GET", null, "?order=created_at.desc");
+    const results = data.filter(a =>
+        a.client_name?.toLowerCase().includes(q) ||
+        a.account_no?.toLowerCase().includes(q) ||
+        a.client_phone?.includes(q)
+    );
+    document.getElementById("searchResults").innerHTML = results.length ? results.map(a =>
+        `<div class="search-result-card">
+            <div class="src-info">
+                <div class="src-name">${a.client_name}</div>
+                <div class="src-meta">${a.account_no} | ${a.account_type} | ${a.currency}</div>
+                <div class="src-phone">${a.client_phone || "-"}</div>
+            </div>
+            <div class="src-balance ${a.balance > 0 ? 'positive' : ''}">${fmtAmount(a.balance)} ${a.currency}</div>
+        </div>`
+    ).join("") : "<p style='color:#64748B;padding:1rem'>Aucun resultat trouve.</p>";
+}
+
+function resetForm(type) {
+    document.getElementById(type + "AccountNo").value = "";
+    document.getElementById(type + "AccountNo").dataset.found = "";
+    document.getElementById(type + "ClientInfo").style.display = "none";
+    document.getElementById(type + "Amount").value = "";
+    if (type === "depot") document.getElementById("depotNotes").value = "";
+    if (type === "retrait") {
+        document.getElementById("retraitId").value = "";
+        document.getElementById("retraitNotes").value = "";
+    }
+}
+
+async function loadDashboard() {
+    await loadWallet();
+    await loadTransactions();
+}
+
+document.addEventListener("DOMContentLoaded", loadDashboard);
+</script>
+</body>
+</html>
