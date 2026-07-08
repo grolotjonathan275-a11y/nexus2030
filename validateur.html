@@ -161,7 +161,7 @@ async function loadOverview(){
 
     const { data: all } = await supabaseClient
         .from("mobile_money_transactions")
-        .select("*, profiles(full_name)")
+        .select("*, profiles!mobile_money_transactions_created_by_fkey(full_name)")
         .order("created_at",{ascending:false});
 
     if(!all)return;
@@ -192,7 +192,7 @@ async function loadOverview(){
 async function loadPending(){
     const { data, error } = await supabaseClient
         .from("mobile_money_transactions")
-        .select("*, profiles(full_name, phone)")
+        .select("*, profiles!mobile_money_transactions_created_by_fkey(full_name, phone)")
         .eq("status","pending_validation")
         .order("created_at",{ascending:true});
 
@@ -267,7 +267,7 @@ async function processTransaction(id,newStatus){
 async function loadHistory(){
     const { data, error } = await supabaseClient
         .from("mobile_money_transactions")
-        .select("*, profiles(full_name)")
+        .select("*, profiles!mobile_money_transactions_created_by_fkey(full_name)")
         .neq("status","pending_validation")
         .order("created_at",{ascending:false})
         .limit(100);
