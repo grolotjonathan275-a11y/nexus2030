@@ -1116,7 +1116,24 @@ async function submitMoneyService(){
         return;
     }
 
-    alert(`✅ Transaction soumise pour validation!\n\nClient: ${senderName}\nMontant: ${fmtA(amt)} DOP\nTotal a payer: ${fmtA(total)} DOP\n\nStatut: En attente de validation (max 2h)\nVous pouvez annuler pendant 10 minutes.`);
+    const receiptParams=new URLSearchParams({
+        id: data.id,
+        service_type: currentMoneyService,
+        sender_full_name: senderName,
+        sender_whatsapp: whatsapp,
+        mobile_number: mobileNumber,
+        amount_dop: amt,
+        rate: rate,
+        amount_htg: amountHtg,
+        fee_percent: feePct,
+        fee_dop: feeDop,
+        total_charged_dop: total,
+        branch: AGENT_BRANCH,
+        staff_name: AGENT_NAME,
+        created_at: data.created_at,
+        status: "pending_validation"
+    });
+    window.open("receipt-mobile-money.html?"+receiptParams.toString(),"_blank");
     closeMoneyServiceForm();
     loadMoneyWallet();
     loadMyMoneyTransactions();

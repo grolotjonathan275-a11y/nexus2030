@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Recu Transaction - NEXUS 2030</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; font-family:'Inter',sans-serif; }
+body { background:#EEF2F7; padding:2rem 1rem; display:flex; flex-direction:column; align-items:center; }
+.receipt {
+    background:#fff; width:100%; max-width:420px; border-radius:16px;
+    box-shadow:0 10px 30px rgba(0,0,0,0.08); overflow:hidden;
+}
+.r-header {
+    padding:1.5rem; text-align:center; color:#fff;
+}
+.r-header.moncash { background:linear-gradient(135deg,#E85D04,#F77F00); }
+.r-header.natcash { background:linear-gradient(135deg,#0EA5E9,#0284C7); }
+.r-logo { font-size:1.3rem; font-weight:800; letter-spacing:0.5px; }
+.r-logo span { color:rgba(255,255,255,0.85); font-weight:400; }
+.r-service { font-size:1.1rem; font-weight:700; margin-top:0.4rem; }
+.r-status {
+    display:inline-block; margin-top:0.6rem; padding:0.3rem 0.9rem;
+    background:rgba(255,255,255,0.25); border-radius:999px; font-size:0.8rem; font-weight:600;
+}
+.r-body { padding:1.5rem; }
+.r-amount-big {
+    text-align:center; padding:1rem 0 1.25rem; border-bottom:1px dashed #E2E8F0; margin-bottom:1rem;
+}
+.r-amount-big .label { font-size:0.8rem; color:#64748B; margin-bottom:0.25rem; }
+.r-amount-big .value { font-size:2rem; font-weight:800; color:#0F172A; }
+.r-row {
+    display:flex; justify-content:space-between; padding:0.5rem 0;
+    font-size:0.88rem; border-bottom:1px solid #F1F5F9;
+}
+.r-row span:first-child { color:#64748B; }
+.r-row strong { color:#0F172A; font-weight:600; text-align:right; }
+.r-section-title {
+    font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px; color:#94A3B8;
+    margin:1.1rem 0 0.4rem; font-weight:700;
+}
+.r-total {
+    display:flex; justify-content:space-between; padding:0.9rem 0; margin-top:0.5rem;
+    border-top:2px solid #0F172A; font-size:1rem;
+}
+.r-total strong { font-size:1.15rem; }
+.r-note {
+    background:#FFFBEB; border:1px solid #FDE68A; border-radius:10px;
+    padding:0.85rem; margin-top:1.1rem; font-size:0.8rem; color:#92400E; line-height:1.5;
+}
+.r-note.status-approved { background:#DCFCE7; border-color:#86EFAC; color:#166534; }
+.r-note.status-rejected, .r-note.status-wrong_number { background:#FEE2E2; border-color:#FCA5A5; color:#991B1B; }
+.r-note.status-cancelled { background:#F1F5F9; border-color:#CBD5E1; color:#475569; }
+.r-footer {
+    text-align:center; padding:1rem 1.5rem 1.5rem; font-size:0.7rem; color:#94A3B8;
+}
+.actions {
+    display:flex; gap:0.6rem; max-width:420px; width:100%; margin-top:1rem;
+}
+.btn {
+    flex:1; padding:0.85rem; border:none; border-radius:10px; font-weight:600;
+    font-size:0.9rem; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:0.4rem;
+}
+.btn-print { background:#0F172A; color:#fff; }
+.btn-whatsapp { background:#25D366; color:#fff; }
+.btn-refresh { background:#E2E8F0; color:#0F172A; }
+@media print {
+    body { background:#fff; padding:0; }
+    .actions { display:none; }
+    .receipt { box-shadow:none; max-width:100%; }
+}
+</style>
+</head>
+<body>
+
+<div class="receipt" id="receipt">
+    <div class="r-header" id="rHeader">
+        <div class="r-logo">NEXUS <span>2030</span></div>
+        <div class="r-service" id="rServiceName">Vente MonCash</div>
+        <div class="r-status" id="rStatusBadge">⏳ En attente de validation</div>
+    </div>
+    <div class="r-body">
+        <div class="r-amount-big">
+            <div class="label">Client va recevoir</div>
+            <div class="value" id="rAmountHtg">-- HTG</div>
+        </div>
+
+        <div class="r-section-title">Details de la transaction</div>
+        <div class="r-row"><span>Date & Heure</span><strong id="rDateTime">-</strong></div>
+        <div class="r-row"><span>Succursale</span><strong id="rBranch">-</strong></div>
+        <div class="r-row"><span>Traite par</span><strong id="rStaffName">-</strong></div>
+
+        <div class="r-section-title">Informations Client</div>
+        <div class="r-row"><span>Nom complet</span><strong id="rSenderName">-</strong></div>
+        <div class="r-row"><span>WhatsApp</span><strong id="rWhatsapp">-</strong></div>
+        <div class="r-row"><span>Numero <span id="rServiceLabel">MonCash</span></span><strong id="rMobileNumber">-</strong></div>
+
+        <div class="r-section-title">Montants</div>
+        <div class="r-row"><span>Montant envoye</span><strong id="rAmountDop">-</strong></div>
+        <div class="r-row"><span>Taux applique</span><strong id="rRate">-</strong></div>
+        <div class="r-row"><span>Frais de service</span><strong id="rFee">-</strong></div>
+
+        <div class="r-total">
+            <span>Total paye par le client</span>
+            <strong id="rTotal">-</strong>
+        </div>
+
+        <div class="r-note" id="rNote">
+            ℹ️ Cette transaction sera validee par un Validateur NEXUS dans un maximum de <strong>2 heures</strong> (selon la disponibilite du reseau Digicel/Natcom).
+            Le client peut demander l'annulation dans les <strong>10 minutes</strong> suivant l'envoi ; passe ce delai, l'operation est definitive.
+        </div>
+    </div>
+    <div class="r-footer">
+        Recu genere electroniquement par NEXUS 2030 — Conservez ce recu comme preuve de transaction.
+    </div>
+</div>
+
+<div class="actions">
+    <button class="btn btn-refresh" onclick="refreshStatus()">🔄 Statut</button>
+    <button class="btn btn-print" onclick="window.print()">🖨️ Imprimer / PDF</button>
+    <button class="btn btn-whatsapp" onclick="shareWhatsapp()">📲 WhatsApp</button>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPA_URL="https://fnuplvbiwfvauwkpxsoc.supabase.co";
+const SUPA_KEY="sb_publishable_QBqdKkpcjDS3_psUdmc4uA_sMCzLqLo";
+const supabaseClient = supabase.createClient(SUPA_URL, SUPA_KEY);
+
+const params = new URLSearchParams(window.location.search);
+const txId = params.get("id");
+
+const statusLabels = {
+    pending_validation: "⏳ En attente de validation",
+    approved: "✅ Transaction Approuvee",
+    rejected: "❌ Transaction Rejetee",
+    wrong_number: "⚠️ Numero Incorrect",
+    cancelled: "🚫 Transaction Annulee"
+};
+
+const statusNotes = {
+    pending_validation: "ℹ️ Cette transaction sera validee par un Validateur NEXUS dans un maximum de <strong>2 heures</strong> (selon la disponibilite du reseau Digicel/Natcom). Le client peut demander l'annulation dans les <strong>10 minutes</strong> suivant l'envoi ; passe ce delai, l'operation est definitive.",
+    approved: "✅ Cette transaction a ete verifiee et approuvee par un Validateur NEXUS. Operation completee avec succes.",
+    rejected: "❌ Cette transaction a ete rejetee par un Validateur NEXUS. Veuillez contacter votre superviseur pour plus d'informations.",
+    wrong_number: "⚠️ Le numero fourni a ete signale comme incorrect par un Validateur NEXUS. Veuillez verifier le numero et refaire la transaction.",
+    cancelled: "🚫 Cette transaction a ete annulee."
+};
+
+function fmtA(n){return Number(n||0).toLocaleString("fr-FR",{minimumFractionDigits:2});}
+
+function renderReceipt(t){
+    const isMoncash = t.service_type==="moncash";
+    document.getElementById("rHeader").className = "r-header " + t.service_type;
+    document.getElementById("rServiceName").textContent = "Vente " + (isMoncash?"MonCash":"NatCash");
+    document.getElementById("rServiceLabel").textContent = isMoncash?"MonCash":"NatCash";
+    document.getElementById("rStatusBadge").textContent = statusLabels[t.status] || t.status;
+
+    document.getElementById("rAmountHtg").textContent = fmtA(t.amount_htg) + " HTG";
+    document.getElementById("rDateTime").textContent = new Date(t.created_at).toLocaleString("fr-FR");
+    document.getElementById("rBranch").textContent = t.branch || "-";
+    document.getElementById("rStaffName").textContent = t.staff_name || "-";
+    document.getElementById("rSenderName").textContent = t.sender_full_name || "-";
+    document.getElementById("rWhatsapp").textContent = t.sender_whatsapp || "-";
+    document.getElementById("rMobileNumber").textContent = t.mobile_number || "-";
+    document.getElementById("rAmountDop").textContent = fmtA(t.amount_dop) + " DOP";
+    document.getElementById("rRate").textContent = "1 DOP = " + t.rate + " HTG";
+    document.getElementById("rFee").textContent = fmtA(t.fee_dop) + " DOP (" + t.fee_percent + "%)";
+    document.getElementById("rTotal").textContent = fmtA(t.total_charged_dop) + " DOP";
+
+    const noteEl = document.getElementById("rNote");
+    noteEl.className = "r-note status-" + t.status;
+    noteEl.innerHTML = statusNotes[t.status] || "";
+}
+
+function getDataFromParams(){
+    return {
+        service_type: params.get("service_type"),
+        sender_full_name: params.get("sender_full_name"),
+        sender_whatsapp: params.get("sender_whatsapp"),
+        mobile_number: params.get("mobile_number"),
+        amount_dop: params.get("amount_dop"),
+        rate: params.get("rate"),
+        amount_htg: params.get("amount_htg"),
+        fee_percent: params.get("fee_percent"),
+        fee_dop: params.get("fee_dop"),
+        total_charged_dop: params.get("total_charged_dop"),
+        branch: params.get("branch"),
+        staff_name: params.get("staff_name"),
+        created_at: params.get("created_at"),
+        status: params.get("status") || "pending_validation"
+    };
+}
+
+async function refreshStatus(){
+    if(!txId){
+        alert("Impossible de rafraichir: identifiant de transaction manquant.");
+        return;
+    }
+    const { data, error } = await supabaseClient
+        .from("mobile_money_transactions")
+        .select("*")
+        .eq("id", txId)
+        .single();
+    if(error || !data){
+        alert("Impossible de recuperer le statut actuel. Le recu affiche reste base sur les donnees de soumission.");
+        return;
+    }
+    renderReceipt({...data, staff_name: params.get("staff_name")});
+}
+
+function shareWhatsapp(){
+    const t = getDataFromParams();
+    const isMoncash = t.service_type==="moncash";
+    const msg = `*NEXUS 2030 — Recu de Transaction*\n\n`+
+        `Service: ${isMoncash?"MonCash":"NatCash"}\n`+
+        `Client: ${t.sender_full_name}\n`+
+        `Montant envoye: ${fmtA(t.amount_dop)} DOP\n`+
+        `Vous allez recevoir: ${fmtA(t.amount_htg)} HTG\n`+
+        `Frais: ${fmtA(t.fee_dop)} DOP\n`+
+        `Total paye: ${fmtA(t.total_charged_dop)} DOP\n`+
+        `Succursale: ${t.branch}\n`+
+        `Traite par: ${t.staff_name}\n`+
+        `Date: ${new Date(t.created_at).toLocaleString("fr-FR")}\n\n`+
+        `Statut: en attente de validation (max 2h). Annulation possible dans les 10 minutes.`;
+    const url = "https://wa.me/?text=" + encodeURIComponent(msg);
+    window.open(url, "_blank");
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    renderReceipt(getDataFromParams());
+});
+</script>
+
+</body>
+</html>
