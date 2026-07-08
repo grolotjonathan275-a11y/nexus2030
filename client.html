@@ -1,35 +1,721 @@
-<div class="quick-actions">
-    <h3>Actions Rapides</h3>
-    <div class="qa-grid">
-        <div class="qa-btn" onclick="goTo('transactions')">
-            <div class="qa-icon">📋</div>
-            <span>Transactions</span>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEXUS 2030 - Espace Client</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/client.css">
+</head>
+<body>
+
+<div class="auth-screen" id="authScreen">
+    <div class="auth-card">
+        <div class="auth-logo">
+            <div class="logo-icon">N</div>
+            <div><span class="logo-name">NEXUS</span><span class="logo-year">2030</span></div>
         </div>
-        <div class="qa-btn" onclick="goTo('profile')">
-            <div class="qa-icon">👤</div>
-            <span>Mon Profil</span>
+        <h2 id="authTitle">Connexion Client</h2>
+        <p class="auth-subtitle" id="authSubtitle">Accedez a votre espace personnel securise</p>
+        <div id="loginForm">
+            <div class="form-group">
+                <label>Email</label>
+                <input type="text" id="loginEmail" placeholder="email@exemple.com">
+            </div>
+            <div class="form-group">
+                <label>Mot de passe</label>
+                <div class="password-field">
+                    <input type="password" id="loginPassword" placeholder="••••••••">
+                    <button type="button" onclick="togglePwd('loginPassword',this)">👁</button>
+                </div>
+            </div>
+            <button class="btn-auth" onclick="loginClient()">Se Connecter</button>
+            <div class="auth-links">
+                <a href="#" onclick="showRegister()">Ouvrir un compte</a>
+                <a href="#" onclick="showForgot()">Mot de passe oublie?</a>
+            </div>
         </div>
-        <div class="qa-btn" onclick="goTo('documents')">
-            <div class="qa-icon">📄</div>
-            <span>Documents</span>
+        <div id="registerForm" style="display:none">
+            <div class="register-steps">
+                <div class="reg-step active" id="regStep1Ind">1</div>
+                <div class="reg-line"></div>
+                <div class="reg-step" id="regStep2Ind">2</div>
+                <div class="reg-line"></div>
+                <div class="reg-step" id="regStep3Ind">3</div>
+                <div class="reg-line"></div>
+                <div class="reg-step" id="regStep4Ind">4</div>
+            </div>
+            <div id="regStep1">
+                <div class="form-grid-2">
+                    <div class="form-group"><label>Prenom *</label><input type="text" id="regFirstName" placeholder="Jean"></div>
+                    <div class="form-group"><label>Nom *</label><input type="text" id="regLastName" placeholder="Dupont"></div>
+                </div>
+                <div class="form-group"><label>Date de Naissance *</label><input type="date" id="regDOB"></div>
+                <div class="form-group"><label>Genre *</label>
+                    <select id="regGender"><option value="">Selectionner...</option><option value="M">Masculin</option><option value="F">Feminin</option></select>
+                </div>
+                <div class="form-group"><label>Nationalite *</label>
+                    <select id="regNat"><option value="HT">Haitienne</option><option value="DO">Dominicaine</option><option value="US">Americaine</option><option value="OTHER">Autre</option></select>
+                </div>
+                <div class="form-group"><label>Adresse *</label><input type="text" id="regAddress" placeholder="Rue, Ville"></div>
+                <div class="form-group"><label>Profession</label><input type="text" id="regOccupation" placeholder="Votre profession"></div>
+                <button class="btn-auth" onclick="regNext(2)">Suivant</button>
+                <p style="text-align:center;margin-top:1rem"><a href="#" onclick="showLogin()">Retour connexion</a></p>
+            </div>
+            <div id="regStep2" style="display:none">
+                <div class="form-group"><label>Email *</label><input type="email" id="regEmail" placeholder="email@exemple.com"></div>
+                <div class="form-group"><label>Telephone *</label><input type="tel" id="regPhone" placeholder="+509 / +1 809"></div>
+                <div class="form-group"><label>Mot de passe *</label>
+                    <div class="password-field">
+                        <input type="password" id="regPassword" placeholder="Min. 8 caracteres">
+                        <button type="button" onclick="togglePwd('regPassword',this)">👁</button>
+                    </div>
+                </div>
+                <div class="form-group"><label>Confirmer mot de passe *</label>
+                    <div class="password-field">
+                        <input type="password" id="regPassword2" placeholder="Confirmer">
+                        <button type="button" onclick="togglePwd('regPassword2',this)">👁</button>
+                    </div>
+                </div>
+                <div class="form-group"><label>Type de Compte *</label>
+                    <select id="regAccountType"><option value="individuel">Individuel</option><option value="epargne">Epargne</option><option value="entreprise">Entreprise</option></select>
+                </div>
+                <div class="form-group"><label>Devise *</label>
+                    <select id="regCurrency"><option value="HTG">Gourdes (HTG)</option><option value="DOP">Pesos (DOP)</option><option value="USD">Dollars (USD)</option></select>
+                </div>
+                <div style="display:flex;gap:1rem">
+                    <button class="btn-secondary" onclick="regNext(1)">Retour</button>
+                    <button class="btn-auth" onclick="regNext(3)">Suivant</button>
+                </div>
+            </div>
+            <div id="regStep3" style="display:none">
+                <div class="kyc-info">🔒 Verification d'identite requise</div>
+                <div class="form-group">
+                    <label>Photo Piece d'Identite *</label>
+                    <div class="upload-zone" onclick="document.getElementById('idDocInput').click()">
+                        <div class="upload-icon">📄</div>
+                        <p>Cliquez pour telecharger</p>
+                        <small>CIN, Passeport — JPG/PNG max 5MB</small>
+                        <input type="file" id="idDocInput" accept="image/*" style="display:none" onchange="previewDoc('idDocInput','idDocPreview')">
+                    </div>
+                    <img id="idDocPreview" style="display:none;width:100%;border-radius:10px;margin-top:0.5rem">
+                </div>
+                <div class="form-group">
+                    <label>Selfie avec Piece d'Identite *</label>
+                    <div class="upload-zone" onclick="document.getElementById('selfieInput').click()">
+                        <div class="upload-icon">🤳</div>
+                        <p>Selfie tenant votre piece</p>
+                        <small>Photo claire, visage visible</small>
+                        <input type="file" id="selfieInput" accept="image/*" style="display:none" onchange="previewDoc('selfieInput','selfiePreview')">
+                    </div>
+                    <img id="selfiePreview" style="display:none;width:100%;border-radius:10px;margin-top:0.5rem">
+                </div>
+                <div class="form-group">
+                    <label>Reconnaissance Faciale *</label>
+                    <div class="facial-zone">
+                        <video id="facialVideo" autoplay playsinline style="display:none;width:100%;border-radius:10px"></video>
+                        <canvas id="facialCanvas" style="display:none"></canvas>
+                        <img id="facialPreview" style="display:none;width:100%;border-radius:10px">
+                        <div id="facialPlaceholder" style="text-align:center;padding:1rem">
+                            <div style="font-size:2rem">👤</div>
+                            <p>Scanner votre visage</p>
+                            <button class="btn-facial" type="button" onclick="startFacial()">Activer Camera</button>
+                        </div>
+                    </div>
+                    <div id="facialStatus"></div>
+                </div>
+                <div style="display:flex;gap:1rem;margin-top:1rem">
+                    <button class="btn-secondary" onclick="regNext(2)">Retour</button>
+                    <button class="btn-auth" onclick="regNext(4)">Suivant</button>
+                </div>
+            </div>
+            <div id="regStep4" style="display:none">
+                <div class="confirm-box">
+                    <div style="font-size:2rem;margin-bottom:0.5rem">✅</div>
+                    <h3>Verifiez vos informations</h3>
+                    <div id="confirmSummary"></div>
+                </div>
+                <div class="form-group">
+                    <label style="display:flex;align-items:flex-start;gap:0.5rem;cursor:pointer">
+                        <input type="checkbox" id="termsCheck" style="margin-top:3px">
+                        <span>J'accepte les <a href="#">conditions d'utilisation</a></span>
+                    </label>
+                </div>
+                <div style="display:flex;gap:1rem">
+                    <button class="btn-secondary" onclick="regNext(3)">Retour</button>
+                    <button class="btn-auth" onclick="submitRegister()">Creer mon compte</button>
+                </div>
+            </div>
         </div>
-        <div class="qa-btn" onclick="goTo('security')">
-            <div class="qa-icon">🔒</div>
-            <span>Securite</span>
+        <div id="forgotForm" style="display:none">
+            <div class="form-group"><label>Votre Email</label><input type="email" id="forgotEmail" placeholder="email@exemple.com"></div>
+            <button class="btn-auth" onclick="sendReset()">Envoyer lien</button>
+            <p style="text-align:center;margin-top:1rem"><a href="#" onclick="showLogin()">Retour connexion</a></p>
         </div>
     </div>
 </div>
 
-<div class="recent-txns-card">
-    <div class="card-header">
-        <h3>Dernieres Transactions</h3>
-        <a href="#" onclick="goTo('transactions')">Voir tout</a>
-    </div>
-    <div class="table-wrap">
-        <table class="data-table">
-            <thead><tr><th>Date</th><th>Heure</th><th>Type</th><th>Montant</th><th>Solde</th></tr></thead>
-            <tbody id="overviewTxns"><tr><td colspan="5">Chargement...</td></tr></tbody>
-        </table>
-    </div>
+<div class="client-app" id="clientApp" style="display:none">
+    <aside class="client-sidebar" id="clientSidebar">
+        <div class="sidebar-logo">
+            <div class="logo-icon">N</div>
+            <div><span class="logo-name">NEXUS</span><span class="logo-year">2030</span></div>
+        </div>
+        <div class="client-profile-mini">
+            <div class="profile-avatar" id="sidebarAvatar">👤</div>
+            <div>
+                <div class="profile-name" id="sidebarName">Client</div>
+                <div class="profile-status">
+                    <span class="status-dot"></span>
+                    <span id="kycStatusText">En attente</span>
+                </div>
+            </div>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="nav-section">MON ESPACE</div>
+            <a href="#overview" class="nav-item active" onclick="clientSection(this,event)"><span>🏠</span>Apercu</a>
+            <a href="#accounts" class="nav-item" onclick="clientSection(this,event)"><span>💳</span>Mes Comptes</a>
+            <a href="#transactions" class="nav-item" onclick="clientSection(this,event)"><span>📋</span>Transactions</a>
+            <a href="#transfers" class="nav-item" onclick="clientSection(this,event)"><span>💸</span>Transferts</a>
+            <div class="nav-section">PROFIL</div>
+            <a href="#profile" class="nav-item" onclick="clientSection(this,event)"><span>👤</span>Mon Profil</a>
+            <a href="#documents" class="nav-item" onclick="clientSection(this,event)"><span>📄</span>Documents</a>
+            <a href="#security" class="nav-item" onclick="clientSection(this,event)"><span>🔒</span>Securite</a>
+            <a href="#notifications" class="nav-item" onclick="clientSection(this,event)"><span>🔔</span>Notifications</a>
+            <div class="nav-section">SUPPORT</div>
+            <a href="#support" class="nav-item" onclick="clientSection(this,event)"><span>💬</span>Support</a>
+            <a href="#" class="nav-item logout" onclick="clientLogout()"><span>🚪</span>Deconnexion</a>
+        </nav>
+    </aside>
+    <main class="client-main">
+        <header class="client-topbar">
+            <button class="menu-toggle" onclick="toggleClientSidebar()">☰</button>
+            <div class="topbar-greeting" id="topbarGreeting">Bonjour!</div>
+            <div class="topbar-right">
+                <div class="time-display" id="clientTime"></div>
+                <div class="notif-btn">🔔</div>
+                <div class="profile-avatar-small" id="topbarAvatar">👤</div>
+            </div>
+        </header>
+        <div class="client-content">
+
+            <section class="csection active" id="csection-overview">
+                <div class="overview-hero">
+                    <div>
+                        <div class="hero-greeting" id="heroGreeting">Bonjour,</div>
+                        <div class="hero-name" id="heroName">Client</div>
+                        <div class="hero-date" id="heroDate"></div>
+                    </div>
+                    <div class="kyc-badge pending" id="kycBadge">KYC En attente</div>
+                </div>
+                <div class="balance-cards">
+                    <div class="balance-card main">
+                        <div class="bc-label">Solde Total</div>
+                        <div class="bc-amount" id="totalBalance">0.00</div>
+                        <div class="bc-currency" id="totalCurrency">HTG</div>
+                        <div class="bc-account" id="mainAccountNo">---</div>
+                    </div>
+                </div>
+                <div class="quick-actions">
+                    <h3>Actions Rapides</h3>
+                    <div class="qa-grid">
+                        <div class="qa-btn" onclick="goTo('transactions')">
+                            <div class="qa-icon">📋</div>
+                            <span>Transactions</span>
+                        </div>
+                        <div class="qa-btn" onclick="goTo('profile')">
+                            <div class="qa-icon">👤</div>
+                            <span>Mon Profil</span>
+                        </div>
+                        <div class="qa-btn" onclick="goTo('documents')">
+                            <div class="qa-icon">📄</div>
+                            <span>Documents</span>
+                        </div>
+                        <div class="qa-btn" onclick="goTo('security')">
+                            <div class="qa-icon">🔒</div>
+                            <span>Securite</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="recent-txns-card">
+                    <div class="card-header">
+                        <h3>Dernieres Transactions</h3>
+                        <a href="#" onclick="goTo('transactions')">Voir tout</a>
+                    </div>
+                    <div class="table-wrap">
+                        <table class="data-table">
+                            <thead><tr><th>Date</th><th>Heure</th><th>Type</th><th>Montant</th><th>Solde</th></tr></thead>
+                            <tbody id="overviewTxns"><tr><td colspan="5">Chargement...</td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <section class="csection" id="csection-accounts">
+                <h2 class="section-title">💳 Mes Comptes</h2>
+                <div id="accountsList"></div>
+            </section>
+
+            <section class="csection" id="csection-transactions">
+                <div class="txn-header">
+                    <h2 class="section-title">📋 Historique Transactions</h2>
+                    <div class="txn-filters">
+                        <select id="txnFilter" onchange="filterTxns()">
+                            <option value="all">Toutes</option>
+                            <option value="depot">Depots</option>
+                            <option value="retrait">Retraits</option>
+                        </select>
+                        <input type="date" id="txnDateFrom" onchange="filterTxns()">
+                        <input type="date" id="txnDateTo" onchange="filterTxns()">
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="table-wrap">
+                        <table class="data-table">
+                            <thead><tr><th>Date</th><th>Heure</th><th>Type</th><th>Montant</th><th>Avant</th><th>Apres</th><th>Caissier</th><th>Statut</th></tr></thead>
+                            <tbody id="allClientTxns"><tr><td colspan="8">Chargement...</td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <section class="csection" id="csection-transfers">
+                <h2 class="section-title">💸 Transferts</h2>
+                <div class="transfer-info-card">
+                    <div style="font-size:1.75rem">ℹ️</div>
+                    <div>
+                        <h3>Comment effectuer un transfert?</h3>
+                        <p>Rendez-vous dans l'une de nos succursales avec votre piece d'identite pour effectuer des transferts MonCash, NatCash, Zelle ou CashApp.</p>
+                        <a href="branches.html" class="btn-small">Trouver une succursale</a>
+                    </div>
+                </div>
+            </section>
+
+            <section class="csection" id="csection-profile">
+                <h2 class="section-title">👤 Mon Profil</h2>
+                <div class="profile-card">
+                    <div class="profile-photo-section">
+                        <div class="profile-photo-wrap">
+                            <img id="profilePhotoImg" src="" alt="" style="display:none;width:100px;height:100px;border-radius:50%;object-fit:cover;border:4px solid rgba(255,255,255,0.3)">
+                            <div id="profilePhotoPlaceholder" style="width:100px;height:100px;border-radius:50%;background:rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;font-size:3rem;border:4px solid rgba(255,255,255,0.3)">👤</div>
+                            <button class="change-photo-btn" type="button" onclick="document.getElementById('profilePhotoInput').click()">📷</button>
+                            <input type="file" id="profilePhotoInput" accept="image/*" style="display:none" onchange="changeProfilePhoto(this)">
+                        </div>
+                        <div>
+                            <div class="profile-full-name" id="profileFullName">-</div>
+                            <div class="profile-account-no" id="profileAccountNo">-</div>
+                            <div class="profile-member-since" id="profileMemberSince">-</div>
+                        </div>
+                    </div>
+                    <div class="profile-form">
+                        <div class="form-section-title">Informations Personnelles</div>
+                        <div class="form-grid-2">
+                            <div class="form-group"><label>Prenom</label><input type="text" id="profFirstName" readonly></div>
+                            <div class="form-group"><label>Nom</label><input type="text" id="profLastName" readonly></div>
+                        </div>
+                        <div class="form-grid-2">
+                            <div class="form-group"><label>Date Naissance</label><input type="text" id="profDOB" readonly></div>
+                            <div class="form-group"><label>Genre</label><input type="text" id="profGender" readonly></div>
+                        </div>
+                        <div class="form-group"><label>Email</label><input type="email" id="profEmail" readonly></div>
+                        <div class="form-group"><label>Telephone</label><input type="tel" id="profPhone" readonly></div>
+                        <div class="form-group"><label>Adresse</label><input type="text" id="profAddress"></div>
+                        <div class="form-group"><label>Profession</label><input type="text" id="profOccupation"></div>
+                        <div class="form-group"><label>Langue</label>
+                            <select id="profLang">
+                                <option value="fr">Francais</option>
+                                <option value="es">Espanol</option>
+                                <option value="en">English</option>
+                                <option value="ht">Kreyol</option>
+                                <option value="pt">Portugues</option>
+                            </select>
+                        </div>
+                        <button class="btn-save" onclick="saveProfile()">💾 Sauvegarder</button>
+                    </div>
+                </div>
+            </section>
+
+            <section class="csection" id="csection-documents">
+                <h2 class="section-title">📄 Mes Documents</h2>
+                <div class="docs-grid">
+                    <div class="doc-card">
+                        <div class="doc-icon">🪪</div>
+                        <div class="doc-info"><div class="doc-name">Piece d'Identite</div><div class="doc-status" id="idDocStatus">Non soumis</div></div>
+                        <button class="doc-btn" onclick="document.getElementById('newIdDoc').click()">Mettre a jour</button>
+                        <input type="file" id="newIdDoc" accept="image/*" style="display:none" onchange="uploadDoc('id_document_photo',this)">
+                    </div>
+                    <div class="doc-card">
+                        <div class="doc-icon">🤳</div>
+                        <div class="doc-info"><div class="doc-name">Selfie avec Piece</div><div class="doc-status" id="selfieDocStatus">Non soumis</div></div>
+                        <button class="doc-btn" onclick="document.getElementById('newSelfie').click()">Mettre a jour</button>
+                        <input type="file" id="newSelfie" accept="image/*" style="display:none" onchange="uploadDoc('facial_photo',this)">
+                    </div>
+                    <div class="doc-card">
+                        <div class="doc-icon">👤</div>
+                        <div class="doc-info"><div class="doc-name">Photo de Profil</div><div class="doc-status" id="photoDocStatus">Non soumis</div></div>
+                        <button class="doc-btn" onclick="document.getElementById('newPhoto').click()">Mettre a jour</button>
+                        <input type="file" id="newPhoto" accept="image/*" style="display:none" onchange="uploadDoc('profile_photo',this)">
+                    </div>
+                </div>
+                <div class="kyc-status-card">
+                    <div style="font-size:2rem" id="kycIcon">⏳</div>
+                    <div>
+                        <div class="kyc-title" id="kycTitle">Verification KYC en cours</div>
+                        <div class="kyc-desc" id="kycDesc">Vos documents sont en cours de verification.</div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="csection" id="csection-security">
+                <h2 class="section-title">🔒 Securite du Compte</h2>
+                <div class="security-grid">
+                    <div class="security-card">
+                        <div class="sec-icon">🔑</div>
+                        <div class="sec-info"><div class="sec-title">Changer mot de passe</div><div class="sec-desc">Modifiez votre mot de passe regulierement</div></div>
+                        <div class="sec-form" id="pwdForm" style="display:none">
+                            <input type="password" id="currentPwd" placeholder="Mot de passe actuel">
+                            <input type="password" id="newPwd" placeholder="Nouveau mot de passe">
+                            <input type="password" id="confirmPwd" placeholder="Confirmer">
+                            <button type="button" onclick="changePassword()">Confirmer</button>
+                        </div>
+                        <button class="sec-btn" onclick="toggleSecForm('pwdForm')">Modifier</button>
+                    </div>
+                    <div class="security-card">
+                        <div class="sec-icon">📱</div>
+                        <div class="sec-info"><div class="sec-title">Verification en 2 etapes</div><div class="sec-desc">Protection supplementaire</div></div>
+                        <div class="sec-toggle"><input type="checkbox" id="twoFactorToggle" onchange="toggle2FA(this)"><label for="twoFactorToggle"></label></div>
+                    </div>
+                    <div class="security-card">
+                        <div class="sec-icon">👁</div>
+                        <div class="sec-info"><div class="sec-title">Reconnaissance Faciale</div><div class="sec-desc">Mettre a jour votre biometrie</div></div>
+                        <button class="sec-btn" onclick="startFacial()">Mettre a jour</button>
+                    </div>
+                    <div class="security-card">
+                        <div class="sec-icon">📍</div>
+                        <div class="sec-info"><div class="sec-title">Sessions Actives</div><div class="sec-desc">Gerer vos sessions</div></div>
+                        <button class="sec-btn danger" onclick="clientLogout()">Deconnecter tout</button>
+                    </div>
+                </div>
+            </section>
+
+            <section class="csection" id="csection-notifications">
+                <h2 class="section-title">🔔 Notifications</h2>
+                <div class="notif-card">
+                    <div class="notif-item">
+                        <div class="notif-info"><div class="notif-title">Notifications Email</div><div class="notif-desc">Recevoir les alertes par email</div></div>
+                        <div class="sec-toggle"><input type="checkbox" id="emailNotif" checked onchange="saveNotifPref()"><label for="emailNotif"></label></div>
+                    </div>
+                    <div class="notif-item">
+                        <div class="notif-info"><div class="notif-title">Notifications SMS</div><div class="notif-desc">Recevoir les alertes par SMS</div></div>
+                        <div class="sec-toggle"><input type="checkbox" id="smsNotif" checked onchange="saveNotifPref()"><label for="smsNotif"></label></div>
+                    </div>
+                    <div class="notif-item">
+                        <div class="notif-info"><div class="notif-title">Alertes Transactions</div><div class="notif-desc">Notifie pour chaque transaction</div></div>
+                        <div class="sec-toggle"><input type="checkbox" id="txnNotif" checked><label for="txnNotif"></label></div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="csection" id="csection-support">
+                <h2 class="section-title">💬 Support Client</h2>
+                <div class="support-grid">
+                    <div class="support-card"><div class="support-icon">📞</div><h3>Telephone</h3><p>+1 (809) 000-0000</p><p class="support-hours">Lun-Ven: 8h-18h</p></div>
+                    <div class="support-card"><div class="support-icon">✉️</div><h3>Email</h3><p>support@nexus2030.com</p><p class="support-hours">Reponse sous 24h</p></div>
+                    <div class="support-card"><div class="support-icon">📍</div><h3>Succursales</h3><p>Trouvez la plus proche</p><a href="branches.html" class="btn-small">Voir la carte</a></div>
+                </div>
+                <div class="card" style="margin-top:1.5rem">
+                    <div class="card-header"><h3>Envoyer un message</h3></div>
+                    <div style="padding:1.5rem">
+                        <div class="form-group"><label>Sujet</label><input type="text" id="supportSubject" placeholder="Votre sujet..."></div>
+                        <div class="form-group"><label>Message</label><textarea id="supportMessage" rows="4" placeholder="Decrivez votre probleme..."></textarea></div>
+                        <button class="btn-auth" onclick="sendSupport()">Envoyer</button>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+    </main>
 </div>
-   
+
+<script>
+const SUPA_URL="https://fnuplvbiwfvauwkpxsoc.supabase.co";
+const SUPA_KEY="sb_publishable_QBqdKkpcjDS3_psUdmc4uA_sMCzLqLo";
+let currentClient=null,allTxnsData=[];
+
+async function supaFetch(table,method="GET",body=null,filter=""){
+    const opts={method,headers:{"apikey":SUPA_KEY,"Authorization":`Bearer ${SUPA_KEY}`,"Content-Type":"application/json","Prefer":method!=="GET"?"return=representation":""}};
+    if(body)opts.body=JSON.stringify(body);
+    const r=await fetch(`${SUPA_URL}/rest/v1/${table}${filter}`,opts);
+    if(method==="GET")return await r.json();
+    return r;
+}
+
+function fmt(d){return d?new Date(d).toLocaleDateString("fr-FR"):"-";}
+function fmtTime(d){return d?new Date(d).toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"}):"-";}
+function fmtAmt(n){return Number(n||0).toLocaleString("fr-FR",{minimumFractionDigits:2});}
+
+setInterval(()=>{const el=document.getElementById("clientTime");if(el)el.textContent=new Date().toLocaleTimeString("fr-FR");},1000);
+
+function showLogin(){document.getElementById("loginForm").style.display="block";document.getElementById("registerForm").style.display="none";document.getElementById("forgotForm").style.display="none";document.getElementById("authTitle").textContent="Connexion Client";}
+function showRegister(){document.getElementById("loginForm").style.display="none";document.getElementById("registerForm").style.display="block";document.getElementById("forgotForm").style.display="none";document.getElementById("authTitle").textContent="Creer un compte";}
+function showForgot(){document.getElementById("loginForm").style.display="none";document.getElementById("registerForm").style.display="none";document.getElementById("forgotForm").style.display="block";document.getElementById("authTitle").textContent="Reinitialiser mot de passe";}
+function togglePwd(id,btn){const i=document.getElementById(id);i.type=i.type==="password"?"text":"password";btn.textContent=i.type==="password"?"👁":"🙈";}
+
+function regNext(step){
+    for(let i=1;i<=4;i++){
+        document.getElementById("regStep"+i).style.display=i===step?"block":"none";
+        const ind=document.getElementById("regStep"+i+"Ind");
+        ind.classList.toggle("active",i===step);
+        ind.classList.toggle("done",i<step);
+    }
+    if(step===4){
+        document.getElementById("confirmSummary").innerHTML=`
+            <div class="summary-item"><span>Nom:</span><strong>${document.getElementById("regFirstName").value} ${document.getElementById("regLastName").value}</strong></div>
+            <div class="summary-item"><span>Email:</span><strong>${document.getElementById("regEmail").value}</strong></div>
+            <div class="summary-item"><span>Telephone:</span><strong>${document.getElementById("regPhone").value}</strong></div>
+            <div class="summary-item"><span>Type:</span><strong>${document.getElementById("regAccountType").value}</strong></div>
+            <div class="summary-item"><span>Devise:</span><strong>${document.getElementById("regCurrency").value}</strong></div>`;
+    }
+}
+
+async function loginClient(){
+    const email=document.getElementById("loginEmail").value.trim();
+    const pwd=document.getElementById("loginPassword").value;
+    if(!email||!pwd)return alert("Remplissez tous les champs");
+    const data=await supaFetch("savings_accounts","GET",null,`?email=eq.${encodeURIComponent(email)}`);
+    if(!data||data.length===0)return alert("Compte non trouve.");
+    const client=data[0];
+    if(client.is_blocked)return alert("Compte bloque. Contactez le support.");
+    if(client.password_hash!==btoa(pwd))return alert("Mot de passe incorrect.");
+    currentClient=client;
+    localStorage.setItem("nexus_client",JSON.stringify(client));
+    showDashboard();
+}
+
+async function submitRegister(){
+    if(!document.getElementById("termsCheck").checked)return alert("Acceptez les conditions.");
+    const firstName=document.getElementById("regFirstName").value.trim();
+    const lastName=document.getElementById("regLastName").value.trim();
+    const email=document.getElementById("regEmail").value.trim();
+    const phone=document.getElementById("regPhone").value.trim();
+    const pwd=document.getElementById("regPassword").value;
+    const pwd2=document.getElementById("regPassword2").value;
+    if(!firstName||!lastName||!email||!phone||!pwd)return alert("Remplissez tous les champs.");
+    if(pwd!==pwd2)return alert("Mots de passe differents.");
+    if(pwd.length<8)return alert("Mot de passe trop court (min. 8 caracteres).");
+    const accountNo="NEXUS-"+new Date().getFullYear()+"-"+String(Math.floor(Math.random()*999999)).padStart(6,"0");
+    const r=await supaFetch("savings_accounts","POST",{
+        account_no:accountNo,client_name:firstName+" "+lastName,
+        client_phone:phone,email,password_hash:btoa(pwd),
+        account_type:document.getElementById("regAccountType").value,
+        currency:document.getElementById("regCurrency").value,
+        client_nat:document.getElementById("regNat").value,
+        gender:document.getElementById("regGender").value,
+        date_of_birth:document.getElementById("regDOB").value,
+        address:document.getElementById("regAddress").value,
+        occupation:document.getElementById("regOccupation").value,
+        balance:0,kyc_status:"pending",status:"active",branch:"En ligne"
+    });
+    if(r.ok){const d=await r.json();currentClient=d[0];localStorage.setItem("nexus_client",JSON.stringify(currentClient));alert("Compte cree! Numero: "+accountNo);showDashboard();}
+    else{const e=await r.json();alert("Erreur: "+(e.message||"Email deja utilise."));}
+}
+
+function showDashboard(){
+    document.getElementById("authScreen").style.display="none";
+    document.getElementById("clientApp").style.display="flex";
+    loadClientData();
+}
+
+async function loadClientData(){
+    if(!currentClient)return;
+    const c=currentClient;
+    const h=new Date().getHours();
+    const gr=h<12?"Bonjour":h<18?"Bon apres-midi":"Bonsoir";
+    document.getElementById("sidebarName").textContent=c.client_name;
+    document.getElementById("heroGreeting").textContent=gr+",";
+    document.getElementById("heroName").textContent=c.client_name;
+    document.getElementById("heroDate").textContent=new Date().toLocaleDateString("fr-FR",{weekday:"long",year:"numeric",month:"long",day:"numeric"});
+    document.getElementById("topbarGreeting").textContent=gr+", "+c.client_name.split(" ")[0]+"!";
+    document.getElementById("mainAccountNo").textContent=c.account_no;
+    document.getElementById("profileFullName").textContent=c.client_name;
+    document.getElementById("profileAccountNo").textContent=c.account_no;
+    document.getElementById("profileMemberSince").textContent="Membre depuis "+fmt(c.created_at);
+    const fresh=await supaFetch("savings_accounts","GET",null,`?account_no=eq.${c.account_no}`);
+    if(fresh&&fresh[0]){currentClient=fresh[0];document.getElementById("totalBalance").textContent=fmtAmt(fresh[0].balance);document.getElementById("totalCurrency").textContent=fresh[0].currency;}
+    const kyc=c.kyc_status;
+    const kb=document.getElementById("kycBadge");
+    if(kyc==="approved"){kb.className="kyc-badge approved";kb.textContent="✅ KYC Verifie";document.getElementById("kycStatusText").textContent="Verifie";}
+    else if(kyc==="rejected"){kb.className="kyc-badge rejected";kb.textContent="❌ KYC Rejete";document.getElementById("kycStatusText").textContent="Rejete";}
+    else{kb.className="kyc-badge pending";kb.textContent="⏳ KYC En attente";document.getElementById("kycStatusText").textContent="En attente";}
+    const names=c.client_name.split(" ");
+    document.getElementById("profFirstName").value=names[0]||"";
+    document.getElementById("profLastName").value=names.slice(1).join(" ")||"";
+    document.getElementById("profEmail").value=c.email||"";
+    document.getElementById("profPhone").value=c.client_phone||"";
+    document.getElementById("profDOB").value=c.date_of_birth||"";
+    document.getElementById("profGender").value=c.gender||"";
+    document.getElementById("profAddress").value=c.address||"";
+    document.getElementById("profOccupation").value=c.occupation||"";
+    if(c.preferred_language)document.getElementById("profLang").value=c.preferred_language;
+    if(c.two_factor)document.getElementById("twoFactorToggle").checked=true;
+    if(c.notification_email!==undefined)document.getElementById("emailNotif").checked=c.notification_email;
+    if(c.notification_sms!==undefined)document.getElementById("smsNotif").checked=c.notification_sms;
+    if(c.profile_photo){
+        document.getElementById("profilePhotoImg").src=c.profile_photo;
+        document.getElementById("profilePhotoImg").style.display="block";
+        document.getElementById("profilePhotoPlaceholder").style.display="none";
+        document.getElementById("topbarAvatar").innerHTML=`<img src="${c.profile_photo}" style="width:32px;height:32px;border-radius:50%;object-fit:cover">`;
+        document.getElementById("sidebarAvatar").innerHTML=`<img src="${c.profile_photo}" style="width:40px;height:40px;border-radius:50%;object-fit:cover">`;
+    }
+    document.getElementById("accountsList").innerHTML=`<div class="account-card"><div class="ac-header"><div class="ac-type">${c.account_type||"Individuel"}</div><div class="ac-status active">Actif</div></div><div class="ac-number">${c.account_no}</div><div class="ac-balance">${fmtAmt(currentClient.balance)} <span>${c.currency}</span></div><div class="ac-info"><span>📍 ${c.branch||"Santo Domingo"}</span><span>📅 ${fmt(c.created_at)}</span></div></div>`;
+    const txns=await supaFetch("transactions","GET",null,`?account_no=eq.${c.account_no}&order=created_at.desc`);
+    allTxnsData=txns;renderTxns(txns);
+    document.getElementById("idDocStatus").textContent=c.id_document_photo?"✅ Soumis":"❌ Non soumis";
+    document.getElementById("selfieDocStatus").textContent=c.facial_photo?"✅ Soumis":"❌ Non soumis";
+    document.getElementById("photoDocStatus").textContent=c.profile_photo?"✅ Soumis":"❌ Non soumis";
+}
+
+function renderTxns(txns){
+    const rows=txns.map(t=>`<tr><td>${fmt(t.created_at)}</td><td>${fmtTime(t.created_at)}</td><td><span class="txn-badge ${t.transaction_type}">${t.transaction_type}</span></td><td class="${t.transaction_type==="depot"?"amount-pos":"amount-neg"}">${t.transaction_type==="depot"?"+":"-"}${fmtAmt(t.amount)} ${t.currency}</td><td>${fmtAmt(t.balance_before)} ${t.currency}</td><td>${fmtAmt(t.balance_after)} ${t.currency}</td><td>${t.cashier_name||"-"}</td><td><span class="status-ok">✅ ${t.status}</span></td></tr>`).join("")||"<tr><td colspan='8'>Aucune transaction</td></tr>";
+    document.getElementById("allClientTxns").innerHTML=rows;
+    document.getElementById("overviewTxns").innerHTML=txns.slice(0,5).map(t=>`<tr><td>${fmt(t.created_at)}</td><td>${fmtTime(t.created_at)}</td><td><span class="txn-badge ${t.transaction_type}">${t.transaction_type}</span></td><td class="${t.transaction_type==="depot"?"amount-pos":"amount-neg"}">${t.transaction_type==="depot"?"+":"-"}${fmtAmt(t.amount)} ${t.currency}</td><td>${fmtAmt(t.balance_after)} ${t.currency}</td></tr>`).join("")||"<tr><td colspan='5'>Aucune transaction</td></tr>";
+}
+
+function filterTxns(){
+    let f=[...allTxnsData];
+    const type=document.getElementById("txnFilter").value;
+    const from=document.getElementById("txnDateFrom").value;
+    const to=document.getElementById("txnDateTo").value;
+    if(type!=="all")f=f.filter(t=>t.transaction_type===type);
+    if(from)f=f.filter(t=>new Date(t.created_at)>=new Date(from));
+    if(to)f=f.filter(t=>new Date(t.created_at)<=new Date(to+"T23:59:59"));
+    renderTxns(f);
+}
+
+function goTo(id){
+    document.querySelectorAll(".csection").forEach(s=>s.classList.remove("active"));
+    document.getElementById("csection-"+id).classList.add("active");
+    document.querySelectorAll(".nav-item").forEach(i=>i.classList.remove("active"));
+    const nav=document.querySelector('[href="#'+id+'"]');
+    if(nav)nav.classList.add("active");
+}
+
+function clientSection(el,e){
+    if(e)e.preventDefault();
+    document.querySelectorAll(".nav-item").forEach(i=>i.classList.remove("active"));
+    if(el)el.classList.add("active");
+    const id=el?el.getAttribute("href").replace("#",""):"";
+    document.querySelectorAll(".csection").forEach(s=>s.classList.remove("active"));
+    const sec=document.getElementById("csection-"+id);
+    if(sec)sec.classList.add("active");
+}
+
+function toggleClientSidebar(){document.getElementById("clientSidebar").classList.toggle("open");}
+
+function clientLogout(){
+    localStorage.removeItem("nexus_client");currentClient=null;
+    document.getElementById("clientApp").style.display="none";
+    document.getElementById("authScreen").style.display="flex";
+    showLogin();
+}
+
+async function saveProfile(){
+    if(!currentClient)return;
+    await supaFetch("savings_accounts","PATCH",{address:document.getElementById("profAddress").value,occupation:document.getElementById("profOccupation").value,preferred_language:document.getElementById("profLang").value},`?account_no=eq.${currentClient.account_no}`);
+    alert("Profil mis a jour!");
+}
+
+async function saveNotifPref(){
+    if(!currentClient)return;
+    await supaFetch("savings_accounts","PATCH",{notification_email:document.getElementById("emailNotif").checked,notification_sms:document.getElementById("smsNotif").checked},`?account_no=eq.${currentClient.account_no}`);
+}
+
+async function toggle2FA(el){
+    if(!currentClient)return;
+    await supaFetch("savings_accounts","PATCH",{two_factor:el.checked},`?account_no=eq.${currentClient.account_no}`);
+}
+
+function previewDoc(inputId,previewId){
+    const file=document.getElementById(inputId).files[0];
+    if(!file)return;
+    if(file.size>5*1024*1024)return alert("Fichier trop grand (max 5MB)");
+    const reader=new FileReader();
+    reader.onload=e=>{document.getElementById(previewId).src=e.target.result;document.getElementById(previewId).style.display="block";};
+    reader.readAsDataURL(file);
+}
+
+async function uploadDoc(field,input){
+    if(!currentClient||!input.files[0])return;
+    const file=input.files[0];
+    if(file.size>5*1024*1024)return alert("Fichier trop grand (max 5MB)");
+    const reader=new FileReader();
+    reader.onload=async e=>{
+        await supaFetch("savings_accounts","PATCH",{[field]:e.target.result},`?account_no=eq.${currentClient.account_no}`);
+        currentClient[field]=e.target.result;
+        localStorage.setItem("nexus_client",JSON.stringify(currentClient));
+        alert("Document mis a jour!");loadClientData();
+    };
+    reader.readAsDataURL(file);
+}
+
+async function changeProfilePhoto(input){await uploadDoc("profile_photo",input);}
+
+function startFacial(){
+    const video=document.getElementById("facialVideo");
+    const placeholder=document.getElementById("facialPlaceholder");
+    if(placeholder)placeholder.style.display="none";
+    video.style.display="block";
+    navigator.mediaDevices.getUserMedia({video:{facingMode:"user"}}).then(stream=>{
+        video.srcObject=stream;
+        const status=document.getElementById("facialStatus");
+        if(status)status.innerHTML='<div style="margin-top:0.5rem;text-align:center"><p style="color:#16A34A;font-weight:600">✅ Camera active</p><button type="button" onclick="captureFacial()" style="background:#22C55E;color:white;border:none;padding:0.5rem 1rem;border-radius:8px;cursor:pointer;margin-top:0.5rem">📸 Capturer</button></div>';
+    }).catch(()=>alert("Camera non disponible."));
+}
+
+function captureFacial(){
+    const video=document.getElementById("facialVideo");
+    const canvas=document.getElementById("facialCanvas");
+    canvas.width=video.videoWidth;canvas.height=video.videoHeight;
+    canvas.getContext("2d").drawImage(video,0,0);
+    const dataUrl=canvas.toDataURL("image/jpeg",0.8);
+    const preview=document.getElementById("facialPreview");
+    preview.src=dataUrl;preview.style.display="block";
+    video.style.display="none";
+    video.srcObject?.getTracks().forEach(t=>t.stop());
+    const status=document.getElementById("facialStatus");
+    if(status)status.innerHTML='<p style="color:#16A34A;font-weight:600;margin-top:0.5rem">✅ Visage capture!</p>';
+    if(currentClient)supaFetch("savings_accounts","PATCH",{facial_photo:dataUrl},`?account_no=eq.${currentClient.account_no}`);
+}
+
+function toggleSecForm(id){const f=document.getElementById(id);f.style.display=f.style.display==="none"?"block":"none";}
+
+async function changePassword(){
+    if(!currentClient)return;
+    const curr=document.getElementById("currentPwd").value;
+    const newP=document.getElementById("newPwd").value;
+    const conf=document.getElementById("confirmPwd").value;
+    if(currentClient.password_hash!==btoa(curr))return alert("Mot de passe actuel incorrect.");
+    if(newP!==conf)return alert("Mots de passe differents.");
+    if(newP.length<8)return alert("Trop court (min. 8 caracteres).");
+    await supaFetch("savings_accounts","PATCH",{password_hash:btoa(newP)},`?account_no=eq.${currentClient.account_no}`);
+    alert("Mot de passe modifie!");document.getElementById("pwdForm").style.display="none";
+}
+
+async function sendSupport(){
+    const subject=document.getElementById("supportSubject").value;
+    const message=document.getElementById("supportMessage").value;
+    if(!subject||!message)return alert("Remplissez tous les champs.");
+    await supaFetch("contacts","POST",{name:currentClient?.client_name||"Client",email:currentClient?.email||"",phone:currentClient?.client_phone||"",subject,message});
+    alert("Message envoye! Reponse sous 24h.");
+    document.getElementById("supportSubject").value="";document.getElementById("supportMessage").value="";
+}
+
+function sendReset(){alert("Lien envoye a "+document.getElementById("forgotEmail").value);}
+
+document.addEventListener("DOMContentLoaded",()=>{
+    const saved=localStorage.getItem("nexus_client");
+    if(saved){currentClient=JSON.parse(saved);showDashboard();}
+});
+</script>
+</body>
+</html>
