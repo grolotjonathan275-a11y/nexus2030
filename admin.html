@@ -140,7 +140,7 @@
 
 <div class="card" style="margin-top:1.5rem;">
 <div class="card-header"><h3>Comptes de l'Equipe</h3><span class="badge" id="usersCount">0</span></div>
-<div class="table-wrap"><table class="data-table"><thead><tr><th>Nom</th><th>Email</th><th>Telephone</th><th>Role</th><th>Statut</th><th>Action</th></tr></thead><tbody id="allUsers"><tr><td colspan="6">Chargement...</td></tr></tbody></table></div>
+<div class="table-wrap"><table class="data-table"><thead><tr><th>Nom</th><th>Email</th><th>Telephone</th><th>Role</th><th>Superviseur</th><th>Statut</th><th>Action</th></tr></thead><tbody id="allUsers"><tr><td colspan="7">Chargement...</td></tr></tbody></table></div>
 </div>
 </section>
 
@@ -372,9 +372,11 @@ async function loadUsers() {
         .order("created_at", { ascending: false });
 
     if (error) {
-        document.getElementById("allUsers").innerHTML = `<tr><td colspan="6">Erreur: ${error.message}</td></tr>`;
+        document.getElementById("allUsers").innerHTML = `<tr><td colspan="7">Erreur: ${error.message}</td></tr>`;
         return;
     }
+
+    const supervisors = users.filter(u => u.role === "superviseur");
 
     document.getElementById("usersCount").textContent = users.length;
     document.getElementById("allUsers").innerHTML = users.map(u => `
@@ -383,6 +385,7 @@ async function loadUsers() {
             <td>${u.email || "-"}</td>
             <td>${u.phone || "-"}</td>
             <td>${ROLE_LABELS[u.role] || u.role}</td>
+            <td>${renderSupervisorCell(u, supervisors)}</td>
             <td><span class="badge-status ${u.status === 'active' ? 'approved' : 'pending'}">${u.status || "-"}</span></td>
             <td>
                 <button onclick="toggleUserStatus('${u.id}','${u.status}')" class="btn-approve" style="background:${u.status === 'active' ? '#F59E0B' : '#10B981'};">
@@ -393,7 +396,30 @@ async function loadUsers() {
                 </button>
             </td>
         </tr>
-    `).join("") || "<tr><td colspan='6'>Aucun utilisateur</td></tr>";
+    `).join("") || "<tr><td colspan='7'>Aucun utilisateur</td></tr>";
+}
+
+function renderSupervisorCell(u, supervisors) {
+    if (!["agent","caissier"].includes(u.role)) return "-";
+    const options = supervisors.map(s =>
+        `<option value="${s.id}" ${u.supervisor_id === s.id ? "selected" : ""}>${s.full_name}</option>`
+    ).join("");
+    return `<select onchange="assignSupervisor('${u.id}', this.value)" style="padding:0.35rem;border-radius:6px;border:1px solid #CBD5E1;font-size:0.85rem;">
+        <option value="">-- Aucun --</option>
+        ${options}
+    </select>`;
+}
+
+async function assignSupervisor(userId, supervisorId) {
+    const { error } = await supabaseClient
+        .from("profiles")
+        .update({ supervisor_id: supervisorId || null })
+        .eq("id", userId);
+    if (error) {
+        alert("Erreur: " + error.message);
+        return;
+    }
+    loadUsers();
 }
 
 async function toggleUserStatus(id, currentStatus) {

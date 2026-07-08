@@ -30,6 +30,8 @@
         <a href="#accounts" class="nav-item" onclick="showSection(this,event)"><span>📖</span>Comptes Epargne</a>
         <a href="#transactions" class="nav-item" onclick="showSection(this,event)"><span>💸</span>Transactions</a>
         <a href="#kyc" class="nav-item" onclick="showSection(this,event)"><span>🪪</span>Suivi KYC</a>
+        <div class="nav-section">EQUIPE</div>
+        <a href="#team" class="nav-item" onclick="showSection(this,event)"><span>👥</span>Mon Equipe</a>
         <div class="nav-section">RAPPORTS</div>
         <a href="#reports" class="nav-item" onclick="showSection(this,event)"><span>📈</span>Rapports</a>
         <div class="nav-section">SYSTEME</div>
@@ -140,6 +142,16 @@
             </div>
         </section>
 
+        <!-- MON EQUIPE -->
+        <section class="section" id="section-team">
+            <h2 class="section-title">👥 Mon Equipe</h2>
+            <div class="kyc-info-banner">
+                <span>ℹ️</span>
+                <span>Ajan/Kesye ki asiyen anba ou pa Super Admin/CEO parèt isit la, ansanm ak aktivite MonCash/NatCash yo.</span>
+            </div>
+            <div id="teamList"></div>
+        </section>
+
         <!-- RAPPORTS -->
         <section class="section" id="section-reports">
             <h2 class="section-title">📈 Rapports</h2>
@@ -202,6 +214,7 @@ function showSection(el,e){
     if(id==="requests")loadRequests();
     if(id==="accounts")loadAccounts();
     if(id==="kyc")loadKyc();
+    if(id==="team")loadTeam();
 }
 
 function goSec(id){
@@ -325,6 +338,73 @@ async function loadKyc(){
 }
 
 function exportData(table){window.open(`${SUPA_URL}/rest/v1/${table}?select=*&apikey=${SUPA_KEY}`);}
+
+let currentSupervisorId=null;
+
+async function loadTeam(){
+    const container=document.getElementById("teamList");
+    container.innerHTML="<p style='padding:1rem;color:#64748B'>Chargement...</p>";
+
+    if(!currentSupervisorId){
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if(session) currentSupervisorId = session.user.id;
+    }
+
+    const { data: team, error } = await supabaseClient
+        .from("profiles")
+        .select("*")
+        .eq("supervisor_id", currentSupervisorId)
+        .in("role", ["agent","caissier"]);
+
+    if(error){
+        container.innerHTML="<p style='color:#DC2626;padding:1rem'>Erreur: "+error.message+"</p>";
+        return;
+    }
+
+    if(!team||team.length===0){
+        container.innerHTML="<div class='card'><p style='padding:2rem;text-align:center;color:#64748B'>Aucun Ajan/Kesye assigne a vous pour le moment. Contactez le Super Admin ou le CEO pour une assignation.</p></div>";
+        return;
+    }
+
+    const todayStart=new Date();
+    todayStart.setHours(0,0,0,0);
+
+    const cards=await Promise.all(team.map(async member=>{
+        const { data: txns } = await supabaseClient
+            .from("mobile_money_transactions")
+            .select("*")
+            .eq("created_by", member.id)
+            .order("created_at",{ascending:false});
+
+        const list = txns||[];
+        const todayT = list.filter(t=>new Date(t.created_at)>=todayStart);
+        const totalToday = todayT.filter(t=>["pending_validation","approved"].includes(t.status)).reduce((s,t)=>s+Number(t.total_charged_dop),0);
+        const totalAll = list.filter(t=>t.status==="approved").reduce((s,t)=>s+Number(t.total_charged_dop),0);
+        const roleLabel = member.role==="agent"?"Agent":"Caissier";
+
+        return `
+        <div class="card" style="margin-bottom:1rem">
+            <div style="padding:1.25rem">
+                <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem">
+                    <div>
+                        <div style="font-size:1.05rem;font-weight:700">${member.full_name}</div>
+                        <div style="font-size:0.82rem;color:#64748B">${roleLabel} — ${member.phone||"Pas de telephone"}</div>
+                    </div>
+                    <span class="badge-status ${member.status==='active'?'approved':'pending'}">${member.status}</span>
+                </div>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:0.75rem;margin-top:1rem">
+                    <div style="background:#F8FAFC;border-radius:8px;padding:0.75rem"><div style="font-size:0.75rem;color:#64748B">Transactions aujourd'hui</div><strong>${todayT.length}</strong></div>
+                    <div style="background:#F8FAFC;border-radius:8px;padding:0.75rem"><div style="font-size:0.75rem;color:#64748B">A remettre aujourd'hui</div><strong>${totalToday.toLocaleString("fr-FR",{minimumFractionDigits:2})} DOP</strong></div>
+                    <div style="background:#F8FAFC;border-radius:8px;padding:0.75rem"><div style="font-size:0.75rem;color:#64748B">Wallet MonCash</div><strong>${Number(member.moncash_balance||0).toLocaleString("fr-FR",{minimumFractionDigits:2})} DOP</strong></div>
+                    <div style="background:#F8FAFC;border-radius:8px;padding:0.75rem"><div style="font-size:0.75rem;color:#64748B">Wallet NatCash</div><strong>${Number(member.natcash_balance||0).toLocaleString("fr-FR",{minimumFractionDigits:2})} DOP</strong></div>
+                    <div style="background:#F8FAFC;border-radius:8px;padding:0.75rem"><div style="font-size:0.75rem;color:#64748B">Total approuve (historique)</div><strong>${totalAll.toLocaleString("fr-FR",{minimumFractionDigits:2})} DOP</strong></div>
+                </div>
+            </div>
+        </div>`;
+    }));
+
+    container.innerHTML=cards.join("");
+}
 
 document.addEventListener("DOMContentLoaded",()=>{loadOverview();});
 </script>

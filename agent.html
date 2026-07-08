@@ -16,6 +16,7 @@
         <div><span class="logo-name">NEXUS</span><span class="logo-year">2030</span></div>
     </div>
     <div class="agent-badge-side">
+        <img id="agentAvatarSideImg" src="" style="display:none;width:44px;height:44px;border-radius:50%;object-fit:cover">
         <div class="agent-avatar" id="agentAvatarSide">AG</div>
         <div>
             <div class="agent-name" id="agentNameSide">Agent Autorise</div>
@@ -655,7 +656,12 @@
             <h2 class="section-title">👤 Mon Profil Agent</h2>
             <div class="profile-agent-card">
                 <div class="pac-header">
-                    <div class="pac-avatar" id="pacAvatar">AG</div>
+                    <div style="position:relative;display:inline-block">
+                        <img id="pacAvatarImg" src="" style="display:none;width:70px;height:70px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,0.3)">
+                        <div class="pac-avatar" id="pacAvatar">AG</div>
+                        <label for="avatarUploadInput" style="position:absolute;bottom:-4px;right:-4px;background:#fff;border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,0.25);font-size:0.8rem">📷</label>
+                        <input type="file" id="avatarUploadInput" accept="image/*" style="display:none" onchange="uploadAvatar(this)">
+                    </div>
                     <div>
                         <div class="pac-name" id="pacName">Agent Autorise</div>
                         <div class="pac-code" id="pacCode">CODE: ---</div>
@@ -663,6 +669,7 @@
                         <div class="pac-since" id="pacSince">Membre depuis: ---</div>
                     </div>
                 </div>
+                <div id="avatarUploadMsg" style="display:none;padding:0.6rem 1rem;border-radius:8px;margin-top:1rem;font-size:0.85rem;"></div>
                 <div class="pac-stats">
                     <div class="ps-item"><div class="ps-num" id="psOps">0</div><div class="ps-label">Operations</div></div>
                     <div class="ps-item"><div class="ps-num" id="psComm">0</div><div class="ps-label">Commissions HTG</div></div>
@@ -1233,6 +1240,70 @@ async function loadHistory(){
     }).join("")||"<tr><td colspan='7'>Aucune operation</td></tr>";
 }
 
+async function uploadAvatar(input){
+    const file = input.files[0];
+    if(!file) return;
+    if(!file.type.startsWith("image/")){
+        showAvatarMsg("Choisissez un fichier image.", true);
+        return;
+    }
+    if(file.size > 3*1024*1024){
+        showAvatarMsg("Image trop grande (max 3 Mo).", true);
+        return;
+    }
+
+    showAvatarMsg("Envoi en cours...", false);
+
+    const ext = file.name.split(".").pop();
+    const path = `${AGENT_ID}/avatar.${ext}`;
+
+    const { error: uploadError } = await supabaseClient.storage
+        .from("avatars")
+        .upload(path, file, { upsert: true, cacheControl: "3600" });
+
+    if(uploadError){
+        showAvatarMsg("Erreur: " + uploadError.message, true);
+        return;
+    }
+
+    const { data: urlData } = supabaseClient.storage.from("avatars").getPublicUrl(path);
+    const publicUrl = urlData.publicUrl + "?t=" + Date.now();
+
+    const { error: updateError } = await supabaseClient
+        .from("profiles")
+        .update({ avatar_url: publicUrl })
+        .eq("id", AGENT_ID);
+
+    if(updateError){
+        showAvatarMsg("Erreur sauvegarde: " + updateError.message, true);
+        return;
+    }
+
+    applyAvatar(publicUrl);
+    showAvatarMsg("✅ Photo de profil mise a jour!", false);
+}
+
+function applyAvatar(url){
+    if(!url) return;
+    const img = document.getElementById("pacAvatarImg");
+    const placeholder = document.getElementById("pacAvatar");
+    img.src = url;
+    img.style.display = "block";
+    placeholder.style.display = "none";
+    const sideImg = document.getElementById("agentAvatarSideImg");
+    if(sideImg){ sideImg.src = url; sideImg.style.display = "block"; }
+    const sidePlaceholder = document.getElementById("agentAvatarSide");
+    if(sidePlaceholder) sidePlaceholder.style.display = "none";
+}
+
+function showAvatarMsg(text, isError){
+    const el = document.getElementById("avatarUploadMsg");
+    el.style.display = "block";
+    el.style.background = isError ? "#FEE2E2" : "#DCFCE7";
+    el.style.color = isError ? "#991B1B" : "#166534";
+    el.textContent = text;
+}
+
 function saveAgentProfile(){alert("✅ Profil sauvegarde!");}
 function changePin(){
     const curr=document.getElementById("currentPin").value;
@@ -1333,6 +1404,7 @@ document.addEventListener("DOMContentLoaded",async ()=>{
     document.getElementById("pacCode").textContent="CODE: "+AGENT_ID.substring(0,8);
     document.getElementById("pacBranch").textContent="Succursale: "+AGENT_BRANCH;
     document.getElementById("walletAgentInfo").textContent=AGENT_NAME+" — "+AGENT_BRANCH;
+    if(profile.avatar_url) applyAvatar(profile.avatar_url);
     loadAll();
 });
 </script>
