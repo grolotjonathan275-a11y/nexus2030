@@ -291,19 +291,19 @@
                 <div class="quick-actions">
                     <h3>Actions Rapides</h3>
                     <div class="qa-grid">
-                        <div class="qa-btn" onclick="clientSection(document.querySelector('[href=\"#transactions\"]'),{preventDefault:()=>{}})">
+                        <div class="qa-btn" onclick="goTo('transactions')"></div>
                             <div class="qa-icon">📋</div>
                             <span>Transactions</span>
                         </div>
-                        <div class="qa-btn" onclick="clientSection(document.querySelector('[href=\"#profile\"]'),{preventDefault:()=>{}})">
+                        <div class="qa-btn" onclick="goTo('profile')"></div>
                             <div class="qa-icon">👤</div>
                             <span>Mon Profil</span>
                         </div>
-                        <div class="qa-btn" onclick="clientSection(document.querySelector('[href=\"#documents\"]'),{preventDefault:()=>{}})">
+                        <div class="qa-btn" onclick="goTo('documents')"></div>
                             <div class="qa-icon">📄</div>
                             <span>Documents</span>
                         </div>
-                        <div class="qa-btn" onclick="clientSection(document.querySelector('[href=\"#security\"]'),{preventDefault:()=>{}})">
+                        <div class="qa-btn" onclick="goTo('security')"></div>
                             <div class="qa-icon">🔒</div>
                             <span>Securite</span>
                         </div>
@@ -313,7 +313,7 @@
                 <div class="recent-txns-card">
                     <div class="card-header">
                         <h3>Dernieres Transactions</h3>
-                        <a href="#" onclick="clientSection(document.querySelector('[href=\"#transactions\"]'),{preventDefault:()=>{}})">Voir tout</a>
+                        <a href="#" onclick="goTo('transactions')"
                     </div>
                     <div class="table-wrap">
                         <table class="data-table">
@@ -996,6 +996,14 @@ document.addEventListener("DOMContentLoaded", () => {
         showDashboard();
     }
 });
+
+function goTo(id){
+    document.querySelectorAll(".csection").forEach(s=>s.classList.remove("active"));
+    document.getElementById("csection-"+id).classList.add("active");
+    document.querySelectorAll(".nav-item").forEach(i=>i.classList.remove("active"));
+    const nav=document.querySelector('[href="#'+id+'"]');
+    if(nav) nav.classList.add("active");
+}
 </script>
 </body>
 </html>
