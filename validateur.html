@@ -16,7 +16,10 @@
         <div><span class="logo-name">NEXUS</span><span class="logo-year">2030</span></div>
     </div>
     <div class="sec-badge-side">
-        <div class="sec-avatar">VAL</div>
+        <div style="position:relative;display:inline-block">
+            <img id="secAvatarImg" src="" style="display:none;width:44px;height:44px;border-radius:50%;object-fit:cover">
+            <div class="sec-avatar" id="secAvatarPlaceholder">VAL</div>
+        </div>
         <div>
             <div class="sec-name" id="validName">Validateur</div>
             <div class="sec-title">Validation des Transactions</div>
@@ -28,6 +31,8 @@
         <div class="nav-section">VALIDATION</div>
         <a href="#pending" class="nav-item" onclick="showSection(this,event)"><span>⏳</span>Transactions en Attente</a>
         <a href="#history" class="nav-item" onclick="showSection(this,event)"><span>📋</span>Historique</a>
+        <div class="nav-section">COMPTE</div>
+        <a href="#profile" class="nav-item" onclick="showSection(this,event)"><span>👤</span>Mon Profil</a>
         <div class="nav-section">SYSTEME</div>
         <a href="index.html" class="nav-item"><span>🌐</span>Site Web</a>
         <a href="#" class="nav-item logout" onclick="logout()"><span>🚪</span>Deconnexion</a>
@@ -94,6 +99,26 @@
                         <tbody id="histList"><tr><td colspan="9">Chargement...</td></tr></tbody>
                     </table>
                 </div>
+            </div>
+        </section>
+
+        <!-- MON PROFIL -->
+        <section class="section" id="section-profile">
+            <div class="card">
+                <div class="card-header"><h3>👤 Mon Profil</h3></div>
+                <div style="padding:1.5rem;display:flex;align-items:center;gap:1.25rem">
+                    <div style="position:relative">
+                        <img id="profAvatarImg" src="" style="display:none;width:80px;height:80px;border-radius:50%;object-fit:cover;border:2px solid #E2E8F0">
+                        <div id="profAvatarPlaceholder" style="width:80px;height:80px;border-radius:50%;background:#6366F1;color:#fff;display:flex;align-items:center;justify-content:center;font-size:1.5rem;font-weight:700">VAL</div>
+                        <label for="avatarUploadInput" style="position:absolute;bottom:-2px;right:-2px;background:#fff;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,0.25)">📷</label>
+                        <input type="file" id="avatarUploadInput" accept="image/*" style="display:none" onchange="uploadAvatar(this)">
+                    </div>
+                    <div>
+                        <div style="font-size:1.1rem;font-weight:700" id="profFullName">Validateur</div>
+                        <div style="color:#64748B;font-size:0.85rem">Validation des Transactions</div>
+                    </div>
+                </div>
+                <div id="avatarUploadMsg" style="display:none;margin:0 1.5rem 1.5rem;padding:0.6rem 1rem;border-radius:8px;font-size:0.85rem;"></div>
             </div>
         </section>
 
@@ -299,6 +324,50 @@ async function loadHistory(){
         </tr>`).join("")||"<tr><td colspan='9'>Aucune transaction traitee</td></tr>";
 }
 
+let currentValidatorId=null;
+
+async function uploadAvatar(input){
+    const file = input.files[0];
+    if(!file) return;
+    if(!file.type.startsWith("image/")){ showAvatarMsg("Choisissez un fichier image.", true); return; }
+    if(file.size > 3*1024*1024){ showAvatarMsg("Image trop grande (max 3 Mo).", true); return; }
+    if(!currentValidatorId){ showAvatarMsg("Session non chargee. Rechargez la page.", true); return; }
+
+    showAvatarMsg("Envoi en cours...", false);
+    const ext = file.name.split(".").pop();
+    const path = `${currentValidatorId}/avatar.${ext}`;
+
+    const { error: uploadError } = await supabaseClient.storage.from("avatars").upload(path, file, { upsert: true, cacheControl: "3600" });
+    if(uploadError){ showAvatarMsg("Erreur: " + uploadError.message, true); return; }
+
+    const { data: urlData } = supabaseClient.storage.from("avatars").getPublicUrl(path);
+    const publicUrl = urlData.publicUrl + "?t=" + Date.now();
+
+    const { error: updateError } = await supabaseClient.from("profiles").update({ avatar_url: publicUrl }).eq("id", currentValidatorId);
+    if(updateError){ showAvatarMsg("Erreur sauvegarde: " + updateError.message, true); return; }
+
+    applyAvatar(publicUrl);
+    showAvatarMsg("✅ Photo de profil mise a jour!", false);
+}
+
+function applyAvatar(url){
+    if(!url) return;
+    document.getElementById("profAvatarImg").src = url;
+    document.getElementById("profAvatarImg").style.display = "block";
+    document.getElementById("profAvatarPlaceholder").style.display = "none";
+    document.getElementById("secAvatarImg").src = url;
+    document.getElementById("secAvatarImg").style.display = "block";
+    document.getElementById("secAvatarPlaceholder").style.display = "none";
+}
+
+function showAvatarMsg(text, isError){
+    const el = document.getElementById("avatarUploadMsg");
+    el.style.display = "block";
+    el.style.background = isError ? "#FEE2E2" : "#DCFCE7";
+    el.style.color = isError ? "#991B1B" : "#166534";
+    el.textContent = text;
+}
+
 document.addEventListener("DOMContentLoaded",async ()=>{
     const { data: { session } } = await supabaseClient.auth.getSession();
     if(!session){
@@ -310,7 +379,10 @@ document.addEventListener("DOMContentLoaded",async ()=>{
         window.location.href="login.html";
         return;
     }
+    currentValidatorId=profile.id;
     document.getElementById("validName").textContent=profile.full_name;
+    document.getElementById("profFullName").textContent=profile.full_name;
+    if(profile.avatar_url) applyAvatar(profile.avatar_url);
     loadOverview();
     loadPending();
 });
