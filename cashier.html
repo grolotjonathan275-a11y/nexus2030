@@ -426,6 +426,25 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- RAPPORT JOURNALIER MONCASH/NATCASH -->
+                <div class="card" style="margin-top:1.5rem">
+                    <div class="card-header">
+                        <h3>📅 Rapport du Jour — MonCash / NatCash</h3>
+                        <span class="badge" id="dailyReportDate"></span>
+                    </div>
+                    <div class="table-wrap">
+                        <table class="data-table">
+                            <thead><tr><th>Heure</th><th>Service</th><th>Client</th><th>Montant DOP</th><th>Frais</th><th>Total</th><th>Statut</th></tr></thead>
+                            <tbody id="dailyReportList"><tr><td colspan="7">Chargement...</td></tr></tbody>
+                        </table>
+                    </div>
+                    <div style="padding:1rem 1.25rem;border-top:2px solid #0F172A;display:flex;justify-content:space-between;flex-wrap:wrap;gap:0.5rem">
+                        <div><span style="color:#64748B">MonCash a remettre:</span> <strong id="dailyTotalMoncash">0.00 DOP</strong></div>
+                        <div><span style="color:#64748B">NatCash a remettre:</span> <strong id="dailyTotalNatcash">0.00 DOP</strong></div>
+                        <div><span style="color:#0F172A;font-weight:700">TOTAL A REMETTRE:</span> <strong id="dailyTotalGrand" style="font-size:1.1rem">0.00 DOP</strong></div>
+                    </div>
+                </div>
             </section>
 
             <!-- RECUS -->
@@ -900,11 +919,59 @@ async function cancelMoneyTransaction(id){
     loadMyMoneyTransactions();
 }
 
+async function loadDailyReport(){
+    if(!currentProfile)return;
+    const todayStart = new Date();
+    todayStart.setHours(0,0,0,0);
+
+    const { data, error } = await supabaseClient
+        .from("mobile_money_transactions")
+        .select("*")
+        .eq("created_by", currentProfile.id)
+        .gte("created_at", todayStart.toISOString())
+        .order("created_at",{ascending:true});
+
+    document.getElementById("dailyReportDate").textContent = new Date().toLocaleDateString("fr-FR");
+
+    if(error||!data){
+        document.getElementById("dailyReportList").innerHTML="<tr><td colspan='7'>Erreur de chargement</td></tr>";
+        return;
+    }
+
+    const statusLabels={
+        pending_validation:"⏳ En attente",
+        approved:"✅ Approuve",
+        rejected:"❌ Rejete",
+        wrong_number:"⚠️ Numero Faux",
+        cancelled:"🚫 Annule"
+    };
+
+    const owed = data.filter(t=>["pending_validation","approved"].includes(t.status));
+    const totalMoncash = owed.filter(t=>t.service_type==="moncash").reduce((s,t)=>s+Number(t.total_charged_dop),0);
+    const totalNatcash = owed.filter(t=>t.service_type==="natcash").reduce((s,t)=>s+Number(t.total_charged_dop),0);
+
+    document.getElementById("dailyTotalMoncash").textContent=fmtAmount(totalMoncash)+" DOP";
+    document.getElementById("dailyTotalNatcash").textContent=fmtAmount(totalNatcash)+" DOP";
+    document.getElementById("dailyTotalGrand").textContent=fmtAmount(totalMoncash+totalNatcash)+" DOP";
+
+    document.getElementById("dailyReportList").innerHTML=data.map(t=>`
+        <tr>
+            <td>${fmtT(t.created_at)}</td>
+            <td>${t.service_type==="moncash"?"📱 MonCash":"💳 NatCash"}</td>
+            <td>${t.sender_full_name}</td>
+            <td>${fmtAmount(t.amount_dop)} DOP</td>
+            <td>${fmtAmount(t.fee_dop)} DOP</td>
+            <td><strong>${fmtAmount(t.total_charged_dop)} DOP</strong></td>
+            <td>${statusLabels[t.status]||t.status}</td>
+        </tr>`).join("")||"<tr><td colspan='7'>Aucune transaction aujourd'hui</td></tr>";
+}
+
 async function loadDashboard() {
     await loadWallet();
     await loadMoneyWallet();
     await loadTransactions();
     await loadMyMoneyTransactions();
+    await loadDailyReport();
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
