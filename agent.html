@@ -131,6 +131,20 @@
                         <div class="wc-code">USD</div>
                     </div>
                 </div>
+                <div class="wallet-currencies" style="margin-top:0.75rem">
+                    <div class="wc-item" style="border-color:#E85D04">
+                        <div class="wc-flag">📱</div>
+                        <div class="wc-name">Wallet MonCash</div>
+                        <div class="wc-amount" id="quickMoncash">0.00</div>
+                        <div class="wc-code">DOP</div>
+                    </div>
+                    <div class="wc-item" style="border-color:#0EA5E9">
+                        <div class="wc-flag">💳</div>
+                        <div class="wc-name">Wallet NatCash</div>
+                        <div class="wc-amount" id="quickNatcash">0.00</div>
+                        <div class="wc-code">DOP</div>
+                    </div>
+                </div>
             </div>
 
             <!-- TAUX DU JOUR -->
@@ -308,15 +322,15 @@
         <section class="section" id="section-transfer">
             <h2 class="section-title">🔄 Transferts</h2>
             <div class="transfer-services">
-                <div class="ts-card moncash" onclick="openTransfer('MonCash')">
+                <div class="ts-card moncash" onclick="openMoneyService('moncash')">
                     <div class="ts-logo">📱</div>
                     <div class="ts-name">MonCash</div>
-                    <div class="ts-desc">Transfert via MonCash</div>
+                    <div class="ts-desc">Vente MonCash (validation requise)</div>
                 </div>
-                <div class="ts-card natcash" onclick="openTransfer('NatCash')">
+                <div class="ts-card natcash" onclick="openMoneyService('natcash')">
                     <div class="ts-logo">💳</div>
                     <div class="ts-name">NatCash</div>
-                    <div class="ts-desc">Transfert via NatCash</div>
+                    <div class="ts-desc">Vente NatCash (validation requise)</div>
                 </div>
                 <div class="ts-card zelle" onclick="openTransfer('Zelle')">
                     <div class="ts-logo">🇺🇸</div>
@@ -337,6 +351,70 @@
                     <div class="ts-logo">N</div>
                     <div class="ts-name">NEXUS Direct</div>
                     <div class="ts-desc">Compte a compte</div>
+                </div>
+            </div>
+
+            <!-- ===== NOUVO FOM MONCASH / NATCASH (ak validasyon) ===== -->
+            <div id="moneyServiceForm" class="op-card" style="display:none;margin-top:1.5rem">
+                <div class="op-card-header" id="msFormHeader" style="background:#E85D04">
+                    <div class="op-icon" id="msFormIcon">📱</div>
+                    <div>
+                        <h2>Vente <span id="msServiceName">MonCash</span></h2>
+                        <p>Cette transaction sera soumise a un Validateur avant confirmation finale</p>
+                    </div>
+                </div>
+                <div class="op-form">
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label>Nom Complet de l'Expediteur *</label>
+                            <input type="text" id="msSenderName" placeholder="Nom complet du client">
+                        </div>
+                        <div class="form-group">
+                            <label>Numero WhatsApp *</label>
+                            <input type="tel" id="msSenderWhatsapp" placeholder="+1 809...">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label id="msNumberLabel">Numero MonCash *</label>
+                        <input type="tel" id="msMobileNumber" placeholder="+509...">
+                    </div>
+                    <div class="form-group">
+                        <label>Montant a Envoyer (Pesos DOP) *</label>
+                        <input type="number" id="msAmountDop" placeholder="0.00" min="1" oninput="calcMoneyService()">
+                    </div>
+                    <div class="fee-box" id="msFeeBox" style="display:none">
+                        <div class="fee-row"><span>Montant envoye:</span><strong id="msShowAmount">-</strong></div>
+                        <div class="fee-row"><span>Taux applique:</span><strong id="msShowRate">-</strong></div>
+                        <div class="fee-row"><span>Client va recevoir (HTG):</span><strong id="msShowHtg">-</strong></div>
+                        <div class="fee-row"><span id="msFeeLabel">Frais service (10%):</span><strong id="msShowFee">-</strong></div>
+                        <div class="fee-row total"><span>Total que le client doit payer:</span><strong id="msShowTotal">-</strong></div>
+                    </div>
+                    <div class="security-check">
+                        <input type="checkbox" id="msConfirm">
+                        <label for="msConfirm">Je confirme avoir verifie le numero et recu les fonds en especes</label>
+                    </div>
+                    <p style="font-size:0.85rem;color:#64748B;margin-top:0.5rem">
+                        ℹ️ La transaction sera validee par un Validateur dans un maximum de <strong>2 heures</strong> (selon la disponibilite du reseau Digicel/Natcom).
+                        Vous pouvez annuler pendant <strong>10 minutes</strong> apres soumission.
+                    </p>
+                    <div class="form-actions">
+                        <button class="btn-cancel" onclick="closeMoneyServiceForm()">Annuler</button>
+                        <button class="btn-action" id="msSubmitBtn" style="background:#E85D04" onclick="submitMoneyService()">📤 Soumettre pour Validation</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MES TRANSACTIONS MONCASH/NATCASH -->
+            <div class="card" style="margin-top:1.5rem">
+                <div class="card-header">
+                    <h3>Mes Ventes MonCash / NatCash</h3>
+                    <span class="badge" id="msCount">0</span>
+                </div>
+                <div class="table-wrap">
+                    <table class="data-table">
+                        <thead><tr><th>Heure</th><th>Service</th><th>Client</th><th>Montant DOP</th><th>Statut</th><th>Action</th></tr></thead>
+                        <tbody id="msTransactionsList"><tr><td colspan="6">Chargement...</td></tr></tbody>
+                    </table>
                 </div>
             </div>
 
@@ -500,6 +578,18 @@
                         <div class="wi-label">Disponible en caisse</div>
                     </div>
                 </div>
+                <div class="wallet-grid" style="margin-top:1rem">
+                    <div class="wallet-item" style="border-color:#E85D04">
+                        <div class="wi-header"><span>📱 Wallet MonCash</span><span class="wi-code">DOP</span></div>
+                        <div class="wi-amount" id="fullWalletMoncash">0.00</div>
+                        <div class="wi-label">Cumul des ventes MonCash</div>
+                    </div>
+                    <div class="wallet-item" style="border-color:#0EA5E9">
+                        <div class="wi-header"><span>💳 Wallet NatCash</span><span class="wi-code">DOP</span></div>
+                        <div class="wi-amount" id="fullWalletNatcash">0.00</div>
+                        <div class="wi-label">Cumul des ventes NatCash</div>
+                    </div>
+                </div>
                 <div class="commission-section">
                     <h3>📊 Mes Commissions</h3>
                     <div class="comm-grid">
@@ -606,19 +696,24 @@
 </main>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 const SUPA_URL="https://fnuplvbiwfvauwkpxsoc.supabase.co";
 const SUPA_KEY="sb_publishable_QBqdKkpcjDS3_psUdmc4uA_sMCzLqLo";
-const AGENT_ID="AGENT-001";
-const AGENT_NAME="Agent NEXUS";
-const AGENT_BRANCH="Santo Domingo";
+const supabaseClient = supabase.createClient(SUPA_URL, SUPA_KEY);
+
+let AGENT_ID="";
+let AGENT_NAME="Agent NEXUS";
+let AGENT_BRANCH="Santo Domingo";
+let currentProfile=null;
+let currentMoneyService="moncash";
+let msSettings={moncash_rate:1.8,natcash_rate:1.8,fee_percent:10};
+
 const COMMISSION_DEPOT=0.01;
 const COMMISSION_RETRAIT=0.015;
 const COMMISSION_TRANSFER=0.01;
 const COMMISSION_CHANGE=0.02;
 const RATES={USD_HTG:130,USD_DOP:58,DOP_HTG:2.24,HTG_DOP:0.447};
-
-let currentTransferType="";
 
 async function sf(table,method="GET",body=null,filter=""){
     const opts={method,headers:{"apikey":SUPA_KEY,"Authorization":`Bearer ${SUPA_KEY}`,"Content-Type":"application/json","Prefer":method!=="GET"?"return=representation":""}};
@@ -653,7 +748,12 @@ function goTo(id){
 }
 
 function toggleSidebar(){document.getElementById("sidebar").classList.toggle("open");}
-function agentLogout(){window.location.href="login.html";}
+
+async function agentLogout(){
+    await supabaseClient.auth.signOut();
+    localStorage.clear();
+    window.location.href="login.html";
+}
 
 function loadRates(){
     document.getElementById("rateUSDHTG").textContent=RATES.USD_HTG+" HTG";
@@ -680,6 +780,17 @@ async function loadWallet(){
         const pct=Math.min(100,(w.daily_total/w.daily_limit)*100);
         document.getElementById("limitFill").style.width=pct+"%";
         document.getElementById("walletDailyUsed").textContent=fmtA(w.daily_total)+" / "+fmtA(w.daily_limit)+" HTG utilise";
+    }
+}
+
+async function loadMoneyWallet(){
+    if(!currentProfile)return;
+    const { data } = await supabaseClient.from("profiles").select("moncash_balance,natcash_balance").eq("id",currentProfile.id).single();
+    if(data){
+        document.getElementById("quickMoncash").textContent=fmtA(data.moncash_balance);
+        document.getElementById("quickNatcash").textContent=fmtA(data.natcash_balance);
+        document.getElementById("fullWalletMoncash").textContent=fmtA(data.moncash_balance);
+        document.getElementById("fullWalletNatcash").textContent=fmtA(data.natcash_balance);
     }
 }
 
@@ -852,11 +963,13 @@ async function executeRetrait(){
 }
 
 function openTransfer(type){
+    document.getElementById("moneyServiceForm").style.display="none";
     currentTransferType=type;
     document.getElementById("transferTypeName").textContent=type;
     document.getElementById("transferForm").style.display="block";
     document.getElementById("transferForm").scrollIntoView({behavior:"smooth"});
 }
+let currentTransferType="";
 
 function closeTransferForm(){document.getElementById("transferForm").style.display="none";}
 
@@ -916,6 +1029,146 @@ function resetChange(){
     document.getElementById("changeResult").style.display="none";
 }
 
+// ===== NOUVO SISTEM MONCASH / NATCASH =====
+
+async function loadMoneyServiceSettings(){
+    try{
+        const { data } = await supabaseClient.from("mobile_money_settings").select("*").eq("id",1).single();
+        if(data)msSettings=data;
+    }catch(e){}
+}
+
+function openMoneyService(type){
+    document.getElementById("transferForm").style.display="none";
+    currentMoneyService=type;
+    const isMoncash=type==="moncash";
+    document.getElementById("msServiceName").textContent=isMoncash?"MonCash":"NatCash";
+    document.getElementById("msFormHeader").style.background=isMoncash?"#E85D04":"#0EA5E9";
+    document.getElementById("msFormIcon").textContent=isMoncash?"📱":"💳";
+    document.getElementById("msNumberLabel").textContent="Numero "+(isMoncash?"MonCash":"NatCash")+" *";
+    document.getElementById("msSubmitBtn").style.background=isMoncash?"#E85D04":"#0EA5E9";
+    document.getElementById("msFeeLabel").textContent=`Frais service (${msSettings.fee_percent}%):`;
+    document.getElementById("moneyServiceForm").style.display="block";
+    document.getElementById("moneyServiceForm").scrollIntoView({behavior:"smooth"});
+}
+
+function closeMoneyServiceForm(){
+    document.getElementById("moneyServiceForm").style.display="none";
+    document.getElementById("msSenderName").value="";
+    document.getElementById("msSenderWhatsapp").value="";
+    document.getElementById("msMobileNumber").value="";
+    document.getElementById("msAmountDop").value="";
+    document.getElementById("msConfirm").checked=false;
+    document.getElementById("msFeeBox").style.display="none";
+}
+
+function calcMoneyService(){
+    const amt=Number(document.getElementById("msAmountDop").value);
+    if(!amt||amt<=0)return;
+    const rate=currentMoneyService==="moncash"?Number(msSettings.moncash_rate):Number(msSettings.natcash_rate);
+    const feePct=Number(msSettings.fee_percent);
+    const amountHtg=amt*rate;
+    const feeDop=amt*(feePct/100);
+    const total=amt+feeDop;
+    document.getElementById("msFeeBox").style.display="block";
+    document.getElementById("msShowAmount").textContent=fmtA(amt)+" DOP";
+    document.getElementById("msShowRate").textContent="1 DOP = "+rate+" HTG";
+    document.getElementById("msShowHtg").textContent=fmtA(amountHtg)+" HTG";
+    document.getElementById("msFeeLabel").textContent=`Frais service (${feePct}%):`;
+    document.getElementById("msShowFee").textContent=fmtA(feeDop)+" DOP";
+    document.getElementById("msShowTotal").textContent=fmtA(total)+" DOP";
+}
+
+async function submitMoneyService(){
+    if(!document.getElementById("msConfirm").checked)return alert("Confirmez avoir verifie le numero et recu les fonds.");
+    const senderName=document.getElementById("msSenderName").value.trim();
+    const whatsapp=document.getElementById("msSenderWhatsapp").value.trim();
+    const mobileNumber=document.getElementById("msMobileNumber").value.trim();
+    const amt=Number(document.getElementById("msAmountDop").value);
+    if(!senderName||!whatsapp||!mobileNumber||!amt||amt<=0)return alert("Remplissez tous les champs obligatoires.");
+
+    const rate=currentMoneyService==="moncash"?Number(msSettings.moncash_rate):Number(msSettings.natcash_rate);
+    const feePct=Number(msSettings.fee_percent);
+    const amountHtg=amt*rate;
+    const feeDop=amt*(feePct/100);
+    const total=amt+feeDop;
+
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if(!session)return alert("Session expiree. Reconnectez-vous.");
+
+    const { data, error } = await supabaseClient.from("mobile_money_transactions").insert({
+        created_by: session.user.id,
+        branch: AGENT_BRANCH,
+        service_type: currentMoneyService,
+        sender_full_name: senderName,
+        sender_whatsapp: whatsapp,
+        mobile_number: mobileNumber,
+        amount_dop: amt,
+        rate: rate,
+        amount_htg: amountHtg,
+        fee_percent: feePct,
+        fee_dop: feeDop,
+        total_charged_dop: total
+    }).select().single();
+
+    if(error){
+        alert("Erreur: "+error.message);
+        return;
+    }
+
+    alert(`✅ Transaction soumise pour validation!\n\nClient: ${senderName}\nMontant: ${fmtA(amt)} DOP\nTotal a payer: ${fmtA(total)} DOP\n\nStatut: En attente de validation (max 2h)\nVous pouvez annuler pendant 10 minutes.`);
+    closeMoneyServiceForm();
+    loadMoneyWallet();
+    loadMyMoneyTransactions();
+}
+
+async function loadMyMoneyTransactions(){
+    const { data, error } = await supabaseClient
+        .from("mobile_money_transactions")
+        .select("*")
+        .order("created_at",{ascending:false})
+        .limit(20);
+
+    if(error||!data){
+        document.getElementById("msTransactionsList").innerHTML="<tr><td colspan='6'>Erreur de chargement</td></tr>";
+        return;
+    }
+
+    document.getElementById("msCount").textContent=data.length;
+
+    const statusLabels={
+        pending_validation:"⏳ En validation",
+        approved:"✅ Approuve",
+        rejected:"❌ Rejete",
+        wrong_number:"⚠️ Numero Faux",
+        cancelled:"🚫 Annule"
+    };
+
+    document.getElementById("msTransactionsList").innerHTML=data.map(t=>{
+        const canCancel = t.status==="pending_validation" && t.can_cancel_until && new Date(t.can_cancel_until) > new Date();
+        return `<tr>
+            <td>${fmtT(t.created_at)}</td>
+            <td>${t.service_type==="moncash"?"📱 MonCash":"💳 NatCash"}</td>
+            <td>${t.sender_full_name}</td>
+            <td>${fmtA(t.amount_dop)} DOP</td>
+            <td><span class="status-sm ${t.status}">${statusLabels[t.status]||t.status}</span></td>
+            <td>${canCancel?`<button class="btn-xs red" onclick="cancelMoneyTransaction('${t.id}')">Annuler</button>`:"-"}</td>
+        </tr>`;
+    }).join("")||"<tr><td colspan='6'>Aucune transaction</td></tr>";
+}
+
+async function cancelMoneyTransaction(id){
+    if(!confirm("Annuler cette transaction? Le client devra etre rembourse."))return;
+    const { error } = await supabaseClient.from("mobile_money_transactions").update({status:"cancelled"}).eq("id",id);
+    if(error){
+        alert("Erreur: "+error.message+"\n(Le delai de 10 minutes est peut-etre depasse.)");
+        return;
+    }
+    alert("✅ Transaction annulee.");
+    loadMoneyWallet();
+    loadMyMoneyTransactions();
+}
+
 async function loadHistory(){
     const txns=await sf("transactions","GET",null,`?cashier_id=eq.${AGENT_ID}&order=created_at.desc`);
     const type=document.getElementById("histType").value;
@@ -960,20 +1213,39 @@ function reportFraud(){alert("🚨 Alerte transmise a NEXUS. Notre equipe va vou
 async function loadAll(){
     loadRates();
     await loadWallet();
+    await loadMoneyWallet();
     await loadStats();
     await loadHistory();
+    await loadMyMoneyTransactions();
 }
 
-document.addEventListener("DOMContentLoaded",()=>{
+document.addEventListener("DOMContentLoaded",async ()=>{
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if(!session){
+        window.location.href="login.html";
+        return;
+    }
+    const { data: profile } = await supabaseClient.from("profiles").select("*").eq("id",session.user.id).single();
+    if(!profile || profile.role!=="agent"){
+        window.location.href="login.html";
+        return;
+    }
+    currentProfile=profile;
+    AGENT_ID=profile.id;
+    AGENT_NAME=profile.full_name;
+    AGENT_BRANCH="Santo Domingo";
+
+    await loadMoneyServiceSettings();
+
     const h=new Date().getHours();
     const gr=h<12?"Bonjour":h<18?"Bon apres-midi":"Bonsoir";
     document.getElementById("whGreeting").textContent=gr+",";
     document.getElementById("whName").textContent=AGENT_NAME;
     document.getElementById("whDate").textContent=new Date().toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
     document.getElementById("agentNameSide").textContent=AGENT_NAME;
-    document.getElementById("agentCodeSide").textContent="CODE: "+AGENT_ID;
+    document.getElementById("agentCodeSide").textContent="CODE: "+AGENT_ID.substring(0,8);
     document.getElementById("pacName").textContent=AGENT_NAME;
-    document.getElementById("pacCode").textContent="CODE: "+AGENT_ID;
+    document.getElementById("pacCode").textContent="CODE: "+AGENT_ID.substring(0,8);
     document.getElementById("pacBranch").textContent="Succursale: "+AGENT_BRANCH;
     document.getElementById("walletAgentInfo").textContent=AGENT_NAME+" — "+AGENT_BRANCH;
     loadAll();
@@ -982,5 +1254,3 @@ document.addEventListener("DOMContentLoaded",()=>{
 
 <div style='position:fixed;bottom:0;left:0;right:0;background:#081440;color:rgba(255,255,255,0.7);text-align:center;padding:6px;font-size:0.72rem;font-family:Inter,sans-serif;z-index:9999;border-top:1px solid rgba(255,255,255,0.1)'>Developed by <strong style=color:white>Jonathan Grolot</strong> (+1 849 453 6553). All rights reserved until full payment is received.</div></body>
 </html>
-
-
