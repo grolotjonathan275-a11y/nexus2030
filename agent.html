@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEXUS 2030 - Agent Autorise</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/agent.css">
+</head>
+<body>
+<div class="agent-layout">
+
+<aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+        <div class="logo-icon">N</div>
+        <div><span class="logo-name">NEXUS</span><span class="logo-year">2030</span></div>
+    </div>
+    <div class="agent-badge-side">
+        <div class="agent-avatar" id="agentAvatarSide">AG</div>
+        <div>
+            <div class="agent-name" id="agentNameSide">Agent Autorise</div>
+            <div class="agent-code" id="agentCodeSide">CODE: ---</div>
+            <div class="agent-status">
+                <span class="status-dot"></span>
+                <span>Actif</span>
+            </div>
+        </div>
+    </div>
+    <nav class="sidebar-nav">
+        <div class="nav-section">TABLEAU DE BORD</div>
+        <a href="#overview" class="nav-item active" onclick="showSection(this,event)"><span>📊</span>Vue d'ensemble</a>
+        <div class="nav-section">SERVICES</div>
+        <a href="#depot" class="nav-item" onclick="showSection(this,event)"><span>💰</span>Depot Client</a>
+        <a href="#retrait" class="nav-item" onclick="showSection(this,event)"><span>💸</span>Retrait Client</a>
+        <a href="#transfer" class="nav-item" onclick="showSection(this,event)"><span>🔄</span>Transferts</a>
+        <a href="#change" class="nav-item" onclick="showSection(this,event)"><span>💱</span>Change Devises</a>
+        <div class="nav-section">CAISSE</div>
+        <a href="#wallet" class="nav-item" onclick="showSection(this,event)"><span>👛</span>Ma Caisse</a>
+        <a href="#history" class="nav-item" onclick="showSection(this,event)"><span>📋</span>Historique</a>
+        <div class="nav-section">COMPTE</div>
+        <a href="#profile" class="nav-item" onclick="showSection(this,event)"><span>👤</span>Mon Profil</a>
+        <a href="#security" class="nav-item" onclick="showSection(this,event)"><span>🔒</span>Securite</a>
+        <a href="index.html" class="nav-item"><span>🌐</span>Site Web</a>
+        <a href="#" class="nav-item logout" onclick="agentLogout()"><span>🚪</span>Deconnexion</a>
+    </nav>
+</aside>
+
+<main class="main-content">
+    <header class="topbar">
+        <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+        <div class="topbar-title" id="pageTitle">Vue d'ensemble</div>
+        <div class="topbar-right">
+            <div class="time-display" id="agentTime"></div>
+            <div class="agent-badge-top">Agent Autorise</div>
+            <div class="notif-icon">🔔</div>
+        </div>
+    </header>
+
+    <div class="content-area">
+
+        <!-- VUE D'ENSEMBLE -->
+        <section class="section active" id="section-overview">
+            <div class="welcome-hero">
+                <div class="wh-left">
+                    <div class="wh-greeting" id="whGreeting">Bonjour,</div>
+                    <div class="wh-name" id="whName">Agent</div>
+                    <div class="wh-date" id="whDate"></div>
+                </div>
+                <div class="wh-right">
+                    <div class="commission-box">
+                        <div class="cb-label">Commission du mois</div>
+                        <div class="cb-amount" id="monthCommission">0.00 HTG</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="kpi-grid">
+                <div class="kpi-card green">
+                    <div class="kpi-icon">💰</div>
+                    <div class="kpi-info">
+                        <div class="kpi-number" id="todayDepots">0</div>
+                        <div class="kpi-label">Depots aujourd'hui</div>
+                    </div>
+                </div>
+                <div class="kpi-card red">
+                    <div class="kpi-icon">💸</div>
+                    <div class="kpi-info">
+                        <div class="kpi-number" id="todayRetraits">0</div>
+                        <div class="kpi-label">Retraits aujourd'hui</div>
+                    </div>
+                </div>
+                <div class="kpi-card blue">
+                    <div class="kpi-icon">🔄</div>
+                    <div class="kpi-info">
+                        <div class="kpi-number" id="todayTransfers">0</div>
+                        <div class="kpi-label">Transferts aujourd'hui</div>
+                    </div>
+                </div>
+                <div class="kpi-card orange">
+                    <div class="kpi-icon">💵</div>
+                    <div class="kpi-info">
+                        <div class="kpi-number" id="todayVolume">0</div>
+                        <div class="kpi-label">Volume HTG</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- WALLET RAPIDE -->
+            <div class="wallet-quick-card">
+                <div class="wqc-header">
+                    <h3>💼 Ma Caisse</h3>
+                    <a href="#" onclick="goTo('wallet')">Details →</a>
+                </div>
+                <div class="wallet-currencies">
+                    <div class="wc-item htg">
+                        <div class="wc-flag">🇭🇹</div>
+                        <div class="wc-name">Gourdes</div>
+                        <div class="wc-amount" id="quickHTG">0.00</div>
+                        <div class="wc-code">HTG</div>
+                    </div>
+                    <div class="wc-item dop">
+                        <div class="wc-flag">🇩🇴</div>
+                        <div class="wc-name">Pesos</div>
+                        <div class="wc-amount" id="quickDOP">0.00</div>
+                        <div class="wc-code">DOP</div>
+                    </div>
+                    <div class="wc-item usd">
+                        <div class="wc-flag">🇺🇸</div>
+                        <div class="wc-name">Dollars</div>
+                        <div class="wc-amount" id="quickUSD">0.00</div>
+                        <div class="wc-code">USD</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAUX DU JOUR -->
+            <div class="rates-card">
+                <div class="rates-header">
+                    <h3>📈 Taux de Change du Jour</h3>
+                    <span class="rates-update" id="ratesUpdate">Mis a jour: --</span>
+                </div>
+                <div class="rates-grid">
+                    <div class="rate-item">
+                        <div class="rate-pair">USD → HTG</div>
+                        <div class="rate-value" id="rateUSDHTG">--</div>
+                    </div>
+                    <div class="rate-item">
+                        <div class="rate-pair">USD → DOP</div>
+                        <div class="rate-value" id="rateUSDDOP">--</div>
+                    </div>
+                    <div class="rate-item">
+                        <div class="rate-pair">DOP → HTG</div>
+                        <div class="rate-value" id="rateDOPHTG">--</div>
+                    </div>
+                    <div class="rate-item">
+                        <div class="rate-pair">HTG → DOP</div>
+                        <div class="rate-value" id="rateHTGDOP">--</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DERNIERES TRANSACTIONS -->
+            <div class="card">
+                <div class="card-header">
+                    <h3>Dernieres Operations</h3>
+                    <a href="#" onclick="goTo('history')">Voir tout</a>
+                </div>
+                <div class="table-wrap">
+                    <table class="data-table">
+                        <thead><tr><th>Heure</th><th>Type</th><th>Client</th><th>Montant</th><th>Statut</th></tr></thead>
+                        <tbody id="recentOps"><tr><td colspan="5">Chargement...</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- DEPOT -->
+        <section class="section" id="section-depot">
+            <h2 class="section-title">💰 Depot Client</h2>
+            <div class="op-card">
+                <div class="op-card-header green">
+                    <div class="op-icon">💰</div>
+                    <div>
+                        <h2>Effectuer un Depot</h2>
+                        <p>Deposer de l'argent sur le compte d'un client NEXUS</p>
+                    </div>
+                </div>
+                <div class="op-form">
+                    <div class="form-group">
+                        <label>Numero de Compte Client *</label>
+                        <div class="input-row">
+                            <input type="text" id="depotAccount" placeholder="NEXUS-2026-000000">
+                            <button class="btn-search" onclick="searchForDepot()">🔍 Chercher</button>
+                        </div>
+                    </div>
+                    <div id="depotClientCard" class="client-info-card" style="display:none">
+                        <div class="cic-avatar">👤</div>
+                        <div class="cic-info">
+                            <div class="cic-name" id="depotClientName">-</div>
+                            <div class="cic-meta" id="depotClientMeta">-</div>
+                            <div class="cic-balance">Solde: <strong id="depotClientBalance">-</strong></div>
+                        </div>
+                        <div class="cic-kyc" id="depotKycBadge">-</div>
+                    </div>
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label>Montant *</label>
+                            <input type="number" id="depotAmount" placeholder="0.00" min="1" oninput="calcDepotFee()">
+                        </div>
+                        <div class="form-group">
+                            <label>Devise *</label>
+                            <select id="depotCurrency" onchange="calcDepotFee()">
+                                <option value="HTG">HTG - Gourdes</option>
+                                <option value="DOP">DOP - Pesos</option>
+                                <option value="USD">USD - Dollars</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="fee-box" id="depotFeeBox" style="display:none">
+                        <div class="fee-row"><span>Montant:</span><strong id="feeDepotAmt">-</strong></div>
+                        <div class="fee-row"><span>Commission agent (1%):</span><strong id="feeDepotComm">-</strong></div>
+                        <div class="fee-row total"><span>Total recu par client:</span><strong id="feeDepotTotal">-</strong></div>
+                    </div>
+                    <div class="form-group">
+                        <label>Notes</label>
+                        <input type="text" id="depotNotes" placeholder="Raison du depot...">
+                    </div>
+                    <div class="security-check">
+                        <input type="checkbox" id="depotConfirm">
+                        <label for="depotConfirm">Je confirme avoir recu le montant en especes du client</label>
+                    </div>
+                    <div class="form-actions">
+                        <button class="btn-cancel" onclick="resetForm('depot')">Annuler</button>
+                        <button class="btn-action green" onclick="executeDepot()">✅ Confirmer le Depot</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- RETRAIT -->
+        <section class="section" id="section-retrait">
+            <h2 class="section-title">💸 Retrait Client</h2>
+            <div class="op-card">
+                <div class="op-card-header red">
+                    <div class="op-icon">💸</div>
+                    <div>
+                        <h2>Effectuer un Retrait</h2>
+                        <p>Remettre de l'argent a un client NEXUS</p>
+                    </div>
+                </div>
+                <div class="op-form">
+                    <div class="form-group">
+                        <label>Numero de Compte Client *</label>
+                        <div class="input-row">
+                            <input type="text" id="retraitAccount" placeholder="NEXUS-2026-000000">
+                            <button class="btn-search" onclick="searchForRetrait()">🔍 Chercher</button>
+                        </div>
+                    </div>
+                    <div id="retraitClientCard" class="client-info-card" style="display:none">
+                        <div class="cic-avatar">👤</div>
+                        <div class="cic-info">
+                            <div class="cic-name" id="retraitClientName">-</div>
+                            <div class="cic-meta" id="retraitClientMeta">-</div>
+                            <div class="cic-balance">Solde: <strong id="retraitClientBalance">-</strong></div>
+                        </div>
+                        <div class="cic-kyc" id="retraitKycBadge">-</div>
+                    </div>
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label>Montant *</label>
+                            <input type="number" id="retraitAmount" placeholder="0.00" min="1" oninput="calcRetraitFee()">
+                        </div>
+                        <div class="form-group">
+                            <label>Devise *</label>
+                            <select id="retraitCurrency" onchange="calcRetraitFee()">
+                                <option value="HTG">HTG - Gourdes</option>
+                                <option value="DOP">DOP - Pesos</option>
+                                <option value="USD">USD - Dollars</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="fee-box" id="retraitFeeBox" style="display:none">
+                        <div class="fee-row"><span>Montant retire:</span><strong id="feeRetraitAmt">-</strong></div>
+                        <div class="fee-row"><span>Commission agent (1.5%):</span><strong id="feeRetraitComm">-</strong></div>
+                        <div class="fee-row total"><span>Client recoit:</span><strong id="feeRetraitTotal">-</strong></div>
+                    </div>
+                    <div class="form-group">
+                        <label>Piece d'Identite Client *</label>
+                        <input type="text" id="retraitIdDoc" placeholder="CIN / Passeport numero...">
+                    </div>
+                    <div class="form-group">
+                        <label>Notes</label>
+                        <input type="text" id="retraitNotes" placeholder="Raison du retrait...">
+                    </div>
+                    <div class="security-check">
+                        <input type="checkbox" id="retraitConfirm">
+                        <label for="retraitConfirm">Je confirme l'identite du client et que j'ai les fonds disponibles</label>
+                    </div>
+                    <div class="form-actions">
+                        <button class="btn-cancel" onclick="resetForm('retrait')">Annuler</button>
+                        <button class="btn-action red" onclick="executeRetrait()">✅ Confirmer le Retrait</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TRANSFERTS -->
+        <section class="section" id="section-transfer">
+            <h2 class="section-title">🔄 Transferts</h2>
+            <div class="transfer-services">
+                <div class="ts-card moncash" onclick="openTransfer('MonCash')">
+                    <div class="ts-logo">📱</div>
+                    <div class="ts-name">MonCash</div>
+                    <div class="ts-desc">Transfert via MonCash</div>
+                </div>
+                <div class="ts-card natcash" onclick="openTransfer('NatCash')">
+                    <div class="ts-logo">💳</div>
+                    <div class="ts-name">NatCash</div>
+                    <div class="ts-desc">Transfert via NatCash</div>
+                </div>
+                <div class="ts-card zelle" onclick="openTransfer('Zelle')">
+                    <div class="ts-logo">🇺🇸</div>
+                    <div class="ts-name">Zelle</div>
+                    <div class="ts-desc">Transfert vers USA</div>
+                </div>
+                <div class="ts-card cashapp" onclick="openTransfer('CashApp')">
+                    <div class="ts-logo">💚</div>
+                    <div class="ts-name">CashApp</div>
+                    <div class="ts-desc">Transfert CashApp</div>
+                </div>
+                <div class="ts-card western" onclick="openTransfer('Western Union')">
+                    <div class="ts-logo">🌍</div>
+                    <div class="ts-name">Western Union</div>
+                    <div class="ts-desc">Transfert international</div>
+                </div>
+                <div class="ts-card nexus" onclick="openTransfer('NEXUS')">
+                    <div class="ts-logo">N</div>
+                    <div class="ts-name">NEXUS Direct</div>
+                    <div class="ts-desc">Compte a compte</div>
+                </div>
+            </div>
+
+            <div id="transferForm" class="op-card" style="display:none;margin-top:1.5rem">
+                <div class="op-card-header blue">
+                    <div class="op-icon">🔄</div>
+                    <div>
+                        <h2>Transfert <span id="transferTypeName"></span></h2>
+                        <p>Remplissez les informations du transfert</p>
+                    </div>
+                </div>
+                <div class="op-form">
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label>Nom Expediteur *</label>
+                            <input type="text" id="tfSenderName" placeholder="Nom complet">
+                        </div>
+                        <div class="form-group">
+                            <label>Telephone Expediteur *</label>
+                            <input type="tel" id="tfSenderPhone" placeholder="+509...">
+                        </div>
+                    </div>
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label>Nom Beneficiaire *</label>
+                            <input type="text" id="tfReceiverName" placeholder="Nom complet">
+                        </div>
+                        <div class="form-group">
+                            <label>Contact Beneficiaire *</label>
+                            <input type="text" id="tfReceiverContact" placeholder="Telephone / Email / $Cashtag">
+                        </div>
+                    </div>
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label>Montant *</label>
+                            <input type="number" id="tfAmount" placeholder="0.00" oninput="calcTransferFee()">
+                        </div>
+                        <div class="form-group">
+                            <label>Devise *</label>
+                            <select id="tfCurrency" onchange="calcTransferFee()">
+                                <option value="HTG">HTG</option>
+                                <option value="DOP">DOP</option>
+                                <option value="USD">USD</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="fee-box" id="tfFeeBox" style="display:none">
+                        <div class="fee-row"><span>Montant:</span><strong id="feeTfAmt">-</strong></div>
+                        <div class="fee-row"><span>Frais service (2%):</span><strong id="feeTfFee">-</strong></div>
+                        <div class="fee-row"><span>Commission agent (1%):</span><strong id="feeTfComm">-</strong></div>
+                        <div class="fee-row total"><span>Total client paie:</span><strong id="feeTfTotal">-</strong></div>
+                    </div>
+                    <div class="form-group">
+                        <label>Piece d'Identite Expediteur *</label>
+                        <input type="text" id="tfIdDoc" placeholder="CIN / Passeport...">
+                    </div>
+                    <div class="security-check">
+                        <input type="checkbox" id="tfConfirm">
+                        <label for="tfConfirm">Je confirme avoir verifie l'identite de l'expediteur</label>
+                    </div>
+                    <div class="form-actions">
+                        <button class="btn-cancel" onclick="closeTransferForm()">Annuler</button>
+                        <button class="btn-action blue" onclick="executeTransfer()">🔄 Executer le Transfert</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CHANGE DEVISES -->
+        <section class="section" id="section-change">
+            <h2 class="section-title">💱 Change de Devises</h2>
+            <div class="op-card">
+                <div class="op-card-header purple">
+                    <div class="op-icon">💱</div>
+                    <div>
+                        <h2>Changer des Devises</h2>
+                        <p>Convertir une devise en une autre</p>
+                    </div>
+                </div>
+                <div class="op-form">
+                    <div class="rates-display">
+                        <div class="rd-item"><span>1 USD =</span><strong id="changeUSDHTG">-- HTG</strong></div>
+                        <div class="rd-item"><span>1 USD =</span><strong id="changeUSDDOP">-- DOP</strong></div>
+                        <div class="rd-item"><span>1 DOP =</span><strong id="changeDOPHTG">-- HTG</strong></div>
+                    </div>
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label>Montant a changer *</label>
+                            <input type="number" id="changeAmount" placeholder="0.00" oninput="calcChange()">
+                        </div>
+                        <div class="form-group">
+                            <label>De *</label>
+                            <select id="changeFrom" onchange="calcChange()">
+                                <option value="USD">USD - Dollars</option>
+                                <option value="HTG">HTG - Gourdes</option>
+                                <option value="DOP">DOP - Pesos</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Vers *</label>
+                        <select id="changeTo" onchange="calcChange()">
+                            <option value="HTG">HTG - Gourdes</option>
+                            <option value="DOP">DOP - Pesos</option>
+                            <option value="USD">USD - Dollars</option>
+                        </select>
+                    </div>
+                    <div class="change-result" id="changeResult" style="display:none">
+                        <div class="cr-label">Montant converti</div>
+                        <div class="cr-amount" id="changeResultAmt">--</div>
+                        <div class="cr-fee" id="changeResultFee">Commission: --</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Nom du Client</label>
+                        <input type="text" id="changeName" placeholder="Nom du client">
+                    </div>
+                    <div class="security-check">
+                        <input type="checkbox" id="changeConfirm">
+                        <label for="changeConfirm">Je confirme les montants et le taux applique</label>
+                    </div>
+                    <div class="form-actions">
+                        <button class="btn-cancel" onclick="resetChange()">Annuler</button>
+                        <button class="btn-action purple" onclick="executeChange()">💱 Effectuer le Change</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- MA CAISSE -->
+        <section class="section" id="section-wallet">
+            <h2 class="section-title">👛 Ma Caisse</h2>
+            <div class="wallet-full-card">
+                <div class="wfc-header">
+                    <div>
+                        <h2>Etat de ma Caisse</h2>
+                        <p id="walletAgentInfo">Agent — Santo Domingo</p>
+                    </div>
+                    <div class="wfc-limit">
+                        <div class="limit-label">Limite journaliere</div>
+                        <div class="limit-value" id="walletDailyLimit">100,000 HTG</div>
+                        <div class="limit-bar">
+                            <div class="limit-fill" id="limitFill" style="width:0%"></div>
+                        </div>
+                        <div class="limit-used" id="walletDailyUsed">0 / 100,000 HTG utilise</div>
+                    </div>
+                </div>
+                <div class="wallet-grid">
+                    <div class="wallet-item htg">
+                        <div class="wi-header"><span>🇭🇹 Gourdes Haitiennes</span><span class="wi-code">HTG</span></div>
+                        <div class="wi-amount" id="fullWalletHTG">0.00</div>
+                        <div class="wi-label">Disponible en caisse</div>
+                    </div>
+                    <div class="wallet-item dop">
+                        <div class="wi-header"><span>🇩🇴 Pesos Dominicains</span><span class="wi-code">DOP</span></div>
+                        <div class="wi-amount" id="fullWalletDOP">0.00</div>
+                        <div class="wi-label">Disponible en caisse</div>
+                    </div>
+                    <div class="wallet-item usd">
+                        <div class="wi-header"><span>🇺🇸 Dollars Americains</span><span class="wi-code">USD</span></div>
+                        <div class="wi-amount" id="fullWalletUSD">0.00</div>
+                        <div class="wi-label">Disponible en caisse</div>
+                    </div>
+                </div>
+                <div class="commission-section">
+                    <h3>📊 Mes Commissions</h3>
+                    <div class="comm-grid">
+                        <div class="comm-item"><div class="ci-label">Aujourd'hui</div><div class="ci-amount" id="commToday">0.00 HTG</div></div>
+                        <div class="comm-item"><div class="ci-label">Cette semaine</div><div class="ci-amount" id="commWeek">0.00 HTG</div></div>
+                        <div class="comm-item"><div class="ci-label">Ce mois</div><div class="ci-amount" id="commMonth">0.00 HTG</div></div>
+                        <div class="comm-item"><div class="ci-label">Total</div><div class="ci-amount" id="commTotal">0.00 HTG</div></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- HISTORIQUE -->
+        <section class="section" id="section-history">
+            <h2 class="section-title">📋 Historique des Operations</h2>
+            <div class="hist-filters">
+                <select id="histType">
+                    <option value="all">Toutes</option>
+                    <option value="depot">Depots</option>
+                    <option value="retrait">Retraits</option>
+                    <option value="transfert">Transferts</option>
+                    <option value="change">Changes</option>
+                </select>
+                <input type="date" id="histFrom">
+                <input type="date" id="histTo">
+                <button onclick="loadHistory()">Filtrer</button>
+            </div>
+            <div class="card" style="margin-top:1rem">
+                <div class="card-header">
+                    <h3>Operations</h3>
+                    <span class="badge" id="histCount">0</span>
+                </div>
+                <div class="table-wrap">
+                    <table class="data-table">
+                        <thead><tr><th>Date</th><th>Heure</th><th>Type</th><th>Client</th><th>Montant</th><th>Commission</th><th>Statut</th></tr></thead>
+                        <tbody id="histList"><tr><td colspan="7">Chargement...</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- PROFIL -->
+        <section class="section" id="section-profile">
+            <h2 class="section-title">👤 Mon Profil Agent</h2>
+            <div class="profile-agent-card">
+                <div class="pac-header">
+                    <div class="pac-avatar" id="pacAvatar">AG</div>
+                    <div>
+                        <div class="pac-name" id="pacName">Agent Autorise</div>
+                        <div class="pac-code" id="pacCode">CODE: ---</div>
+                        <div class="pac-branch" id="pacBranch">Succursale: ---</div>
+                        <div class="pac-since" id="pacSince">Membre depuis: ---</div>
+                    </div>
+                </div>
+                <div class="pac-stats">
+                    <div class="ps-item"><div class="ps-num" id="psOps">0</div><div class="ps-label">Operations</div></div>
+                    <div class="ps-item"><div class="ps-num" id="psComm">0</div><div class="ps-label">Commissions HTG</div></div>
+                    <div class="ps-item"><div class="ps-num" id="psClients">0</div><div class="ps-label">Clients servis</div></div>
+                </div>
+                <div class="pac-info-grid">
+                    <div class="form-group"><label>Nom Commercial</label><input type="text" id="profBizName" placeholder="Nom de votre point de service"></div>
+                    <div class="form-group"><label>Adresse Point de Service</label><input type="text" id="profAddress" placeholder="Adresse complete"></div>
+                    <div class="form-group"><label>Telephone</label><input type="tel" id="profPhone" placeholder="+509..."></div>
+                    <div class="form-group"><label>Horaires d'ouverture</label><input type="text" id="profHours" placeholder="Lun-Sam: 8h-18h"></div>
+                </div>
+                <button class="btn-save-profile" onclick="saveAgentProfile()">💾 Sauvegarder</button>
+            </div>
+        </section>
+
+        <!-- SECURITE -->
+        <section class="section" id="section-security">
+            <h2 class="section-title">🔒 Securite</h2>
+            <div class="security-cards">
+                <div class="sec-card">
+                    <div class="sc-icon">🔑</div>
+                    <div class="sc-info"><div class="sc-title">Code PIN Transaction</div><div class="sc-desc">Code requis pour chaque transaction</div></div>
+                    <div class="sc-form" id="pinForm" style="display:none">
+                        <input type="password" id="currentPin" placeholder="PIN actuel (4 chiffres)" maxlength="4">
+                        <input type="password" id="newPin" placeholder="Nouveau PIN" maxlength="4">
+                        <input type="password" id="confirmPin" placeholder="Confirmer PIN" maxlength="4">
+                        <button onclick="changePin()">Confirmer</button>
+                    </div>
+                    <button class="sc-btn" onclick="toggleForm('pinForm')">Modifier PIN</button>
+                </div>
+                <div class="sec-card">
+                    <div class="sc-icon">📱</div>
+                    <div class="sc-info"><div class="sc-title">Limite par Transaction</div><div class="sc-desc">Montant maximum par operation</div></div>
+                    <div class="sc-value" id="txnLimit">50,000 HTG</div>
+                </div>
+                <div class="sec-card">
+                    <div class="sc-icon">📊</div>
+                    <div class="sc-info"><div class="sc-title">Limite Journaliere</div><div class="sc-desc">Volume maximum par jour</div></div>
+                    <div class="sc-value" id="dailyLimitSec">100,000 HTG</div>
+                </div>
+                <div class="sec-card">
+                    <div class="sc-icon">🚨</div>
+                    <div class="sc-info"><div class="sc-title">Signaler une Fraude</div><div class="sc-desc">Alerter NEXUS d'une activite suspecte</div></div>
+                    <button class="sc-btn danger" onclick="reportFraud()">Signaler</button>
+                </div>
+            </div>
+        </section>
+
+    </div>
+</main>
+</div>
+
+<script>
+const SUPA_URL="https://fnuplvbiwfvauwkpxsoc.supabase.co";
+const SUPA_KEY="sb_publishable_QBqdKkpcjDS3_psUdmc4uA_sMCzLqLo";
+const AGENT_ID="AGENT-001";
+const AGENT_NAME="Agent NEXUS";
+const AGENT_BRANCH="Santo Domingo";
+const COMMISSION_DEPOT=0.01;
+const COMMISSION_RETRAIT=0.015;
+const COMMISSION_TRANSFER=0.01;
+const COMMISSION_CHANGE=0.02;
+const RATES={USD_HTG:130,USD_DOP:58,DOP_HTG:2.24,HTG_DOP:0.447};
+
+let currentTransferType="";
+
+async function sf(table,method="GET",body=null,filter=""){
+    const opts={method,headers:{"apikey":SUPA_KEY,"Authorization":`Bearer ${SUPA_KEY}`,"Content-Type":"application/json","Prefer":method!=="GET"?"return=representation":""}};
+    if(body)opts.body=JSON.stringify(body);
+    const r=await fetch(`${SUPA_URL}/rest/v1/${table}${filter}`,opts);
+    if(method==="GET")return await r.json();
+    return r;
+}
+
+function fmt(d){return d?new Date(d).toLocaleDateString("fr-FR"):"-";}
+function fmtT(d){return d?new Date(d).toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"}):"-";}
+function fmtA(n){return Number(n||0).toLocaleString("fr-FR",{minimumFractionDigits:2});}
+
+setInterval(()=>{const el=document.getElementById("agentTime");if(el)el.textContent=new Date().toLocaleTimeString("fr-FR");},1000);
+
+function showSection(el,e){
+    if(e)e.preventDefault();
+    document.querySelectorAll(".nav-item").forEach(i=>i.classList.remove("active"));
+    el.classList.add("active");
+    const id=el.getAttribute("href").replace("#","");
+    document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
+    document.getElementById("section-"+id).classList.add("active");
+    document.getElementById("pageTitle").textContent=el.textContent.trim();
+}
+
+function goTo(id){
+    document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
+    document.getElementById("section-"+id).classList.add("active");
+    document.querySelectorAll(".nav-item").forEach(i=>i.classList.remove("active"));
+    const nav=document.querySelector('[href="#'+id+'"]');
+    if(nav)nav.classList.add("active");
+}
+
+function toggleSidebar(){document.getElementById("sidebar").classList.toggle("open");}
+function agentLogout(){window.location.href="login.html";}
+
+function loadRates(){
+    document.getElementById("rateUSDHTG").textContent=RATES.USD_HTG+" HTG";
+    document.getElementById("rateUSDDOP").textContent=RATES.USD_DOP+" DOP";
+    document.getElementById("rateDOPHTG").textContent=RATES.DOP_HTG+" HTG";
+    document.getElementById("rateHTGDOP").textContent=RATES.HTG_DOP+" DOP";
+    document.getElementById("changeUSDHTG").textContent=RATES.USD_HTG+" HTG";
+    document.getElementById("changeUSDDOP").textContent=RATES.USD_DOP+" DOP";
+    document.getElementById("changeDOPHTG").textContent=RATES.DOP_HTG+" HTG";
+    document.getElementById("ratesUpdate").textContent="Mis a jour: "+new Date().toLocaleTimeString("fr-FR");
+}
+
+async function loadWallet(){
+    const data=await sf("cashier_wallets","GET",null,`?cashier_id=eq.${AGENT_ID}`);
+    if(data&&data[0]){
+        const w=data[0];
+        document.getElementById("quickHTG").textContent=fmtA(w.balance_htg);
+        document.getElementById("quickDOP").textContent=fmtA(w.balance_dop);
+        document.getElementById("quickUSD").textContent=fmtA(w.balance_usd);
+        document.getElementById("fullWalletHTG").textContent=fmtA(w.balance_htg);
+        document.getElementById("fullWalletDOP").textContent=fmtA(w.balance_dop);
+        document.getElementById("fullWalletUSD").textContent=fmtA(w.balance_usd);
+        document.getElementById("walletDailyLimit").textContent=fmtA(w.daily_limit)+" HTG";
+        const pct=Math.min(100,(w.daily_total/w.daily_limit)*100);
+        document.getElementById("limitFill").style.width=pct+"%";
+        document.getElementById("walletDailyUsed").textContent=fmtA(w.daily_total)+" / "+fmtA(w.daily_limit)+" HTG utilise";
+    }
+}
+
+async function loadStats(){
+    const txns=await sf("transactions","GET",null,`?cashier_id=eq.${AGENT_ID}&order=created_at.desc`);
+    const today=new Date().toDateString();
+    const todayT=txns.filter(t=>new Date(t.created_at).toDateString()===today);
+    const depots=todayT.filter(t=>t.transaction_type==="depot");
+    const retraits=todayT.filter(t=>t.transaction_type==="retrait");
+    const transfers=todayT.filter(t=>t.transaction_type==="transfert");
+    const volume=todayT.reduce((s,t)=>s+Number(t.amount),0);
+    document.getElementById("todayDepots").textContent=depots.length;
+    document.getElementById("todayRetraits").textContent=retraits.length;
+    document.getElementById("todayTransfers").textContent=transfers.length;
+    document.getElementById("todayVolume").textContent=fmtA(volume);
+
+    const commToday=todayT.reduce((s,t)=>s+Number(t.amount)*COMMISSION_DEPOT,0);
+    const now=new Date();
+    const weekT=txns.filter(t=>new Date(t.created_at)>new Date(now-7*86400000));
+    const monthT=txns.filter(t=>new Date(t.created_at).getMonth()===now.getMonth());
+    const commWeek=weekT.reduce((s,t)=>s+Number(t.amount)*COMMISSION_DEPOT,0);
+    const commMonth=monthT.reduce((s,t)=>s+Number(t.amount)*COMMISSION_DEPOT,0);
+    const commAll=txns.reduce((s,t)=>s+Number(t.amount)*COMMISSION_DEPOT,0);
+
+    document.getElementById("commToday").textContent=fmtA(commToday)+" HTG";
+    document.getElementById("commWeek").textContent=fmtA(commWeek)+" HTG";
+    document.getElementById("commMonth").textContent=fmtA(commMonth)+" HTG";
+    document.getElementById("commTotal").textContent=fmtA(commAll)+" HTG";
+    document.getElementById("monthCommission").textContent=fmtA(commMonth)+" HTG";
+
+    document.getElementById("psOps").textContent=txns.length;
+    document.getElementById("psComm").textContent=fmtA(commAll);
+
+    document.getElementById("recentOps").innerHTML=txns.slice(0,5).map(t=>`
+        <tr>
+            <td>${fmtT(t.created_at)}</td>
+            <td><span class="op-badge ${t.transaction_type}">${t.transaction_type}</span></td>
+            <td>${t.client_name||"-"}</td>
+            <td class="${t.transaction_type==="depot"?"pos":"neg"}">${fmtA(t.amount)} ${t.currency}</td>
+            <td><span class="status-ok">✅</span></td>
+        </tr>`).join("")||"<tr><td colspan='5'>Aucune operation</td></tr>";
+}
+
+async function searchForDepot(){
+    const acc=document.getElementById("depotAccount").value.trim();
+    if(!acc)return alert("Entrez un numero de compte.");
+    const data=await sf("savings_accounts","GET",null,`?account_no=eq.${acc}`);
+    if(!data||!data[0])return alert("Compte non trouve.");
+    const c=data[0];
+    document.getElementById("depotClientCard").style.display="flex";
+    document.getElementById("depotClientName").textContent=c.client_name;
+    document.getElementById("depotClientMeta").textContent=`${c.account_type} | ${c.currency}`;
+    document.getElementById("depotClientBalance").textContent=fmtA(c.balance)+" "+c.currency;
+    document.getElementById("depotKycBadge").textContent=c.kyc_status==="approved"?"✅ KYC":"⚠️ KYC";
+    document.getElementById("depotKycBadge").className="cic-kyc "+(c.kyc_status==="approved"?"ok":"warn");
+    document.getElementById("depotAccount").dataset.client=JSON.stringify(c);
+}
+
+async function searchForRetrait(){
+    const acc=document.getElementById("retraitAccount").value.trim();
+    if(!acc)return alert("Entrez un numero de compte.");
+    const data=await sf("savings_accounts","GET",null,`?account_no=eq.${acc}`);
+    if(!data||!data[0])return alert("Compte non trouve.");
+    const c=data[0];
+    document.getElementById("retraitClientCard").style.display="flex";
+    document.getElementById("retraitClientName").textContent=c.client_name;
+    document.getElementById("retraitClientMeta").textContent=`${c.account_type} | ${c.currency}`;
+    document.getElementById("retraitClientBalance").textContent=fmtA(c.balance)+" "+c.currency;
+    document.getElementById("retraitKycBadge").textContent=c.kyc_status==="approved"?"✅ KYC":"⚠️ KYC";
+    document.getElementById("retraitKycBadge").className="cic-kyc "+(c.kyc_status==="approved"?"ok":"warn");
+    document.getElementById("retraitAccount").dataset.client=JSON.stringify(c);
+}
+
+function calcDepotFee(){
+    const amt=Number(document.getElementById("depotAmount").value);
+    const curr=document.getElementById("depotCurrency").value;
+    if(!amt)return;
+    const comm=amt*COMMISSION_DEPOT;
+    const total=amt-comm;
+    document.getElementById("depotFeeBox").style.display="block";
+    document.getElementById("feeDepotAmt").textContent=fmtA(amt)+" "+curr;
+    document.getElementById("feeDepotComm").textContent=fmtA(comm)+" "+curr;
+    document.getElementById("feeDepotTotal").textContent=fmtA(total)+" "+curr;
+}
+
+function calcRetraitFee(){
+    const amt=Number(document.getElementById("retraitAmount").value);
+    const curr=document.getElementById("retraitCurrency").value;
+    if(!amt)return;
+    const comm=amt*COMMISSION_RETRAIT;
+    const total=amt-comm;
+    document.getElementById("retraitFeeBox").style.display="block";
+    document.getElementById("feeRetraitAmt").textContent=fmtA(amt)+" "+curr;
+    document.getElementById("feeRetraitComm").textContent=fmtA(comm)+" "+curr;
+    document.getElementById("feeRetraitTotal").textContent=fmtA(total)+" "+curr;
+}
+
+function calcTransferFee(){
+    const amt=Number(document.getElementById("tfAmount").value);
+    const curr=document.getElementById("tfCurrency").value;
+    if(!amt)return;
+    const fee=amt*0.02;
+    const comm=amt*COMMISSION_TRANSFER;
+    const total=amt+fee+comm;
+    document.getElementById("tfFeeBox").style.display="block";
+    document.getElementById("feeTfAmt").textContent=fmtA(amt)+" "+curr;
+    document.getElementById("feeTfFee").textContent=fmtA(fee)+" "+curr;
+    document.getElementById("feeTfComm").textContent=fmtA(comm)+" "+curr;
+    document.getElementById("feeTfTotal").textContent=fmtA(total)+" "+curr;
+}
+
+function calcChange(){
+    const amt=Number(document.getElementById("changeAmount").value);
+    const from=document.getElementById("changeFrom").value;
+    const to=document.getElementById("changeTo").value;
+    if(!amt||from===to)return;
+    let converted=0;
+    if(from==="USD"&&to==="HTG")converted=amt*RATES.USD_HTG;
+    else if(from==="USD"&&to==="DOP")converted=amt*RATES.USD_DOP;
+    else if(from==="DOP"&&to==="HTG")converted=amt*RATES.DOP_HTG;
+    else if(from==="HTG"&&to==="DOP")converted=amt*RATES.HTG_DOP;
+    else if(from==="HTG"&&to==="USD")converted=amt/RATES.USD_HTG;
+    else if(from==="DOP"&&to==="USD")converted=amt/RATES.USD_DOP;
+    const comm=converted*COMMISSION_CHANGE;
+    const net=converted-comm;
+    document.getElementById("changeResult").style.display="block";
+    document.getElementById("changeResultAmt").textContent=fmtA(net)+" "+to;
+    document.getElementById("changeResultFee").textContent="Commission (2%): "+fmtA(comm)+" "+to;
+}
+
+async function executeDepot(){
+    if(!document.getElementById("depotConfirm").checked)return alert("Confirmez avoir recu les fonds.");
+    const clientData=document.getElementById("depotAccount").dataset.client;
+    if(!clientData)return alert("Recherchez d'abord le compte client.");
+    const c=JSON.parse(clientData);
+    const amt=Number(document.getElementById("depotAmount").value);
+    const curr=document.getElementById("depotCurrency").value;
+    if(!amt||amt<=0)return alert("Entrez un montant valide.");
+    const balBefore=Number(c.balance);
+    const balAfter=balBefore+amt;
+    await sf("savings_accounts","PATCH",{balance:balAfter},`?account_no=eq.${c.account_no}`);
+    await sf("transactions","POST",{account_no:c.account_no,client_name:c.client_name,transaction_type:"depot",amount:amt,balance_before:balBefore,balance_after:balAfter,currency:curr,cashier_id:AGENT_ID,cashier_name:AGENT_NAME,branch:AGENT_BRANCH,notes:document.getElementById("depotNotes").value,status:"completed"});
+    const p=new URLSearchParams({client_name:c.client_name,account_no:c.account_no,amount:amt,currency:curr,balance_before:balBefore,balance_after:balAfter});
+    window.open("receipt.html?"+p.toString(),"_blank");
+    alert("✅ Depot effectue!");
+    resetForm("depot");
+    loadAll();
+}
+
+async function executeRetrait(){
+    if(!document.getElementById("retraitConfirm").checked)return alert("Confirmez l'identite du client.");
+    const clientData=document.getElementById("retraitAccount").dataset.client;
+    if(!clientData)return alert("Recherchez d'abord le compte client.");
+    const c=JSON.parse(clientData);
+    const amt=Number(document.getElementById("retraitAmount").value);
+    const curr=document.getElementById("retraitCurrency").value;
+    const idDoc=document.getElementById("retraitIdDoc").value;
+    if(!amt||amt<=0)return alert("Entrez un montant valide.");
+    if(!idDoc)return alert("Piece d'identite obligatoire.");
+    if(amt>Number(c.balance))return alert("Solde insuffisant! Solde: "+fmtA(c.balance)+" "+c.currency);
+    const balBefore=Number(c.balance);
+    const balAfter=balBefore-amt;
+    await sf("savings_accounts","PATCH",{balance:balAfter},`?account_no=eq.${c.account_no}`);
+    await sf("transactions","POST",{account_no:c.account_no,client_name:c.client_name,transaction_type:"retrait",amount:amt,balance_before:balBefore,balance_after:balAfter,currency:curr,cashier_id:AGENT_ID,cashier_name:AGENT_NAME,branch:AGENT_BRANCH,notes:"ID: "+idDoc,status:"completed"});
+    const p=new URLSearchParams({client_name:c.client_name,account_no:c.account_no,amount:amt,currency:curr,balance_before:balBefore,balance_after:balAfter});
+    window.open("receipt-withdrawal.html?"+p.toString(),"_blank");
+    alert("✅ Retrait effectue!");
+    resetForm("retrait");
+    loadAll();
+}
+
+function openTransfer(type){
+    currentTransferType=type;
+    document.getElementById("transferTypeName").textContent=type;
+    document.getElementById("transferForm").style.display="block";
+    document.getElementById("transferForm").scrollIntoView({behavior:"smooth"});
+}
+
+function closeTransferForm(){document.getElementById("transferForm").style.display="none";}
+
+async function executeTransfer(){
+    if(!document.getElementById("tfConfirm").checked)return alert("Confirmez l'identite de l'expediteur.");
+    const sender=document.getElementById("tfSenderName").value;
+    const receiver=document.getElementById("tfReceiverName").value;
+    const contact=document.getElementById("tfReceiverContact").value;
+    const amt=Number(document.getElementById("tfAmount").value);
+    const curr=document.getElementById("tfCurrency").value;
+    const idDoc=document.getElementById("tfIdDoc").value;
+    if(!sender||!receiver||!contact||!amt||!idDoc)return alert("Remplissez tous les champs.");
+    await sf("transactions","POST",{account_no:"TRANSFER",client_name:sender,transaction_type:"transfert",amount:amt,balance_before:0,balance_after:0,currency:curr,cashier_id:AGENT_ID,cashier_name:AGENT_NAME,branch:AGENT_BRANCH,notes:`${currentTransferType} → ${receiver} (${contact}) | ID: ${idDoc}`,status:"completed"});
+    alert(`✅ Transfert ${currentTransferType} enregistre!\nBeneficiaire: ${receiver}\nContact: ${contact}\nMontant: ${fmtA(amt)} ${curr}`);
+    closeTransferForm();
+    loadAll();
+}
+
+async function executeChange(){
+    if(!document.getElementById("changeConfirm").checked)return alert("Confirmez le change.");
+    const amt=Number(document.getElementById("changeAmount").value);
+    const from=document.getElementById("changeFrom").value;
+    const to=document.getElementById("changeTo").value;
+    const name=document.getElementById("changeName").value||"Client";
+    if(!amt)return alert("Entrez un montant.");
+    await sf("transactions","POST",{account_no:"CHANGE",client_name:name,transaction_type:"change",amount:amt,balance_before:0,balance_after:0,currency:from,cashier_id:AGENT_ID,cashier_name:AGENT_NAME,branch:AGENT_BRANCH,notes:`Change ${from} → ${to}`,status:"completed"});
+    alert(`✅ Change effectue!\n${fmtA(amt)} ${from} change.`);
+    resetChange();
+    loadAll();
+}
+
+function resetForm(type){
+    if(type==="depot"){
+        document.getElementById("depotAccount").value="";
+        document.getElementById("depotAccount").dataset.client="";
+        document.getElementById("depotClientCard").style.display="none";
+        document.getElementById("depotAmount").value="";
+        document.getElementById("depotNotes").value="";
+        document.getElementById("depotConfirm").checked=false;
+        document.getElementById("depotFeeBox").style.display="none";
+    }else{
+        document.getElementById("retraitAccount").value="";
+        document.getElementById("retraitAccount").dataset.client="";
+        document.getElementById("retraitClientCard").style.display="none";
+        document.getElementById("retraitAmount").value="";
+        document.getElementById("retraitIdDoc").value="";
+        document.getElementById("retraitNotes").value="";
+        document.getElementById("retraitConfirm").checked=false;
+        document.getElementById("retraitFeeBox").style.display="none";
+    }
+}
+
+function resetChange(){
+    document.getElementById("changeAmount").value="";
+    document.getElementById("changeName").value="";
+    document.getElementById("changeConfirm").checked=false;
+    document.getElementById("changeResult").style.display="none";
+}
+
+async function loadHistory(){
+    const txns=await sf("transactions","GET",null,`?cashier_id=eq.${AGENT_ID}&order=created_at.desc`);
+    const type=document.getElementById("histType").value;
+    const from=document.getElementById("histFrom").value;
+    const to=document.getElementById("histTo").value;
+    let f=txns;
+    if(type!=="all")f=f.filter(t=>t.transaction_type===type);
+    if(from)f=f.filter(t=>new Date(t.created_at)>=new Date(from));
+    if(to)f=f.filter(t=>new Date(t.created_at)<=new Date(to+"T23:59:59"));
+    document.getElementById("histCount").textContent=f.length;
+    document.getElementById("histList").innerHTML=f.map(t=>{
+        let comm=0;
+        if(t.transaction_type==="depot")comm=Number(t.amount)*COMMISSION_DEPOT;
+        else if(t.transaction_type==="retrait")comm=Number(t.amount)*COMMISSION_RETRAIT;
+        else if(t.transaction_type==="transfert")comm=Number(t.amount)*COMMISSION_TRANSFER;
+        else if(t.transaction_type==="change")comm=Number(t.amount)*COMMISSION_CHANGE;
+        return`<tr>
+            <td>${fmt(t.created_at)}</td>
+            <td>${fmtT(t.created_at)}</td>
+            <td><span class="op-badge ${t.transaction_type}">${t.transaction_type}</span></td>
+            <td>${t.client_name||"-"}</td>
+            <td>${fmtA(t.amount)} ${t.currency}</td>
+            <td class="pos">+${fmtA(comm)} HTG</td>
+            <td><span class="status-ok">✅ Complet</span></td>
+        </tr>`;
+    }).join("")||"<tr><td colspan='7'>Aucune operation</td></tr>";
+}
+
+function saveAgentProfile(){alert("✅ Profil sauvegarde!");}
+function changePin(){
+    const curr=document.getElementById("currentPin").value;
+    const newP=document.getElementById("newPin").value;
+    const conf=document.getElementById("confirmPin").value;
+    if(newP!==conf)return alert("PINs differents.");
+    if(newP.length!==4)return alert("PIN doit avoir 4 chiffres.");
+    alert("✅ PIN modifie!");
+    document.getElementById("pinForm").style.display="none";
+}
+function toggleForm(id){const f=document.getElementById(id);f.style.display=f.style.display==="none"?"block":"none";}
+function reportFraud(){alert("🚨 Alerte transmise a NEXUS. Notre equipe va vous contacter.");}
+
+async function loadAll(){
+    loadRates();
+    await loadWallet();
+    await loadStats();
+    await loadHistory();
+}
+
+document.addEventListener("DOMContentLoaded",()=>{
+    const h=new Date().getHours();
+    const gr=h<12?"Bonjour":h<18?"Bon apres-midi":"Bonsoir";
+    document.getElementById("whGreeting").textContent=gr+",";
+    document.getElementById("whName").textContent=AGENT_NAME;
+    document.getElementById("whDate").textContent=new Date().toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
+    document.getElementById("agentNameSide").textContent=AGENT_NAME;
+    document.getElementById("agentCodeSide").textContent="CODE: "+AGENT_ID;
+    document.getElementById("pacName").textContent=AGENT_NAME;
+    document.getElementById("pacCode").textContent="CODE: "+AGENT_ID;
+    document.getElementById("pacBranch").textContent="Succursale: "+AGENT_BRANCH;
+    document.getElementById("walletAgentInfo").textContent=AGENT_NAME+" — "+AGENT_BRANCH;
+    loadAll();
+});
+</script>
+</body>
+</html>
