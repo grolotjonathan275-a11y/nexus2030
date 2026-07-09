@@ -20,6 +20,22 @@
                 <span class="brand-year">2030</span>
             </div>
         </a>
+        <div class="navbar-right">
+            <div class="lang-selector" id="langSelector">
+                <button class="lang-btn" id="langBtn">
+                    <span class="lang-flag" id="currentFlag">🇫🇷</span>
+                    <span class="lang-code" id="currentLang">FR</span>
+                    <span class="lang-arrow">▾</span>
+                </button>
+                <div class="lang-dropdown" id="langDropdown">
+                    <button class="lang-option active" data-lang="fr" data-flag="🇫🇷"><span>🇫🇷</span> Français</button>
+                    <button class="lang-option" data-lang="es" data-flag="🇩🇴"><span>🇩🇴</span> Español</button>
+                    <button class="lang-option" data-lang="en" data-flag="🇺🇸"><span>🇺🇸</span> English</button>
+                    <button class="lang-option" data-lang="ht" data-flag="🇭🇹"><span>🇭🇹</span> Kreyòl</button>
+                    <button class="lang-option" data-lang="pt" data-flag="🇧🇷"><span>🇧🇷</span> Português</button>
+                </div>
+            </div>
+        </div>
     </div>
 </nav>
 
@@ -36,20 +52,20 @@
                         <span class="brand-year">2030</span>
                     </div>
                 </div>
-                <h2 data-i18n="login.brand.title">Votre espace financier securise</h2>
-                <p data-i18n="login.brand.sub">Accedez a vos comptes, suivez vos transactions et gerez vos finances en toute securite.</p>
+                <h2 data-i18n="login.brand.title">Votre espace financier sécurisé</h2>
+                <p data-i18n="login.brand.sub">Accédez à vos comptes, suivez vos transactions et gérez vos finances en toute sécurité.</p>
                 <div class="login-features">
                     <div class="login-feature">
                         <span>🔒</span>
-                        <span>Connexion securisee SSL</span>
+                        <span data-i18n="login.feat1">Connexion sécurisée SSL</span>
                     </div>
                     <div class="login-feature">
                         <span>✅</span>
-                        <span>Verification en 2 etapes</span>
+                        <span data-i18n="login.feat2">Vérification en 2 étapes</span>
                     </div>
                     <div class="login-feature">
                         <span>⚡</span>
-                        <span>Acces instantane a vos comptes</span>
+                        <span data-i18n="login.feat3">Accès instantané à vos comptes</span>
                     </div>
                 </div>
             </div>
@@ -61,70 +77,70 @@
 
                 <!-- TABS -->
                 <div class="login-tabs">
-                    <button class="login-tab active" id="tabLogin">Connexion</button>
-                    <button class="login-tab" id="tabRegister">Creer un compte</button>
+                    <button class="login-tab active" id="tabLogin" data-i18n="login.tab.login">Connexion</button>
+                    <button class="login-tab" id="tabRegister" data-i18n="login.tab.register">Créer un compte</button>
                 </div>
 
                 <!-- LOGIN FORM -->
                 <div id="loginForm">
                     <div class="form-group">
-                        <label>Email ou Telephone</label>
-                        <input type="text" class="form-input" id="loginEmail" placeholder="email@exemple.com">
+                        <label data-i18n="login.email">Email ou Téléphone</label>
+                        <input type="text" class="form-input" id="loginEmail" data-i18n-placeholder="login.emailPh" placeholder="email@exemple.com">
                     </div>
                     <div class="form-group">
-                        <label>Mot de passe</label>
+                        <label data-i18n="login.password">Mot de passe</label>
                         <div class="input-password">
-                            <input type="password" class="form-input" id="loginPassword" placeholder="••••••••">
+                            <input type="password" class="form-input" id="loginPassword" data-i18n-placeholder="login.passwordPh" placeholder="••••••••">
                             <button type="button" class="toggle-password" id="togglePassword">👁</button>
                         </div>
                     </div>
                     <div class="login-options">
                         <label class="checkbox-label">
                             <input type="checkbox" id="rememberMe">
-                            <span>Se souvenir de moi</span>
+                            <span data-i18n="login.remember">Se souvenir de moi</span>
                         </label>
-                        <a href="#" class="forgot-link">Mot de passe oublie?</a>
+                        <a href="#" class="forgot-link" data-i18n="login.forgot">Mot de passe oublié ?</a>
                     </div>
-                    <button class="btn btn-primary btn-full" id="loginSubmit">Se connecter</button>
+                    <button class="btn btn-primary btn-full" id="loginSubmit" data-i18n="login.submit">Se connecter</button>
                     <div class="login-divider">
-                        <span>ou</span>
+                        <span data-i18n="login.or">ou</span>
                     </div>
-                    <a href="contact.html" class="btn-secondary-login">Besoin d'aide? Contactez-nous</a>
+                    <a href="contact.html" class="btn-secondary-login" data-i18n="login.help">Besoin d'aide? Contactez-nous</a>
                 </div>
 
                 <!-- REGISTER FORM -->
                 <div id="registerForm" style="display:none">
                     <div class="form-row">
                         <div class="form-group">
-                            <label>Prenom *</label>
-                            <input type="text" class="form-input" id="regFirstName" placeholder="Jean">
+                            <label data-i18n="login.reg.firstname">Prénom *</label>
+                            <input type="text" class="form-input" id="regFirstName" data-i18n-placeholder="login.reg.firstnamePh" placeholder="Jean">
                         </div>
                         <div class="form-group">
-                            <label>Nom *</label>
-                            <input type="text" class="form-input" id="regLastName" placeholder="Dupont">
+                            <label data-i18n="login.reg.lastname">Nom *</label>
+                            <input type="text" class="form-input" id="regLastName" data-i18n-placeholder="login.reg.lastnamePh" placeholder="Dupont">
                         </div>
                     </div>
                     <div class="form-group">
-                        <label>Email *</label>
-                        <input type="email" class="form-input" id="regEmail" placeholder="email@exemple.com">
+                        <label data-i18n="login.reg.email">Email *</label>
+                        <input type="email" class="form-input" id="regEmail" data-i18n-placeholder="login.reg.emailPh" placeholder="email@exemple.com">
                     </div>
                     <div class="form-group">
-                        <label>Telephone *</label>
-                        <input type="tel" class="form-input" id="regPhone" placeholder="+509 / +1 809">
+                        <label data-i18n="login.reg.phone">Téléphone *</label>
+                        <input type="tel" class="form-input" id="regPhone" data-i18n-placeholder="login.reg.phonePh" placeholder="+509 / +1 809">
                     </div>
                     <div class="form-group">
-                        <label>Mot de passe *</label>
-                        <input type="password" class="form-input" id="regPassword" placeholder="Min. 8 caracteres">
+                        <label data-i18n="login.reg.password">Mot de passe *</label>
+                        <input type="password" class="form-input" id="regPassword" placeholder="Min. 8 caractères">
                     </div>
-                    <button class="btn btn-primary btn-full" id="registerSubmit">Creer mon compte</button>
-                    <p class="login-terms">En creant un compte, vous acceptez nos conditions d'utilisation et notre politique de confidentialite.</p>
+                    <button class="btn btn-primary btn-full" id="registerSubmit" data-i18n="login.reg.submit">Créer mon compte</button>
+                    <p class="login-terms" data-i18n="login.reg.terms">En créant un compte, vous acceptez nos conditions d'utilisation et notre politique de confidentialité.</p>
                 </div>
 
                 <!-- SUCCESS MESSAGE -->
                 <div class="login-success" id="loginSuccess" style="display:none">
                     <div class="success-icon">✅</div>
-                    <h3>Connexion reussie!</h3>
-                    <p>Bienvenue sur NEXUS 2030. Redirection en cours...</p>
+                    <h3 data-i18n="login.success.title">Connexion réussie!</h3>
+                    <p data-i18n="login.success.sub">Bienvenue sur NEXUS 2030. Redirection en cours...</p>
                 </div>
 
             </div>
@@ -148,7 +164,7 @@ const ROLE_REDIRECTS = {
     superviseur: 'superviseur.html',
     caissier: 'cashier.html',
     agent: 'agent.html',
-validateur: 'validateur.html',
+    validateur: 'validateur.html',
     client: 'client.html'
 };
 
@@ -192,8 +208,6 @@ document.getElementById("loginSubmit").addEventListener("click", async function(
     btn.disabled = true;
 
     try {
-        // Etap 1: Eseye konekte kòm anplwaye (Super Admin, CEO, Secretaire, Superviseur, Caissier, Agent)
-        // atravè Supabase Auth — modpas verifye ak chifre otomatikman pa Supabase
         const { data: authData, error: authError } = await supabaseClient.auth.signInWithPassword({ email, password });
 
         if (!authError && authData.session) {
@@ -218,7 +232,6 @@ document.getElementById("loginSubmit").addEventListener("click", async function(
             }
         }
 
-        // Etap 2: Si se pa yon anplwaye, chèche nan kliyan yo (savings_accounts)
         const clientRes = await fetch(`${SUPA_URL}/rest/v1/savings_accounts?email=eq.${encodeURIComponent(email)}&select=*`, {
             headers: {"apikey": SUPA_KEY, "Authorization": `Bearer ${SUPA_KEY}`}
         });
@@ -332,13 +345,11 @@ function showSuccess(){
 
 // CHECK SESSION
 document.addEventListener("DOMContentLoaded", async () => {
-    // Kliyan (ansyen sistèm localStorage)
     const role = localStorage.getItem("nexus_role");
     if(role === "client" && ROLE_REDIRECTS[role]){
         window.location.href = ROLE_REDIRECTS[role];
         return;
     }
-    // Anplwaye (sesyon Supabase Auth)
     const { data: { session } } = await supabaseClient.auth.getSession();
     if (session) {
         const { data: profile } = await supabaseClient.from("profiles").select("role,status").eq("id", session.user.id).single();
