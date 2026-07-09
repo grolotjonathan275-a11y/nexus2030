@@ -488,6 +488,7 @@ async function loginClient(){
     if(client.is_blocked)return alert("Compte bloque. Contactez le support.");
     if(client.password_hash!==btoa(pwd))return alert("Mot de passe incorrect.");
     currentClient=client;
+    localStorage.clear();
     localStorage.setItem("nexus_client",JSON.stringify(client));
     showDashboard();
 }
@@ -516,7 +517,7 @@ async function submitRegister(){
         occupation:document.getElementById("regOccupation").value,
         balance:0,kyc_status:"pending",status:"active",branch:"En ligne"
     });
-    if(r.ok){const d=await r.json();currentClient=d[0];localStorage.setItem("nexus_client",JSON.stringify(currentClient));alert("Compte cree! Numero: "+accountNo);showDashboard();}
+    if(r.ok){const d=await r.json();currentClient=d[0];localStorage.clear();localStorage.setItem("nexus_client",JSON.stringify(currentClient));alert("Compte cree! Numero: "+accountNo);showDashboard();}
     else{const e=await r.json();alert("Erreur: "+(e.message||"Email deja utilise."));}
 }
 
@@ -541,7 +542,15 @@ async function loadClientData(){
     document.getElementById("profileAccountNo").textContent=c.account_no;
     document.getElementById("profileMemberSince").textContent="Membre depuis "+fmt(c.created_at);
     const fresh=await supaFetch("savings_accounts","GET",null,`?account_no=eq.${c.account_no}`);
-    if(fresh&&fresh[0]){currentClient=fresh[0];document.getElementById("totalBalance").textContent=fmtAmt(fresh[0].balance);document.getElementById("totalCurrency").textContent=fresh[0].currency;}
+    if(!fresh||fresh.length===0||fresh[0].is_blocked){
+        alert("Session invalide ou compte bloque. Veuillez vous reconnecter.");
+        clientLogout();
+        return;
+    }
+    currentClient=fresh[0];
+    localStorage.setItem("nexus_client",JSON.stringify(currentClient));
+    document.getElementById("totalBalance").textContent=fmtAmt(fresh[0].balance);
+    document.getElementById("totalCurrency").textContent=fresh[0].currency;
     const kyc=c.kyc_status;
     const kb=document.getElementById("kycBadge");
     if(kyc==="approved"){kb.className="kyc-badge approved";kb.textContent="✅ KYC Verifie";document.getElementById("kycStatusText").textContent="Verifie";}
@@ -613,7 +622,8 @@ function clientSection(el,e){
 function toggleClientSidebar(){document.getElementById("clientSidebar").classList.toggle("open");}
 
 function clientLogout(){
-    localStorage.removeItem("nexus_client");currentClient=null;
+    localStorage.clear();
+    currentClient=null;
     document.getElementById("clientApp").style.display="none";
     document.getElementById("authScreen").style.display="flex";
     showLogin();
@@ -714,11 +724,21 @@ function sendReset(){alert("Lien envoye a "+document.getElementById("forgotEmail
 
 document.addEventListener("DOMContentLoaded",()=>{
     const saved=localStorage.getItem("nexus_client");
-    if(saved){currentClient=JSON.parse(saved);showDashboard();}
+    if(saved){
+        try{
+            const parsed=JSON.parse(saved);
+            if(parsed&&parsed.account_no){
+                currentClient=parsed;
+                showDashboard();
+            }else{
+                localStorage.clear();
+            }
+        }catch(e){
+            localStorage.clear();
+        }
+    }
 });
 </script>
 
 <div style='position:fixed;bottom:0;left:0;right:0;background:#081440;color:rgba(255,255,255,0.7);text-align:center;padding:6px;font-size:0.72rem;font-family:Inter,sans-serif;z-index:9999;border-top:1px solid rgba(255,255,255,0.1)'>Developed by <strong style=color:white>Jonathan Grolot</strong> (+1 849 453 6553). All rights reserved until full payment is received.</div></body>
 </html>
-
-
