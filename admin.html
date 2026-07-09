@@ -88,14 +88,44 @@
 </div>
 </section>
 <section class="section" id="section-branches">
-<div class="card"><div class="card-header"><h3>Succursales</h3></div><p style="padding:1rem;color:#64748B;">Module en developpement.</p></div>
+<div class="card">
+<div class="card-header"><h3>🏦 Succursales</h3><span class="badge" id="branchCount">0</span></div>
+<div class="table-wrap"><table class="data-table">
+<thead><tr><th>Succursale</th><th>Clients</th><th>Comptes Actifs</th><th>Transactions Bancaires</th><th>Ventes MonCash/NatCash</th><th>Volume MonCash/NatCash</th></tr></thead>
+<tbody id="branchList"><tr><td colspan="6">Chargement...</td></tr></tbody>
+</table></div>
+</div>
 </section>
 <section class="section" id="section-employees">
-<div class="card"><div class="card-header"><h3>Employes</h3></div><p style="padding:1rem;color:#64748B;">Module en developpement.</p></div>
+<div class="card">
+<div class="card-header"><h3>👥 Annuaire des Employes</h3><span class="badge" id="employeeCount">0</span></div>
+<div id="employeeDirectory" style="padding:1.5rem"></div>
+</div>
 </section>
 <section class="section" id="section-transactions">
-<div class="card"><div class="card-header"><h3>Transactions</h3></div><p style="padding:1rem;color:#64748B;">Module en developpement.</p></div>
+<div class="card">
+<div class="card-header"><h3>💸 Toutes les Transactions</h3></div>
+<div style="padding:1rem 1.5rem 0">
+<div class="txn-filters" style="display:flex;gap:0.6rem;flex-wrap:wrap;margin-bottom:1rem">
+<select id="globalTxnType" onchange="loadGlobalTransactions()" style="padding:0.5rem;border-radius:8px;border:1px solid #CBD5E1;">
+<option value="all">Tous types</option>
+<option value="depot">Depots</option>
+<option value="retrait">Retraits</option>
+<option value="moncash">MonCash</option>
+<option value="natcash">NatCash</option>
+</select>
+<input type="date" id="globalTxnFrom" style="padding:0.5rem;border-radius:8px;border:1px solid #CBD5E1;">
+<input type="date" id="globalTxnTo" style="padding:0.5rem;border-radius:8px;border:1px solid #CBD5E1;">
+<button onclick="loadGlobalTransactions()" class="btn-approve">Filtrer</button>
+</div>
+</div>
+<div class="table-wrap"><table class="data-table">
+<thead><tr><th>Date</th><th>Heure</th><th>Type</th><th>Client</th><th>Montant</th><th>Traite par</th><th>Succursale</th><th>Statut</th></tr></thead>
+<tbody id="globalTxnList"><tr><td colspan="8">Chargement...</td></tr></tbody>
+</table></div>
+</div>
 </section>
+
 
 <!-- ===== NOUVO SEKSYON: GESTION UTILISATEURS ===== -->
 <section class="section" id="section-users">
@@ -234,6 +264,9 @@ function showSection(el, e) {
     document.getElementById("pageTitle").textContent = el.textContent.trim();
     if (id === "users") loadUsers();
     if (id === "settings") loadMoneyServiceSettings();
+    if (id === "branches") loadBranches();
+    if (id === "employees") loadEmployeeDirectory();
+    if (id === "transactions") loadGlobalTransactions();
 }
 
 function showSectionByName(e, id) {
@@ -506,6 +539,168 @@ function showSettingsMsg(text, isError){
     el.style.background = isError ? "#FEE2E2" : "#DCFCE7";
     el.style.color = isError ? "#991B1B" : "#166534";
     el.textContent = text;
+}
+
+// ===== SUCCURSALES =====
+
+async function loadBranches(){
+    const clients = await fetchData("savings_accounts");
+    const bankTxns = await fetchData("transactions");
+    const { data: mmTxns } = await supabaseClient.from("mobile_money_transactions").select("*");
+
+    const branches = {};
+    const ensure = (b) => {
+        if (!branches[b]) branches[b] = { clients: 0, activeAccounts: 0, bankTxns: 0, mmCount: 0, mmVolume: 0 };
+        return branches[b];
+    };
+
+    clients.forEach(c => {
+        const b = c.branch || "Non specifie";
+        const e = ensure(b);
+        e.clients++;
+        if (c.status === "active") e.activeAccounts++;
+    });
+
+    bankTxns.forEach(t => {
+        const c = clients.find(x => x.account_no === t.account_no);
+        const b = c?.branch || "Non specifie";
+        ensure(b).bankTxns++;
+    });
+
+    (mmTxns || []).forEach(t => {
+        const b = t.branch || "Non specifie";
+        const e = ensure(b);
+        e.mmCount++;
+        if (["pending_validation","approved"].includes(t.status)) e.mmVolume += Number(t.total_charged_dop);
+    });
+
+    const entries = Object.entries(branches);
+    document.getElementById("branchCount").textContent = entries.length;
+    document.getElementById("branchList").innerHTML = entries.map(([b, d]) => `
+        <tr>
+            <td><strong>${b}</strong></td>
+            <td>${d.clients}</td>
+            <td>${d.activeAccounts}</td>
+            <td>${d.bankTxns}</td>
+            <td>${d.mmCount}</td>
+            <td>${d.mmVolume.toLocaleString("fr-FR",{minimumFractionDigits:2})} DOP</td>
+        </tr>`).join("") || "<tr><td colspan='6'>Aucune succursale</td></tr>";
+}
+
+// ===== ANNUAIRE EMPLOYES =====
+
+async function loadEmployeeDirectory(){
+    const { data: users, error } = await supabaseClient
+        .from("profiles")
+        .select("*")
+        .order("role", { ascending: true });
+
+    const container = document.getElementById("employeeDirectory");
+
+    if (error || !users) {
+        container.innerHTML = "<p style='color:#DC2626'>Erreur de chargement</p>";
+        return;
+    }
+
+    document.getElementById("employeeCount").textContent = users.length;
+
+    const groups = {};
+    users.forEach(u => {
+        if (!groups[u.role]) groups[u.role] = [];
+        groups[u.role].push(u);
+    });
+
+    const roleOrder = ["super_admin","ceo","secretaire","superviseur","caissier","agent","validateur","client"];
+    const roleColors = {
+        super_admin:"#7C3AED", ceo:"#0F172A", secretaire:"#7C3AED", superviseur:"#0EA5E9",
+        caissier:"#F97316", agent:"#10B981", validateur:"#6366F1", client:"#64748B"
+    };
+
+    container.innerHTML = roleOrder.filter(r => groups[r]).map(role => `
+        <div style="margin-bottom:1.5rem">
+            <h4 style="color:#64748B;font-size:0.8rem;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:0.75rem">${ROLE_LABELS[role] || role} (${groups[role].length})</h4>
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:0.75rem">
+                ${groups[role].map(u => `
+                    <div style="display:flex;align-items:center;gap:0.75rem;padding:0.9rem;border:1px solid #E2E8F0;border-radius:10px">
+                        ${u.avatar_url
+                            ? `<img src="${u.avatar_url}" style="width:44px;height:44px;border-radius:50%;object-fit:cover">`
+                            : `<div style="width:44px;height:44px;border-radius:50%;background:${roleColors[role]||'#64748B'};color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.85rem">${(u.full_name||"?").split(" ").map(n=>n[0]).join("").substring(0,2).toUpperCase()}</div>`
+                        }
+                        <div style="min-width:0">
+                            <div style="font-weight:600;font-size:0.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${u.full_name}</div>
+                            <div style="font-size:0.78rem;color:#64748B;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${u.phone||u.email||"-"}</div>
+                            <span class="badge-status ${u.status==='active'?'approved':'pending'}" style="font-size:0.7rem;margin-top:0.2rem;display:inline-block">${u.status}</span>
+                        </div>
+                    </div>
+                `).join("")}
+            </div>
+        </div>
+    `).join("") || "<p style='color:#64748B'>Aucun employe</p>";
+}
+
+// ===== TRANSACTIONS GLOBALES (bancaires + mobile money) =====
+
+async function loadGlobalTransactions(){
+    const type = document.getElementById("globalTxnType").value;
+    const from = document.getElementById("globalTxnFrom").value;
+    const to = document.getElementById("globalTxnTo").value;
+
+    let rows = [];
+
+    if (type === "all" || type === "depot" || type === "retrait") {
+        const bankTxns = await fetchData("transactions");
+        bankTxns.filter(t => type === "all" || t.transaction_type === type).forEach(t => {
+            rows.push({
+                created_at: t.created_at,
+                type: t.transaction_type,
+                client: t.client_name,
+                amount: `${Number(t.amount).toLocaleString("fr-FR",{minimumFractionDigits:2})} ${t.currency}`,
+                staff: t.cashier_name || "-",
+                branch: t.branch || "-",
+                status: t.status || "completed"
+            });
+        });
+    }
+
+    if (type === "all" || type === "moncash" || type === "natcash") {
+        const { data: mmTxns } = await supabaseClient
+            .from("mobile_money_transactions")
+            .select("*, profiles!mobile_money_transactions_created_by_fkey(full_name)");
+        (mmTxns || []).filter(t => type === "all" || t.service_type === type).forEach(t => {
+            rows.push({
+                created_at: t.created_at,
+                type: t.service_type,
+                client: t.sender_full_name,
+                amount: `${Number(t.total_charged_dop).toLocaleString("fr-FR",{minimumFractionDigits:2})} DOP`,
+                staff: t.profiles?.full_name || "-",
+                branch: t.branch || "-",
+                status: t.status
+            });
+        });
+    }
+
+    if (from) rows = rows.filter(r => new Date(r.created_at) >= new Date(from));
+    if (to) rows = rows.filter(r => new Date(r.created_at) <= new Date(to + "T23:59:59"));
+
+    rows.sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
+
+    const typeIcons = { depot:"💰 Depot", retrait:"💸 Retrait", moncash:"📱 MonCash", natcash:"💳 NatCash" };
+    const statusLabels = {
+        completed:"✅ Complet", pending_validation:"⏳ En attente", approved:"✅ Approuve",
+        rejected:"❌ Rejete", wrong_number:"⚠️ Numero Faux", cancelled:"🚫 Annule"
+    };
+
+    document.getElementById("globalTxnList").innerHTML = rows.map(r => `
+        <tr>
+            <td>${new Date(r.created_at).toLocaleDateString("fr-FR")}</td>
+            <td>${new Date(r.created_at).toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"})}</td>
+            <td>${typeIcons[r.type] || r.type}</td>
+            <td>${r.client || "-"}</td>
+            <td>${r.amount}</td>
+            <td>${r.staff}</td>
+            <td>${r.branch}</td>
+            <td>${statusLabels[r.status] || r.status}</td>
+        </tr>`).join("") || "<tr><td colspan='8'>Aucune transaction</td></tr>";
 }
 
 document.addEventListener("DOMContentLoaded", loadDashboard);
