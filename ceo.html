@@ -42,6 +42,7 @@
         <a href="#news" class="nav-item" onclick="showSection(this,event)"><span>📰</span>Actualites</a>
         <a href="#partners" class="nav-item" onclick="showSection(this,event)"><span>🤝</span>Logos Partenaires</a>
         <a href="#contact-info" class="nav-item" onclick="showSection(this,event)"><span>📞</span>Infos Contact Site</a>
+        <a href="#manage-branches" class="nav-item" onclick="showSection(this,event)"><span>🏦</span>Gerer Succursales</a>
         <a href="admin.html" class="nav-item"><span>⚙️</span>Super Admin</a>
         <a href="index.html" class="nav-item"><span>🌐</span>Site Web</a>
         <a href="#" class="nav-item logout" onclick="logout()"><span>🚪</span>Deconnexion</a>
@@ -569,6 +570,52 @@
             </div>
         </section>
 
+        <!-- GESTION SUCCURSALES -->
+        <section class="section" id="section-manage-branches">
+            <h2 class="section-title">🏦 Gerer les Succursales</h2>
+            <div class="card">
+                <div class="card-header"><h3>Creer / Modifier une Succursale</h3></div>
+                <div style="padding:1.5rem">
+                    <div id="branchMsg" style="display:none;padding:0.75rem 1rem;border-radius:8px;margin-bottom:1rem;font-size:0.9rem;"></div>
+                    <input type="hidden" id="branchEditId" value="">
+                    <div class="form-grid-2">
+                        <div class="form-group"><label>Nom de la Succursale *</label><input type="text" id="brName" placeholder="NEXUS Santo Domingo Centro"></div>
+                        <div class="form-group"><label>Pays *</label>
+                            <select id="brCountry">
+                                <option value="DO">🇩🇴 Republique Dominicaine</option>
+                                <option value="HT">🇭🇹 Haiti</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-grid-2">
+                        <div class="form-group"><label>Region / Province *</label><input type="text" id="brRegion" placeholder="Distrito Nacional"></div>
+                        <div class="form-group"><label>Telephone *</label><input type="text" id="brPhone" placeholder="+1 (809) 555-0101"></div>
+                    </div>
+                    <div class="form-grid-2">
+                        <div class="form-group"><label>Horaires</label><input type="text" id="brHours" placeholder="Lun-Sam 8h-18h"></div>
+                        <div class="form-group"><label>Photo de la Succursale</label><input type="file" id="brPhoto" accept="image/*"></div>
+                    </div>
+                    <div class="form-grid-2">
+                        <div class="form-group"><label>Latitude (optionnel)</label><input type="text" id="brLat" placeholder="18.4861"></div>
+                        <div class="form-group"><label>Longitude (optionnel)</label><input type="text" id="brLng" placeholder="-69.9312"></div>
+                    </div>
+                    <div class="form-group"><label>Adresse Complete *</label><input type="text" id="brAddress" placeholder="Av. Winston Churchill #25, Santo Domingo"></div>
+                    <div style="display:flex;gap:0.75rem">
+                        <button class="btn-ceo-action" onclick="saveBranch()">💾 Enregistrer</button>
+                        <button class="btn-ceo-action warning" onclick="resetBranchForm()">Annuler</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" style="margin-top:1.5rem">
+                <div class="card-header"><h3>Succursales Actives</h3><span class="badge" id="branchesMgmtCount">0</span></div>
+                <div class="table-wrap"><table class="data-table">
+                    <thead><tr><th>Photo</th><th>Nom</th><th>Pays</th><th>Region</th><th>Telephone</th><th>Action</th></tr></thead>
+                    <tbody id="branchesMgmtList"><tr><td colspan="6">Chargement...</td></tr></tbody>
+                </table></div>
+            </div>
+        </section>
+
     </div>
 </main>
 </div>
@@ -607,6 +654,7 @@ function showSection(el,e){
     if(id==="news")loadNews();
     if(id==="partners")loadPartnerLogos();
     if(id==="contact-info")loadContactInfo();
+    if(id==="manage-branches")loadBranchesManagement();
 }
 
 function toggleSidebar(){document.getElementById("sidebar").classList.toggle("open");}
@@ -1258,6 +1306,125 @@ async function saveContactInfo(){
         msg.style.background = "#DCFCE7"; msg.style.color = "#166534";
         msg.textContent = "✅ Informations mises a jour! Elles apparaissent maintenant sur le site public.";
     }
+}
+
+// ===== GESTION SUCCURSALES =====
+
+function showBranchMsg(text, isError){
+    const el = document.getElementById("branchMsg");
+    el.style.display = "block";
+    el.style.background = isError ? "#FEE2E2" : "#DCFCE7";
+    el.style.color = isError ? "#991B1B" : "#166534";
+    el.textContent = text;
+}
+
+function resetBranchForm(){
+    document.getElementById("branchEditId").value = "";
+    document.getElementById("brName").value = "";
+    document.getElementById("brCountry").value = "DO";
+    document.getElementById("brRegion").value = "";
+    document.getElementById("brPhone").value = "";
+    document.getElementById("brHours").value = "";
+    document.getElementById("brLat").value = "";
+    document.getElementById("brLng").value = "";
+    document.getElementById("brAddress").value = "";
+    document.getElementById("brPhoto").value = "";
+    document.getElementById("branchMsg").style.display = "none";
+}
+
+async function saveBranch(){
+    const editId = document.getElementById("branchEditId").value;
+    const name = document.getElementById("brName").value.trim();
+    const country = document.getElementById("brCountry").value;
+    const region = document.getElementById("brRegion").value.trim();
+    const phone = document.getElementById("brPhone").value.trim();
+    const hours = document.getElementById("brHours").value.trim();
+    const latitude = document.getElementById("brLat").value.trim();
+    const longitude = document.getElementById("brLng").value.trim();
+    const address = document.getElementById("brAddress").value.trim();
+    const file = document.getElementById("brPhoto").files[0];
+
+    if(!name || !region || !phone || !address){
+        showBranchMsg("Remplissez tous les champs obligatoires (*).", true);
+        return;
+    }
+
+    let photo_url = null;
+
+    if(file){
+        if(file.size > 5*1024*1024){ showBranchMsg("Photo trop volumineuse (max 5 Mo).", true); return; }
+        const ext = file.name.split(".").pop();
+        const path = `${Date.now()}_${Math.floor(Math.random()*9999)}.${ext}`;
+        const { error: uploadError } = await supabaseClient.storage.from("branches").upload(path, file);
+        if(uploadError){ showBranchMsg("Erreur upload photo: " + uploadError.message, true); return; }
+        const { data: urlData } = supabaseClient.storage.from("branches").getPublicUrl(path);
+        photo_url = urlData.publicUrl;
+    }
+
+    const payload = {
+        name, country, region, phone, address,
+        hours: hours || null,
+        latitude: latitude ? Number(latitude) : null,
+        longitude: longitude ? Number(longitude) : null
+    };
+    if(photo_url) payload.photo_url = photo_url;
+
+    let error;
+    if(editId){
+        ({ error } = await supabaseClient.from("branches").update(payload).eq("id", editId));
+    } else {
+        ({ error } = await supabaseClient.from("branches").insert(payload));
+    }
+
+    if(error){
+        showBranchMsg("Erreur: " + error.message, true);
+        return;
+    }
+
+    showBranchMsg(editId ? "✅ Succursale mise a jour!" : "✅ Succursale creee avec succes!", false);
+    resetBranchForm();
+    loadBranchesManagement();
+}
+
+async function loadBranchesManagement(){
+    const { data, error } = await supabaseClient.from("branches").select("*").eq("active", true).order("display_order",{ascending:true});
+    if(error) return;
+
+    document.getElementById("branchesMgmtCount").textContent = data.length;
+    document.getElementById("branchesMgmtList").innerHTML = data.map(b => `
+        <tr>
+            <td>${b.photo_url ? `<img src="${b.photo_url}" style="width:50px;height:50px;object-fit:cover;border-radius:6px">` : "-"}</td>
+            <td><strong>${b.name}</strong></td>
+            <td>${b.country === "DO" ? "🇩🇴 RD" : "🇭🇹 Haiti"}</td>
+            <td>${b.region}</td>
+            <td>${b.phone}</td>
+            <td>
+                <button class="btn-ceo-action" style="padding:0.35rem 0.7rem;font-size:0.8rem" onclick="editBranch('${b.id}')">Modifier</button>
+                <button class="btn-ceo-action warning" style="padding:0.35rem 0.7rem;font-size:0.8rem;margin-left:0.35rem" onclick="deleteBranch('${b.id}')">Supprimer</button>
+            </td>
+        </tr>`).join("") || "<tr><td colspan='6'>Aucune succursale</td></tr>";
+}
+
+async function editBranch(id){
+    const { data, error } = await supabaseClient.from("branches").select("*").eq("id", id).single();
+    if(error || !data) return;
+    document.getElementById("branchEditId").value = data.id;
+    document.getElementById("brName").value = data.name || "";
+    document.getElementById("brCountry").value = data.country || "DO";
+    document.getElementById("brRegion").value = data.region || "";
+    document.getElementById("brPhone").value = data.phone || "";
+    document.getElementById("brHours").value = data.hours || "";
+    document.getElementById("brLat").value = data.latitude || "";
+    document.getElementById("brLng").value = data.longitude || "";
+    document.getElementById("brAddress").value = data.address || "";
+    window.scrollTo({top:0, behavior:"smooth"});
+}
+
+async function deleteBranch(id){
+    if(!confirm("Supprimer cette succursale du site?")) return;
+    const { error } = await supabaseClient.from("branches").delete().eq("id", id);
+    if(error){ alert("Erreur: " + error.message); return; }
+    loadBranchesManagement();
 }
 
 document.addEventListener("DOMContentLoaded",loadOverview);
