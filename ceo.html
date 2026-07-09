@@ -41,6 +41,7 @@
         <a href="#promotions" class="nav-item" onclick="showSection(this,event)"><span>📢</span>Publicites & Promotions</a>
         <a href="#news" class="nav-item" onclick="showSection(this,event)"><span>📰</span>Actualites</a>
         <a href="#partners" class="nav-item" onclick="showSection(this,event)"><span>🤝</span>Logos Partenaires</a>
+        <a href="#contact-info" class="nav-item" onclick="showSection(this,event)"><span>📞</span>Infos Contact Site</a>
         <a href="admin.html" class="nav-item"><span>⚙️</span>Super Admin</a>
         <a href="index.html" class="nav-item"><span>🌐</span>Site Web</a>
         <a href="#" class="nav-item logout" onclick="logout()"><span>🚪</span>Deconnexion</a>
@@ -543,6 +544,31 @@
             </div>
         </section>
 
+        <!-- INFOS CONTACT SITE WEB -->
+        <section class="section" id="section-contact-info">
+            <h2 class="section-title">📞 Informations de Contact du Site Web</h2>
+            <div class="card">
+                <div class="card-header"><h3>Coordonnees Publiques</h3></div>
+                <div style="padding:1.5rem">
+                    <div id="contactInfoMsg" style="display:none;padding:0.75rem 1rem;border-radius:8px;margin-bottom:1rem;font-size:0.9rem;"></div>
+                    <div class="form-grid-2">
+                        <div class="form-group"><label>Adresse (Siege Social) *</label><input type="text" id="ciAddress" placeholder="Alto de Friusa, Av. España, Plaza Stephanie"></div>
+                        <div class="form-group"><label>Ville *</label><input type="text" id="ciCity" placeholder="Bavaro"></div>
+                    </div>
+                    <div class="form-grid-2">
+                        <div class="form-group"><label>Province *</label><input type="text" id="ciProvince" placeholder="La Altagracia"></div>
+                        <div class="form-group"><label>Telephone *</label><input type="text" id="ciPhone" placeholder="+1 8494914555"></div>
+                    </div>
+                    <div class="form-grid-2">
+                        <div class="form-group"><label>Numero WhatsApp (sans + ni espaces) *</label><input type="text" id="ciWhatsapp" placeholder="18494914555"></div>
+                        <div class="form-group"><label>Email</label><input type="email" id="ciEmail" placeholder="info@nexus2030.com"></div>
+                    </div>
+                    <button class="btn-ceo-action" onclick="saveContactInfo()">💾 Enregistrer</button>
+                    <p style="font-size:0.8rem;color:#94A3B8;margin-top:0.75rem">Ces informations apparaissent en direct dans le pied de page du site public.</p>
+                </div>
+            </div>
+        </section>
+
     </div>
 </main>
 </div>
@@ -580,6 +606,7 @@ function showSection(el,e){
     if(id==="promotions")loadPromotions();
     if(id==="news")loadNews();
     if(id==="partners")loadPartnerLogos();
+    if(id==="contact-info")loadContactInfo();
 }
 
 function toggleSidebar(){document.getElementById("sidebar").classList.toggle("open");}
@@ -1186,6 +1213,51 @@ async function deletePartnerLogo(id){
     const { error } = await supabaseClient.from("partner_logos").delete().eq("id", id);
     if(error){ alert("Erreur: " + error.message); return; }
     loadPartnerLogos();
+}
+
+// ===== INFOS CONTACT SITE WEB =====
+
+async function loadContactInfo(){
+    const { data, error } = await supabaseClient.from("site_settings").select("*").eq("id",1).single();
+    if(error || !data) return;
+    document.getElementById("ciAddress").value = data.address_line || "";
+    document.getElementById("ciCity").value = data.city || "";
+    document.getElementById("ciProvince").value = data.province || "";
+    document.getElementById("ciPhone").value = data.phone_number || "";
+    document.getElementById("ciWhatsapp").value = data.whatsapp_number || "";
+    document.getElementById("ciEmail").value = data.email || "";
+}
+
+async function saveContactInfo(){
+    const address_line = document.getElementById("ciAddress").value.trim();
+    const city = document.getElementById("ciCity").value.trim();
+    const province = document.getElementById("ciProvince").value.trim();
+    const phone_number = document.getElementById("ciPhone").value.trim();
+    const whatsapp_number = document.getElementById("ciWhatsapp").value.trim();
+    const email = document.getElementById("ciEmail").value.trim();
+
+    const msg = document.getElementById("contactInfoMsg");
+
+    if(!address_line || !city || !province || !phone_number || !whatsapp_number){
+        msg.style.display = "block";
+        msg.style.background = "#FEE2E2"; msg.style.color = "#991B1B";
+        msg.textContent = "Remplissez tous les champs obligatoires (*).";
+        return;
+    }
+
+    const { error } = await supabaseClient.from("site_settings").update({
+        address_line, city, province, phone_number, whatsapp_number, email,
+        updated_at: new Date().toISOString()
+    }).eq("id",1);
+
+    msg.style.display = "block";
+    if(error){
+        msg.style.background = "#FEE2E2"; msg.style.color = "#991B1B";
+        msg.textContent = "Erreur: " + error.message;
+    } else {
+        msg.style.background = "#DCFCE7"; msg.style.color = "#166534";
+        msg.textContent = "✅ Informations mises a jour! Elles apparaissent maintenant sur le site public.";
+    }
 }
 
 document.addEventListener("DOMContentLoaded",loadOverview);

@@ -373,9 +373,10 @@
                 <div class="footer-col">
                     <h4 data-i18n="footer.contact2">Contact</h4>
                     <ul>
-                        <li>📍 Santo Domingo, RD</li>
-                        <li>📞 +1 (809) 000-0000</li>
-                        <li>✉️ info@nexus2030.com</li>
+                        <li>📍 <span data-i18n="footer.hq">Siège Social</span>: <span id="footerAddress">Chargement...</span></li>
+                        <li>📞 <a id="footerPhoneLink" href="tel:+18090000000">+1 (809) 000-0000</a></li>
+                        <li>💬 <a id="footerWhatsappLink" href="#" target="_blank" data-i18n="contact.info.whatsappBtn">Écrire sur WhatsApp</a></li>
+                        <li>✉️ <span id="footerEmail">info@nexus2030.com</span></li>
                     </ul>
                 </div>
             </div>
@@ -550,6 +551,35 @@ async function loadPromotions(){
 
 document.addEventListener("DOMContentLoaded", loadNewsPublic);
 document.addEventListener("DOMContentLoaded", loadPartnerLogosPublic);
+document.addEventListener("DOMContentLoaded", loadContactInfoPublic);
+
+async function loadContactInfoPublic(){
+    try{
+        const r = await fetch(`${NEXUS_SUPA_URL}/rest/v1/site_settings?id=eq.1`, {
+            headers: { "apikey": NEXUS_SUPA_KEY, "Authorization": `Bearer ${NEXUS_SUPA_KEY}` }
+        });
+        const data = await r.json();
+        if(!data || !data[0]) return;
+        const s = data[0];
+
+        const addrEl = document.getElementById("footerAddress");
+        if(addrEl) addrEl.textContent = `${s.address_line}, ${s.city}, ${s.province}`;
+
+        const phoneEl = document.getElementById("footerPhoneLink");
+        if(phoneEl){
+            phoneEl.textContent = s.phone_number;
+            phoneEl.href = "tel:" + s.phone_number.replace(/[^0-9+]/g, "");
+        }
+
+        const waEl = document.getElementById("footerWhatsappLink");
+        if(waEl && s.whatsapp_number){
+            waEl.href = "https://wa.me/" + s.whatsapp_number.replace(/[^0-9]/g, "");
+        }
+
+        const emailEl = document.getElementById("footerEmail");
+        if(emailEl && s.email) emailEl.textContent = s.email;
+    }catch(e){}
+}
 
 async function loadNewsPublic(){
     try{

@@ -308,6 +308,7 @@ fr: {
 "calc.title": "Calculatrice de Devises",
 "calc.buy": "Nous Achetons",
 "calc.sell": "Nous Vendons",
+"footer.hq": "Siège Social",
 },
 
 es: {
@@ -614,6 +615,7 @@ es: {
 "calc.title": "Calculadora de Divisas",
 "calc.buy": "Compramos",
 "calc.sell": "Vendemos",
+"footer.hq": "Sede Principal",
 },
 
 en: {
@@ -920,6 +922,7 @@ en: {
 "calc.title": "Currency Calculator",
 "calc.buy": "We Buy",
 "calc.sell": "We Sell",
+"footer.hq": "Headquarters",
 },
 
 ht: {
@@ -1226,6 +1229,7 @@ ht: {
 "calc.title": "Kalkilatè Deviz",
 "calc.buy": "Nou Achte",
 "calc.sell": "Nou Vann",
+"footer.hq": "Sant Prensipal",
 },
 
 pt: {
@@ -1532,6 +1536,7 @@ pt: {
 "calc.title": "Calculadora de Moedas",
 "calc.buy": "Compramos",
 "calc.sell": "Vendemos",
+"footer.hq": "Sede Principal",
 }
 };
 
