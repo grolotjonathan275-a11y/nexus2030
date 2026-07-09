@@ -39,6 +39,8 @@
         <a href="#mm-settings" class="nav-item" onclick="showSection(this,event)"><span>📱</span>Parametres MonCash/NatCash</a>
         <a href="#web-rates" class="nav-item" onclick="showSection(this,event)"><span>💱</span>Taux de Change Site Web</a>
         <a href="#promotions" class="nav-item" onclick="showSection(this,event)"><span>📢</span>Publicites & Promotions</a>
+        <a href="#news" class="nav-item" onclick="showSection(this,event)"><span>📰</span>Actualites</a>
+        <a href="#partners" class="nav-item" onclick="showSection(this,event)"><span>🤝</span>Logos Partenaires</a>
         <a href="admin.html" class="nav-item"><span>⚙️</span>Super Admin</a>
         <a href="index.html" class="nav-item"><span>🌐</span>Site Web</a>
         <a href="#" class="nav-item logout" onclick="logout()"><span>🚪</span>Deconnexion</a>
@@ -501,6 +503,46 @@
             </div>
         </section>
 
+        <!-- ACTUALITES -->
+        <section class="section" id="section-news">
+            <h2 class="section-title">📰 Actualites</h2>
+            <div class="card">
+                <div class="card-header"><h3>Publier une Actualite</h3></div>
+                <div style="padding:1.5rem">
+                    <div id="newsMsg" style="display:none;padding:0.75rem 1rem;border-radius:8px;margin-bottom:1rem;font-size:0.9rem;"></div>
+                    <div class="form-group"><label>Titre *</label><input type="text" id="newsTitle" placeholder="Ex: Nouveaux horaires pour les fetes"></div>
+                    <div class="form-group"><label>Contenu *</label><textarea id="newsContent" rows="4" placeholder="Detail de l'actualite..."></textarea></div>
+                    <div class="form-group"><label>Image (optionnel)</label><input type="file" id="newsImage" accept="image/*"></div>
+                    <button class="btn-ceo-action" onclick="publishNews()">📤 Publier sur le Site</button>
+                </div>
+            </div>
+            <div class="card" style="margin-top:1.5rem">
+                <div class="card-header"><h3>Actualites Publiees</h3><span class="badge" id="newsCount">0</span></div>
+                <div id="newsListContainer" style="padding:1.5rem"></div>
+            </div>
+        </section>
+
+        <!-- LOGOS PARTENAIRES -->
+        <section class="section" id="section-partners">
+            <h2 class="section-title">🤝 Logos Partenaires</h2>
+            <div class="card">
+                <div class="card-header"><h3>Ajouter un Logo Partenaire</h3></div>
+                <div style="padding:1.5rem">
+                    <div id="partnersMsg" style="display:none;padding:0.75rem 1rem;border-radius:8px;margin-bottom:1rem;font-size:0.9rem;"></div>
+                    <div class="form-grid-2">
+                        <div class="form-group"><label>Nom de l'entreprise (optionnel)</label><input type="text" id="partnerName" placeholder="Ex: Digicel, Natcom, Western Union..."></div>
+                        <div class="form-group"><label>Logo (fichier image) *</label><input type="file" id="partnerLogo" accept="image/*"></div>
+                    </div>
+                    <button class="btn-ceo-action" onclick="uploadPartnerLogo()">📤 Ajouter le Logo</button>
+                    <p style="font-size:0.8rem;color:#94A3B8;margin-top:0.75rem">Les logos defilent automatiquement en bas de la page d'accueil publique.</p>
+                </div>
+            </div>
+            <div class="card" style="margin-top:1.5rem">
+                <div class="card-header"><h3>Logos Actifs</h3><span class="badge" id="partnersCount">0</span></div>
+                <div id="partnersListContainer" style="padding:1.5rem;display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:1rem"></div>
+            </div>
+        </section>
+
     </div>
 </main>
 </div>
@@ -536,6 +578,8 @@ function showSection(el,e){
     if(id==="mm-settings")loadMoneyServiceSettings();
     if(id==="web-rates")loadExchangeRates();
     if(id==="promotions")loadPromotions();
+    if(id==="news")loadNews();
+    if(id==="partners")loadPartnerLogos();
 }
 
 function toggleSidebar(){document.getElementById("sidebar").classList.toggle("open");}
@@ -1013,6 +1057,135 @@ async function deletePromotion(id){
     const { error } = await supabaseClient.from("promotions").delete().eq("id", id);
     if(error){ alert("Erreur: " + error.message); return; }
     loadPromotions();
+}
+
+// ===== ACTUALITES =====
+
+function showNewsMsg(text, isError){
+    const el = document.getElementById("newsMsg");
+    el.style.display = "block";
+    el.style.background = isError ? "#FEE2E2" : "#DCFCE7";
+    el.style.color = isError ? "#991B1B" : "#166534";
+    el.textContent = text;
+}
+
+async function publishNews(){
+    const title = document.getElementById("newsTitle").value.trim();
+    const content = document.getElementById("newsContent").value.trim();
+    const file = document.getElementById("newsImage").files[0];
+
+    if(!title || !content){ showNewsMsg("Titre et contenu obligatoires.", true); return; }
+
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if(!session){ showNewsMsg("Session expiree. Reconnectez-vous.", true); return; }
+
+    showNewsMsg("Publication en cours...", false);
+
+    let imageUrl = null;
+    if(file){
+        if(file.size > 5*1024*1024){ showNewsMsg("Image trop volumineuse (max 5 Mo).", true); return; }
+        const ext = file.name.split(".").pop();
+        const path = `${Date.now()}_${Math.floor(Math.random()*9999)}.${ext}`;
+        const { error: uploadError } = await supabaseClient.storage.from("news").upload(path, file);
+        if(uploadError){ showNewsMsg("Erreur upload: " + uploadError.message, true); return; }
+        const { data: urlData } = supabaseClient.storage.from("news").getPublicUrl(path);
+        imageUrl = urlData.publicUrl;
+    }
+
+    const { error } = await supabaseClient.from("news_announcements").insert({
+        title, content, image_url: imageUrl, created_by: session.user.id
+    });
+
+    if(error){ showNewsMsg("Erreur: " + error.message, true); return; }
+
+    showNewsMsg("✅ Actualite publiee avec succes!", false);
+    document.getElementById("newsTitle").value = "";
+    document.getElementById("newsContent").value = "";
+    document.getElementById("newsImage").value = "";
+    loadNews();
+}
+
+async function loadNews(){
+    const { data, error } = await supabaseClient.from("news_announcements").select("*").eq("active", true).order("created_at",{ascending:false});
+    if(error) return;
+    document.getElementById("newsCount").textContent = data.length;
+    document.getElementById("newsListContainer").innerHTML = data.map(n => `
+        <div style="border:1px solid #E2E8F0;border-radius:10px;padding:1rem;margin-bottom:1rem;display:flex;gap:1rem">
+            ${n.image_url ? `<img src="${n.image_url}" style="width:90px;height:90px;object-fit:cover;border-radius:8px">` : ""}
+            <div style="flex:1">
+                <div style="font-weight:700">${n.title}</div>
+                <div style="color:#64748B;font-size:0.85rem;margin-top:0.25rem">${n.content}</div>
+                <div style="color:#94A3B8;font-size:0.75rem;margin-top:0.5rem">${new Date(n.created_at).toLocaleDateString("fr-FR")}</div>
+                <button class="btn-ceo-action warning" style="padding:0.3rem 0.6rem;font-size:0.78rem;margin-top:0.5rem" onclick="deleteNews('${n.id}')">Supprimer</button>
+            </div>
+        </div>`).join("") || "<p style='color:#94A3B8'>Aucune actualite publiee</p>";
+}
+
+async function deleteNews(id){
+    if(!confirm("Retirer cette actualite du site?")) return;
+    const { error } = await supabaseClient.from("news_announcements").delete().eq("id", id);
+    if(error){ alert("Erreur: " + error.message); return; }
+    loadNews();
+}
+
+// ===== LOGOS PARTENAIRES =====
+
+function showPartnersMsg(text, isError){
+    const el = document.getElementById("partnersMsg");
+    el.style.display = "block";
+    el.style.background = isError ? "#FEE2E2" : "#DCFCE7";
+    el.style.color = isError ? "#991B1B" : "#166534";
+    el.textContent = text;
+}
+
+async function uploadPartnerLogo(){
+    const name = document.getElementById("partnerName").value.trim();
+    const file = document.getElementById("partnerLogo").files[0];
+
+    if(!file){ showPartnersMsg("Choisissez un fichier logo.", true); return; }
+    if(file.size > 2*1024*1024){ showPartnersMsg("Logo trop volumineux (max 2 Mo).", true); return; }
+
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if(!session){ showPartnersMsg("Session expiree. Reconnectez-vous.", true); return; }
+
+    showPartnersMsg("Envoi en cours...", false);
+
+    const ext = file.name.split(".").pop();
+    const path = `${Date.now()}_${Math.floor(Math.random()*9999)}.${ext}`;
+    const { error: uploadError } = await supabaseClient.storage.from("partner-logos").upload(path, file);
+    if(uploadError){ showPartnersMsg("Erreur upload: " + uploadError.message, true); return; }
+
+    const { data: urlData } = supabaseClient.storage.from("partner-logos").getPublicUrl(path);
+
+    const { error } = await supabaseClient.from("partner_logos").insert({
+        logo_url: urlData.publicUrl, company_name: name || null, created_by: session.user.id
+    });
+
+    if(error){ showPartnersMsg("Erreur: " + error.message, true); return; }
+
+    showPartnersMsg("✅ Logo ajoute avec succes!", false);
+    document.getElementById("partnerName").value = "";
+    document.getElementById("partnerLogo").value = "";
+    loadPartnerLogos();
+}
+
+async function loadPartnerLogos(){
+    const { data, error } = await supabaseClient.from("partner_logos").select("*").eq("active", true).order("created_at",{ascending:false});
+    if(error) return;
+    document.getElementById("partnersCount").textContent = data.length;
+    document.getElementById("partnersListContainer").innerHTML = data.map(p => `
+        <div style="border:1px solid #E2E8F0;border-radius:10px;overflow:hidden;text-align:center;padding:0.75rem">
+            <img src="${p.logo_url}" style="width:100%;height:60px;object-fit:contain">
+            <div style="font-size:0.78rem;color:#64748B;margin-top:0.4rem">${p.company_name || "-"}</div>
+            <button class="btn-ceo-action warning" style="padding:0.3rem 0.6rem;font-size:0.75rem;margin-top:0.4rem" onclick="deletePartnerLogo('${p.id}')">Supprimer</button>
+        </div>`).join("") || "<p style='color:#94A3B8;grid-column:1/-1'>Aucun logo ajoute</p>";
+}
+
+async function deletePartnerLogo(id){
+    if(!confirm("Retirer ce logo du site?")) return;
+    const { error } = await supabaseClient.from("partner_logos").delete().eq("id", id);
+    if(error){ alert("Erreur: " + error.message); return; }
+    loadPartnerLogos();
 }
 
 document.addEventListener("DOMContentLoaded",loadOverview);

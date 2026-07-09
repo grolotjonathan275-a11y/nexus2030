@@ -45,6 +45,23 @@
 .promo-card-title{font-weight:700;color:#0F172A;font-size:1rem;margin-bottom:0.35rem;}
 .promo-card-desc{color:#64748B;font-size:0.85rem;line-height:1.5;}
 
+/* ===== ACTUALITES ===== */
+.news-section{padding:4rem 0;background:#F8FAFC;}
+.news-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1.5rem;margin-top:2.5rem;}
+.news-card{background:#fff;border-radius:14px;padding:1.5rem;box-shadow:0 4px 20px rgba(15,23,42,0.06);display:flex;gap:1rem;}
+.news-card img{width:80px;height:80px;object-fit:cover;border-radius:10px;flex-shrink:0;}
+.news-card-title{font-weight:700;color:#0F172A;margin-bottom:0.4rem;}
+.news-card-content{color:#64748B;font-size:0.88rem;line-height:1.5;}
+.news-card-date{color:#94A3B8;font-size:0.75rem;margin-top:0.5rem;}
+
+/* ===== LOGOS PARTENAIRES ===== */
+.partners-strip{background:#fff;padding:2rem 0;overflow:hidden;border-top:1px solid #EEF2F7;}
+.partners-title{text-align:center;color:#94A3B8;font-size:0.8rem;text-transform:uppercase;letter-spacing:1px;font-weight:700;margin-bottom:1.5rem;}
+.partners-track{display:inline-flex;align-items:center;padding-left:100%;animation:partners-scroll 30s linear infinite;}
+.partners-track img{height:48px;max-width:140px;object-fit:contain;margin:0 2.5rem;opacity:0.75;transition:opacity .2s;}
+.partners-track img:hover{opacity:1;}
+@keyframes partners-scroll{0%{transform:translateX(0);}100%{transform:translateX(-100%);}}
+
 /* ===== CALCULATRICE ===== */
 .calc-fab{position:fixed;bottom:24px;right:24px;width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,#F97316,#EA580C);color:#fff;border:none;font-size:1.6rem;box-shadow:0 8px 24px rgba(249,115,22,0.4);cursor:pointer;z-index:998;display:flex;align-items:center;justify-content:center;}
 .calc-modal{display:none;position:fixed;inset:0;background:rgba(15,23,42,0.55);z-index:1000;align-items:center;justify-content:center;padding:1rem;}
@@ -306,6 +323,24 @@
         </div>
     </section>
 
+    <!-- ========== ACTUALITES ========== -->
+    <section class="news-section" id="news" style="display:none">
+        <div class="section-container">
+            <div class="section-header">
+                <span class="section-badge">Actualites</span>
+                <h2 class="section-title">Dernieres Nouvelles</h2>
+                <p class="section-subtitle">Restez informe de nos annonces et mises a jour</p>
+            </div>
+            <div class="news-grid" id="newsGrid"></div>
+        </div>
+    </section>
+
+    <!-- ========== LOGOS PARTENAIRES ========== -->
+    <div class="partners-strip" id="partnersStrip" style="display:none">
+        <div class="partners-title">Nos Partenaires de Confiance</div>
+        <div class="partners-track" id="partnersTrack"></div>
+    </div>
+
     <!-- ========== FOOTER ========== -->
     <footer class="footer">
         <div class="footer-container">
@@ -483,6 +518,45 @@ async function loadPromotions(){
                 </div>` : ""}
             </div>
         `).join("");
+    }catch(e){}
+}
+
+document.addEventListener("DOMContentLoaded", loadNewsPublic);
+document.addEventListener("DOMContentLoaded", loadPartnerLogosPublic);
+
+async function loadNewsPublic(){
+    try{
+        const r = await fetch(`${NEXUS_SUPA_URL}/rest/v1/news_announcements?active=eq.true&order=created_at.desc`, {
+            headers: { "apikey": NEXUS_SUPA_KEY, "Authorization": `Bearer ${NEXUS_SUPA_KEY}` }
+        });
+        const items = await r.json();
+        if(!items || items.length === 0) return;
+
+        document.getElementById("news").style.display = "block";
+        document.getElementById("newsGrid").innerHTML = items.map(n => `
+            <div class="news-card">
+                ${n.image_url ? `<img src="${n.image_url}" alt="${n.title}">` : ""}
+                <div>
+                    <div class="news-card-title">${n.title}</div>
+                    <div class="news-card-content">${n.content}</div>
+                    <div class="news-card-date">${new Date(n.created_at).toLocaleDateString("fr-FR",{day:"numeric",month:"long",year:"numeric"})}</div>
+                </div>
+            </div>
+        `).join("");
+    }catch(e){}
+}
+
+async function loadPartnerLogosPublic(){
+    try{
+        const r = await fetch(`${NEXUS_SUPA_URL}/rest/v1/partner_logos?active=eq.true&order=display_order.asc`, {
+            headers: { "apikey": NEXUS_SUPA_KEY, "Authorization": `Bearer ${NEXUS_SUPA_KEY}` }
+        });
+        const logos = await r.json();
+        if(!logos || logos.length === 0) return;
+
+        document.getElementById("partnersStrip").style.display = "block";
+        const imgs = logos.map(l => `<img src="${l.logo_url}" alt="${l.company_name||'Partenaire'}">`).join("");
+        document.getElementById("partnersTrack").innerHTML = imgs + imgs;
     }catch(e){}
 }
 </script>
