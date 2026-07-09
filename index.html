@@ -107,7 +107,7 @@
             <ul class="navbar-menu" id="navbarMenu">
                 <li><a href="index.html" class="nav-link active" data-i18n="nav.home">Accueil</a></li>
                 <li><a href="services.html" class="nav-link" data-i18n="nav.services">Services</a></li>
-                <li><a href="#rates" class="nav-link">Taux du Jour</a></li>
+                <li><a href="#rates" class="nav-link" data-i18n="nav.rates">Taux du Jour</a></li>
                 <li><a href="about.html" class="nav-link" data-i18n="nav.about">À Propos</a></li>
                 <li><a href="branches.html" class="nav-link" data-i18n="nav.branches">Succursales</a></li>
                 <li><a href="contact.html" class="nav-link" data-i18n="nav.contact">Contact</a></li>
@@ -203,17 +203,17 @@
     <section class="rates-section" id="rates">
         <div class="section-container">
             <div class="section-header">
-                <span class="section-badge">Taux du Jour</span>
-                <h2 class="section-title">Nos Taux de Change</h2>
-                <p class="section-subtitle">Mis à jour par notre équipe NEXUS — Achetez et vendez en toute confiance</p>
+                <span class="section-badge" data-i18n="rates.badge">Taux du Jour</span>
+                <h2 class="section-title" data-i18n="rates.title">Nos Taux de Change</h2>
+                <p class="section-subtitle" data-i18n="rates.subtitle">Mis à jour par notre équipe NEXUS — Achetez et vendez en toute confiance</p>
             </div>
             <div class="rates-grid" id="ratesGrid">
                 <p style="text-align:center;color:#94A3B8;grid-column:1/-1">Chargement des taux...</p>
             </div>
             <div class="rates-cta">
-                <button class="btn-primary" onclick="openCalculator()" style="border:none;cursor:pointer;font-family:inherit;font-size:inherit">🧮 Calculatrice de Devises</button>
+                <button class="btn-primary" onclick="openCalculator()" style="border:none;cursor:pointer;font-family:inherit;font-size:inherit">🧮 <span data-i18n="rates.calcBtn">Calculatrice de Devises</span></button>
             </div>
-            <p class="rates-note">Taux sujets à changement sans préavis. Contactez votre succursale pour confirmation.</p>
+            <p class="rates-note" data-i18n="rates.note">Taux sujets à changement sans préavis. Contactez votre succursale pour confirmation.</p>
         </div>
     </section>
 
@@ -221,9 +221,9 @@
     <section class="promo-section" id="promotions" style="display:none">
         <div class="section-container">
             <div class="section-header">
-                <span class="section-badge">Actualites</span>
-                <h2 class="section-title">Nos Offres & Promotions</h2>
-                <p class="section-subtitle">Decouvrez nos dernieres offres et nouveautes</p>
+                <span class="section-badge" data-i18n="promo.badge">Actualites</span>
+                <h2 class="section-title" data-i18n="promo.title">Nos Offres & Promotions</h2>
+                <p class="section-subtitle" data-i18n="promo.subtitle">Decouvrez nos dernieres offres et nouveautes</p>
             </div>
             <div class="promo-grid" id="promoGrid"></div>
         </div>
@@ -327,9 +327,9 @@
     <section class="news-section" id="news" style="display:none">
         <div class="section-container">
             <div class="section-header">
-                <span class="section-badge">Actualites</span>
-                <h2 class="section-title">Dernieres Nouvelles</h2>
-                <p class="section-subtitle">Restez informe de nos annonces et mises a jour</p>
+                <span class="section-badge" data-i18n="news.badge">Actualites</span>
+                <h2 class="section-title" data-i18n="news.title">Dernieres Nouvelles</h2>
+                <p class="section-subtitle" data-i18n="news.subtitle">Restez informe de nos annonces et mises a jour</p>
             </div>
             <div class="news-grid" id="newsGrid"></div>
         </div>
@@ -337,7 +337,7 @@
 
     <!-- ========== LOGOS PARTENAIRES ========== -->
     <div class="partners-strip" id="partnersStrip" style="display:none">
-        <div class="partners-title">Nos Partenaires de Confiance</div>
+        <div class="partners-title" data-i18n="partners.title">Nos Partenaires de Confiance</div>
         <div class="partners-track" id="partnersTrack"></div>
     </div>
 
@@ -396,7 +396,7 @@
     <div class="calc-modal" id="calcModal">
         <div class="calc-modal-content">
             <div class="calc-header">
-                <h3>Calculatrice de Devises</h3>
+                <h3 data-i18n="calc.title">Calculatrice de Devises</h3>
                 <button onclick="closeCalculator()">✕</button>
             </div>
             <div class="calc-body">
@@ -406,11 +406,11 @@
                 </div>
                 <div class="calc-result">
                     <div class="calc-result-row">
-                        <span class="calc-result-label buy">Nous Achetons</span>
+                        <span class="calc-result-label buy" data-i18n="calc.buy">Nous Achetons</span>
                         <span class="calc-result-amount" id="calcBuyResult">0.00 DOP</span>
                     </div>
                     <div class="calc-result-row">
-                        <span class="calc-result-label sell">Nous Vendons</span>
+                        <span class="calc-result-label sell" data-i18n="calc.sell">Nous Vendons</span>
                         <span class="calc-result-amount" id="calcSellResult">0.00 DOP</span>
                     </div>
                 </div>
@@ -444,15 +444,28 @@ async function loadExchangeRates(){
     }
 }
 
+function getCurrentLang(){
+    return localStorage.getItem('nexus_lang') || 'fr';
+}
+
+function rt(key){
+    const lang = getCurrentLang();
+    return (translations[lang] && translations[lang][key]) || (translations.fr && translations.fr[key]) || key;
+}
+
 function renderTicker(){
     const track = document.getElementById("rateTickerTrack");
+    const buyLabel = rt("rates.buy");
+    const sellLabel = rt("rates.sell");
     track.innerHTML = nexusRates.map(r =>
-        `<span><span class="rt-flag">${r.flag_emoji}</span>${r.currency_code} <span class="rt-buy">Achetons: ${fmtRate(r.buy_rate)}</span> &nbsp;|&nbsp; <span class="rt-sell">Vendons: ${fmtRate(r.sell_rate)}</span></span>`
+        `<span><span class="rt-flag">${r.flag_emoji}</span>${r.currency_code} <span class="rt-buy">${buyLabel}: ${fmtRate(r.buy_rate)}</span> &nbsp;|&nbsp; <span class="rt-sell">${sellLabel}: ${fmtRate(r.sell_rate)}</span></span>`
     ).join("");
 }
 
 function renderRatesGrid(){
     const grid = document.getElementById("ratesGrid");
+    const buyLabel = rt("rates.buy");
+    const sellLabel = rt("rates.sell");
     grid.innerHTML = nexusRates.map(r => `
         <div class="rate-card">
             <div class="rate-card-flag">${r.flag_emoji}</div>
@@ -460,11 +473,11 @@ function renderRatesGrid(){
             <div class="rate-card-divider"></div>
             <div class="rate-card-values">
                 <div class="rate-card-col">
-                    <div class="rate-card-label buy">Achetons</div>
+                    <div class="rate-card-label buy">${buyLabel}</div>
                     <div class="rate-card-value">${fmtRate(r.buy_rate)}</div>
                 </div>
                 <div class="rate-card-col">
-                    <div class="rate-card-label sell">Vendons</div>
+                    <div class="rate-card-label sell">${sellLabel}</div>
                     <div class="rate-card-value">${fmtRate(r.sell_rate)}</div>
                 </div>
             </div>
@@ -494,6 +507,20 @@ document.getElementById("calcModal").addEventListener("click", (e) => {
 });
 
 document.addEventListener("DOMContentLoaded", loadExchangeRates);
+
+document.addEventListener("DOMContentLoaded", () => {
+    document.querySelectorAll('.lang-option').forEach(opt => {
+        opt.addEventListener('click', () => {
+            setTimeout(() => {
+                if (nexusRates && nexusRates.length) {
+                    renderTicker();
+                    renderRatesGrid();
+                    calcConvert();
+                }
+            }, 50);
+        });
+    });
+});
 document.addEventListener("DOMContentLoaded", loadPromotions);
 
 async function loadPromotions(){
