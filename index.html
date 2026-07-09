@@ -36,6 +36,15 @@
 .rates-cta{text-align:center;margin-top:2.5rem;}
 .rates-note{text-align:center;color:#94A3B8;font-size:0.8rem;margin-top:1.25rem;}
 
+/* ===== GALERIE PROMOTIONS ===== */
+.promo-section{padding:4rem 0;background:#fff;}
+.promo-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1.5rem;margin-top:2.5rem;}
+.promo-card{border-radius:16px;overflow:hidden;box-shadow:0 4px 20px rgba(15,23,42,0.08);background:#fff;}
+.promo-card img,.promo-card video{width:100%;height:220px;object-fit:cover;display:block;}
+.promo-card-body{padding:1.1rem 1.25rem;}
+.promo-card-title{font-weight:700;color:#0F172A;font-size:1rem;margin-bottom:0.35rem;}
+.promo-card-desc{color:#64748B;font-size:0.85rem;line-height:1.5;}
+
 /* ===== CALCULATRICE ===== */
 .calc-fab{position:fixed;bottom:24px;right:24px;width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,#F97316,#EA580C);color:#fff;border:none;font-size:1.6rem;box-shadow:0 8px 24px rgba(249,115,22,0.4);cursor:pointer;z-index:998;display:flex;align-items:center;justify-content:center;}
 .calc-modal{display:none;position:fixed;inset:0;background:rgba(15,23,42,0.55);z-index:1000;align-items:center;justify-content:center;padding:1rem;}
@@ -188,6 +197,18 @@
                 <button class="btn-primary" onclick="openCalculator()" style="border:none;cursor:pointer;font-family:inherit;font-size:inherit">🧮 Calculatrice de Devises</button>
             </div>
             <p class="rates-note">Taux sujets à changement sans préavis. Contactez votre succursale pour confirmation.</p>
+        </div>
+    </section>
+
+    <!-- ========== PROMOTIONS & PUBLICITES ========== -->
+    <section class="promo-section" id="promotions" style="display:none">
+        <div class="section-container">
+            <div class="section-header">
+                <span class="section-badge">Actualites</span>
+                <h2 class="section-title">Nos Offres & Promotions</h2>
+                <p class="section-subtitle">Decouvrez nos dernieres offres et nouveautes</p>
+            </div>
+            <div class="promo-grid" id="promoGrid"></div>
         </div>
     </section>
 
@@ -438,6 +459,32 @@ document.getElementById("calcModal").addEventListener("click", (e) => {
 });
 
 document.addEventListener("DOMContentLoaded", loadExchangeRates);
+document.addEventListener("DOMContentLoaded", loadPromotions);
+
+async function loadPromotions(){
+    try{
+        const r = await fetch(`${NEXUS_SUPA_URL}/rest/v1/promotions?active=eq.true&order=created_at.desc`, {
+            headers: { "apikey": NEXUS_SUPA_KEY, "Authorization": `Bearer ${NEXUS_SUPA_KEY}` }
+        });
+        const promos = await r.json();
+        if(!promos || promos.length === 0) return;
+
+        document.getElementById("promotions").style.display = "block";
+        document.getElementById("promoGrid").innerHTML = promos.map(p => `
+            <div class="promo-card">
+                ${p.media_type === "image"
+                    ? `<img src="${p.media_url}" alt="${p.title||'Promotion NEXUS'}">`
+                    : `<video src="${p.media_url}" controls></video>`
+                }
+                ${(p.title || p.description) ? `
+                <div class="promo-card-body">
+                    ${p.title ? `<div class="promo-card-title">${p.title}</div>` : ""}
+                    ${p.description ? `<div class="promo-card-desc">${p.description}</div>` : ""}
+                </div>` : ""}
+            </div>
+        `).join("");
+    }catch(e){}
+}
 </script>
 
 <div style='position:fixed;bottom:0;left:0;right:0;background:#081440;color:rgba(255,255,255,0.7);text-align:center;padding:6px;font-size:0.72rem;font-family:Inter,sans-serif;z-index:9999;border-top:1px solid rgba(255,255,255,0.1)'>Developed by <strong style=color:white>Jonathan Grolot</strong> (+1 849 453 6553). All rights reserved until full payment is received.</div></body>

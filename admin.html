@@ -27,6 +27,7 @@
 <a href="#reports" class="nav-item" onclick="showSection(this,event)"><span>📈</span>Rapports</a>
 <div class="nav-section">SYSTEME</div>
 <a href="#users" class="nav-item" onclick="showSection(this,event)"><span>🔐</span>Gestion Utilisateurs</a>
+<a href="#promotions" class="nav-item" onclick="showSection(this,event)"><span>📢</span>Publicites & Promotions</a>
 <a href="#settings" class="nav-item" onclick="showSection(this,event)"><span>⚙️</span>Parametres</a>
 <a href="index.html" class="nav-item"><span>🌐</span>Site Web</a>
 <a href="#" class="nav-item logout" onclick="logout()"><span>🚪</span>Deconnexion</a>
@@ -174,6 +175,48 @@
 </div>
 </section>
 
+<section class="section" id="section-promotions">
+<div class="card">
+<div class="card-header"><h3>📢 Publier une Nouvelle Publicite</h3></div>
+<div style="padding:1.5rem">
+<div id="promoMsg" style="display:none;padding:0.75rem 1rem;border-radius:8px;margin-bottom:1rem;font-size:0.9rem;"></div>
+<div class="settings-grid">
+<div class="setting-item">
+<label>Type de Media *</label>
+<select id="promoType" onchange="updatePromoFileAccept()" style="width:100%;padding:0.6rem;border-radius:8px;border:1px solid #CBD5E1;font-family:inherit;">
+<option value="image">📷 Photo</option>
+<option value="video">🎬 Video</option>
+</select>
+</div>
+<div class="setting-item">
+<label>Fichier *</label>
+<input type="file" id="promoFile" accept="image/*">
+</div>
+</div>
+<div class="setting-item" style="margin-top:1rem">
+<label>Titre (optionnel)</label>
+<input type="text" id="promoTitle" placeholder="Ex: Nouvelle offre de printemps">
+</div>
+<div class="setting-item" style="margin-top:1rem">
+<label>Description (optionnel)</label>
+<textarea id="promoDescription" rows="2" placeholder="Details de la promotion..." style="width:100%;padding:0.6rem;border-radius:8px;border:1px solid #CBD5E1;font-family:inherit;"></textarea>
+</div>
+<button class="btn-approve" style="margin-top:1rem;padding:0.7rem 1.5rem" onclick="uploadPromotion()">📤 Publier sur le Site</button>
+<p style="font-size:0.8rem;color:#94A3B8;margin-top:0.75rem">Maximum 8 photos et 8 videos actifs simultanement sur le site public.</p>
+</div>
+</div>
+
+<div class="card" style="margin-top:1.5rem">
+<div class="card-header"><h3>📷 Photos Publiees</h3><span class="badge" id="promoPhotoCount">0/8</span></div>
+<div id="promoPhotosList" style="padding:1.5rem;display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:1rem"></div>
+</div>
+
+<div class="card" style="margin-top:1.5rem">
+<div class="card-header"><h3>🎬 Videos Publiees</h3><span class="badge" id="promoVideoCount">0/8</span></div>
+<div id="promoVideosList" style="padding:1.5rem;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1rem"></div>
+</div>
+</section>
+
 <section class="section" id="section-settings">
 <div class="card">
 <div class="card-header"><h3>Parametres Systeme</h3></div>
@@ -275,6 +318,7 @@ function showSection(el, e) {
     document.getElementById("section-" + id).classList.add("active");
     document.getElementById("pageTitle").textContent = el.textContent.trim();
     if (id === "users") loadUsers();
+    if (id === "promotions") loadPromotions();
     if (id === "clients") loadClientsList();
     if (id === "settings") { loadMoneyServiceSettings(); loadExchangeRates(); }
     if (id === "branches") loadBranches();
@@ -774,6 +818,101 @@ async function saveExchangeRate(id){
         msg.textContent = "✅ Taux mis a jour! Il apparait maintenant sur le site public.";
         loadExchangeRates();
     }
+}
+
+// ===== PUBLICITES & PROMOTIONS =====
+
+function updatePromoFileAccept(){
+    const type = document.getElementById("promoType").value;
+    document.getElementById("promoFile").accept = type === "image" ? "image/*" : "video/*";
+}
+
+function showPromoMsg(text, isError){
+    const el = document.getElementById("promoMsg");
+    el.style.display = "block";
+    el.style.background = isError ? "#FEE2E2" : "#DCFCE7";
+    el.style.color = isError ? "#991B1B" : "#166534";
+    el.textContent = text;
+}
+
+async function uploadPromotion(){
+    const type = document.getElementById("promoType").value;
+    const file = document.getElementById("promoFile").files[0];
+    const title = document.getElementById("promoTitle").value.trim();
+    const description = document.getElementById("promoDescription").value.trim();
+
+    if(!file){ showPromoMsg("Choisissez un fichier.", true); return; }
+
+    const maxSize = type === "image" ? 5*1024*1024 : 50*1024*1024;
+    if(file.size > maxSize){ showPromoMsg(`Fichier trop volumineux (max ${type==="image"?"5":"50"} Mo).`, true); return; }
+
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if(!session){ showPromoMsg("Session expiree. Reconnectez-vous.", true); return; }
+
+    showPromoMsg("Envoi en cours...", false);
+
+    const ext = file.name.split(".").pop();
+    const path = `${type}/${Date.now()}_${Math.floor(Math.random()*9999)}.${ext}`;
+
+    const { error: uploadError } = await supabaseClient.storage.from("promotions").upload(path, file);
+    if(uploadError){ showPromoMsg("Erreur upload: " + uploadError.message, true); return; }
+
+    const { data: urlData } = supabaseClient.storage.from("promotions").getPublicUrl(path);
+
+    const { error: insertError } = await supabaseClient.from("promotions").insert({
+        media_type: type,
+        media_url: urlData.publicUrl,
+        title: title || null,
+        description: description || null,
+        created_by: session.user.id
+    });
+
+    if(insertError){
+        showPromoMsg("Erreur: " + insertError.message, true);
+        return;
+    }
+
+    showPromoMsg("✅ Publicite publiee avec succes sur le site!", false);
+    document.getElementById("promoFile").value = "";
+    document.getElementById("promoTitle").value = "";
+    document.getElementById("promoDescription").value = "";
+    loadPromotions();
+}
+
+async function loadPromotions(){
+    const { data, error } = await supabaseClient.from("promotions").select("*").eq("active", true).order("created_at",{ascending:false});
+    if(error) return;
+
+    const photos = data.filter(p => p.media_type === "image");
+    const videos = data.filter(p => p.media_type === "video");
+
+    document.getElementById("promoPhotoCount").textContent = `${photos.length}/8`;
+    document.getElementById("promoVideoCount").textContent = `${videos.length}/8`;
+
+    document.getElementById("promoPhotosList").innerHTML = photos.map(p => `
+        <div style="border:1px solid #E2E8F0;border-radius:10px;overflow:hidden">
+            <img src="${p.media_url}" style="width:100%;height:120px;object-fit:cover">
+            <div style="padding:0.6rem">
+                <div style="font-size:0.85rem;font-weight:600">${p.title || "Sans titre"}</div>
+                <button class="btn-approve" style="background:#EF4444;padding:0.3rem 0.6rem;font-size:0.78rem;margin-top:0.4rem" onclick="deletePromotion('${p.id}')">Supprimer</button>
+            </div>
+        </div>`).join("") || "<p style='color:#94A3B8;grid-column:1/-1'>Aucune photo publiee</p>";
+
+    document.getElementById("promoVideosList").innerHTML = videos.map(p => `
+        <div style="border:1px solid #E2E8F0;border-radius:10px;overflow:hidden">
+            <video src="${p.media_url}" style="width:100%;height:140px;object-fit:cover" controls></video>
+            <div style="padding:0.6rem">
+                <div style="font-size:0.85rem;font-weight:600">${p.title || "Sans titre"}</div>
+                <button class="btn-approve" style="background:#EF4444;padding:0.3rem 0.6rem;font-size:0.78rem;margin-top:0.4rem" onclick="deletePromotion('${p.id}')">Supprimer</button>
+            </div>
+        </div>`).join("") || "<p style='color:#94A3B8;grid-column:1/-1'>Aucune video publiee</p>";
+}
+
+async function deletePromotion(id){
+    if(!confirm("Retirer cette publicite du site?")) return;
+    const { error } = await supabaseClient.from("promotions").delete().eq("id", id);
+    if(error){ alert("Erreur: " + error.message); return; }
+    loadPromotions();
 }
 
 document.addEventListener("DOMContentLoaded", loadDashboard);
