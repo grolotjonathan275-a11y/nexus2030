@@ -223,6 +223,18 @@ soit un total de <strong id="exTotal">--</strong> DOP.
 <button class="btn-approve" style="padding:0.7rem 1.5rem" onclick="saveMoneyServiceSettings()">💾 Enregistrer les Parametres</button>
 </div>
 </div>
+
+<div class="card" style="margin-top:1.5rem">
+<div class="card-header"><h3>💱 Taux de Change du Site Web</h3><span class="badge" id="ratesCount">0</span></div>
+<div style="padding:1.5rem">
+<div id="ratesMsg" style="display:none;padding:0.75rem 1rem;border-radius:8px;margin-bottom:1rem;font-size:0.9rem;"></div>
+<div class="table-wrap"><table class="data-table">
+<thead><tr><th>Devise</th><th>Nom</th><th>Achetons</th><th>Vendons</th><th>Actif sur le site</th><th>Action</th></tr></thead>
+<tbody id="ratesList"><tr><td colspan="6">Chargement...</td></tr></tbody>
+</table></div>
+<p style="font-size:0.8rem;color:#94A3B8;margin-top:0.75rem">Ces taux apparaissent en direct sur la page d'accueil publique (index.html) — barre defilante, cartes, et calculatrice.</p>
+</div>
+</div>
 </section>
 
 </div>
@@ -264,7 +276,7 @@ function showSection(el, e) {
     document.getElementById("pageTitle").textContent = el.textContent.trim();
     if (id === "users") loadUsers();
     if (id === "clients") loadClientsList();
-    if (id === "settings") loadMoneyServiceSettings();
+    if (id === "settings") { loadMoneyServiceSettings(); loadExchangeRates(); }
     if (id === "branches") loadBranches();
     if (id === "employees") loadEmployeeDirectory();
     if (id === "transactions") loadGlobalTransactions();
@@ -716,6 +728,52 @@ async function loadClientsList(){
             <td>${c.client_nat || "-"}</td>
             <td>${fmt(c.created_at)}</td>
         </tr>`).join("") || "<tr><td colspan='5'>Aucun client</td></tr>";
+}
+
+// ===== TAUX DE CHANGE SITE WEB =====
+
+async function loadExchangeRates(){
+    const { data, error } = await supabaseClient.from("exchange_rates").select("*").order("display_order",{ascending:true});
+    if (error) {
+        document.getElementById("ratesList").innerHTML = `<tr><td colspan="6">Erreur: ${error.message}</td></tr>`;
+        return;
+    }
+    document.getElementById("ratesCount").textContent = data.length;
+    document.getElementById("ratesList").innerHTML = data.map(r => `
+        <tr>
+            <td>${r.flag_emoji} <strong>${r.currency_code}</strong></td>
+            <td>${r.currency_name}</td>
+            <td><input type="number" step="0.01" value="${r.buy_rate}" id="rateBuy_${r.id}" style="width:90px;padding:0.4rem;border-radius:6px;border:1px solid #CBD5E1"></td>
+            <td><input type="number" step="0.01" value="${r.sell_rate}" id="rateSell_${r.id}" style="width:90px;padding:0.4rem;border-radius:6px;border:1px solid #CBD5E1"></td>
+            <td>
+                <select id="rateActive_${r.id}" style="padding:0.4rem;border-radius:6px;border:1px solid #CBD5E1">
+                    <option value="true" ${r.active ? "selected" : ""}>Oui</option>
+                    <option value="false" ${!r.active ? "selected" : ""}>Non</option>
+                </select>
+            </td>
+            <td><button class="btn-approve" style="padding:0.4rem 0.8rem" onclick="saveExchangeRate('${r.id}')">💾 Sauvegarder</button></td>
+        </tr>`).join("") || "<tr><td colspan='6'>Aucun taux</td></tr>";
+}
+
+async function saveExchangeRate(id){
+    const buy = Number(document.getElementById(`rateBuy_${id}`).value);
+    const sell = Number(document.getElementById(`rateSell_${id}`).value);
+    const active = document.getElementById(`rateActive_${id}`).value === "true";
+
+    const { error } = await supabaseClient.from("exchange_rates").update({
+        buy_rate: buy, sell_rate: sell, active: active, updated_at: new Date().toISOString()
+    }).eq("id", id);
+
+    const msg = document.getElementById("ratesMsg");
+    msg.style.display = "block";
+    if (error) {
+        msg.style.background = "#FEE2E2"; msg.style.color = "#991B1B";
+        msg.textContent = "Erreur: " + error.message;
+    } else {
+        msg.style.background = "#DCFCE7"; msg.style.color = "#166534";
+        msg.textContent = "✅ Taux mis a jour! Il apparait maintenant sur le site public.";
+        loadExchangeRates();
+    }
 }
 
 document.addEventListener("DOMContentLoaded", loadDashboard);
