@@ -344,12 +344,10 @@ function showSuccess(){
 }
 
 // CHECK SESSION
+// NOTE: Nou pa fè otoredireksyon ki baze sou localStorage "nexus_role" ankò,
+// paske sa te bloke moun ki eseye konekte ak yon lòt kont apre yo chanje paj san yo pa dekonekte pwòpteman.
+// Sèl sesyon Supabase Auth ki verifye an dirèk (staff) ka deklanche yon otoredireksyon.
 document.addEventListener("DOMContentLoaded", async () => {
-    const role = localStorage.getItem("nexus_role");
-    if(role === "client" && ROLE_REDIRECTS[role]){
-        window.location.href = ROLE_REDIRECTS[role];
-        return;
-    }
     const { data: { session } } = await supabaseClient.auth.getSession();
     if (session) {
         const { data: profile } = await supabaseClient.from("profiles").select("role,status").eq("id", session.user.id).single();

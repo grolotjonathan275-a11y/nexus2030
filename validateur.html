@@ -371,11 +371,14 @@ function showAvatarMsg(text, isError){
 document.addEventListener("DOMContentLoaded",async ()=>{
     const { data: { session } } = await supabaseClient.auth.getSession();
     if(!session){
+        localStorage.clear();
         window.location.href="login.html";
         return;
     }
     const { data: profile } = await supabaseClient.from("profiles").select("*").eq("id",session.user.id).single();
     if(!profile || profile.role!=="validateur"){
+        await supabaseClient.auth.signOut();
+        localStorage.clear();
         window.location.href="login.html";
         return;
     }
