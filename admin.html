@@ -263,6 +263,7 @@ function showSection(el, e) {
     document.getElementById("section-" + id).classList.add("active");
     document.getElementById("pageTitle").textContent = el.textContent.trim();
     if (id === "users") loadUsers();
+    if (id === "clients") loadClientsList();
     if (id === "settings") loadMoneyServiceSettings();
     if (id === "branches") loadBranches();
     if (id === "employees") loadEmployeeDirectory();
@@ -701,6 +702,20 @@ async function loadGlobalTransactions(){
             <td>${r.branch}</td>
             <td>${statusLabels[r.status] || r.status}</td>
         </tr>`).join("") || "<tr><td colspan='8'>Aucune transaction</td></tr>";
+}
+
+// ===== LISTE CLIENTS =====
+
+async function loadClientsList(){
+    const clients = await fetchData("savings_accounts");
+    document.getElementById("allClients").innerHTML = clients.map(c => `
+        <tr>
+            <td><strong>${c.client_name || "-"}</strong></td>
+            <td>${c.email || "-"}</td>
+            <td>${c.client_phone || "-"}</td>
+            <td>${c.client_nat || "-"}</td>
+            <td>${fmt(c.created_at)}</td>
+        </tr>`).join("") || "<tr><td colspan='5'>Aucun client</td></tr>";
 }
 
 document.addEventListener("DOMContentLoaded", loadDashboard);
