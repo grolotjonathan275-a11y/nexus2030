@@ -3,15 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="NEXUS - Notre histoire, notre mission et nos valeurs">
     <title>NEXUS 2030 — À Propos</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="assets/css/design-system.css">
     <link rel="stylesheet" href="assets/css/navbar.css">
-    <link rel="stylesheet" href="assets/css/about.css">
 </head>
 <body>
 
+    <!-- NAVBAR -->
     <nav class="navbar" id="navbar">
         <div class="navbar-container">
             <a href="index.html" class="navbar-logo">
@@ -36,11 +37,11 @@
                         <span class="lang-arrow">▾</span>
                     </button>
                     <div class="lang-dropdown" id="langDropdown">
-                        <button class="lang-option active" data-lang="fr" data-flag="🇫🇷"><span>🇫🇷</span> Français</button>
-                        <button class="lang-option" data-lang="es" data-flag="🇩🇴"><span>🇩🇴</span> Español</button>
-                        <button class="lang-option" data-lang="en" data-flag="🇺🇸"><span>🇺🇸</span> English</button>
-                        <button class="lang-option" data-lang="ht" data-flag="🇭🇹"><span>🇭🇹</span> Kreyòl</button>
-                        <button class="lang-option" data-lang="pt" data-flag="🇧🇷"><span>🇧🇷</span> Português</button>
+                        <div class="lang-option active" data-lang="fr">🇫🇷 Français</div>
+                        <div class="lang-option" data-lang="es">🇩🇴 Español</div>
+                        <div class="lang-option" data-lang="en">🇺🇸 English</div>
+                        <div class="lang-option" data-lang="ht">🇭🇹 Kreyòl</div>
+                        <div class="lang-option" data-lang="pt">🇧🇷 Português</div>
                     </div>
                 </div>
                 <a href="login.html" class="btn-login" data-i18n="nav.login">Connexion</a>
@@ -51,6 +52,7 @@
         </div>
     </nav>
 
+    <!-- HERO -->
     <section class="about-hero">
         <div class="about-hero-content">
             <span class="section-badge" data-i18n="about.badge">Notre Histoire</span>
@@ -59,16 +61,17 @@
         </div>
     </section>
 
+    <!-- MISSION -->
     <section class="about-mission">
         <div class="section-container">
-            <div class="mission-card">
-                <div class="mission-icon">🎯</div>
+            <div class="mission-box">
                 <h2 data-i18n="about.mission.title">Notre Mission</h2>
                 <p data-i18n="about.mission.text">Faciliter la vie financière des communautés haïtiennes et dominicaines en offrant des services rapides, fiables et accessibles à tous, peu importe où ils se trouvent.</p>
             </div>
         </div>
     </section>
 
+    <!-- VALEURS -->
     <section class="about-values">
         <div class="section-container">
             <div class="section-header">
@@ -77,22 +80,18 @@
             </div>
             <div class="values-grid">
                 <div class="value-card">
-                    <div class="value-icon">🔍</div>
                     <h3 data-i18n="about.v1.title">Transparence</h3>
                     <p data-i18n="about.v1.desc">Aucun frais caché, des taux clairs et des reçus pour chaque transaction.</p>
                 </div>
                 <div class="value-card">
-                    <div class="value-icon">🔒</div>
                     <h3 data-i18n="about.v2.title">Sécurité</h3>
                     <p data-i18n="about.v2.desc">KYC rigoureux, reconnaissance faciale et chiffrement de bout en bout.</p>
                 </div>
                 <div class="value-card">
-                    <div class="value-icon">📍</div>
                     <h3 data-i18n="about.v3.title">Proximité</h3>
                     <p data-i18n="about.v3.desc">Plus de 100 succursales pour être toujours près de vous.</p>
                 </div>
                 <div class="value-card">
-                    <div class="value-icon">🤝</div>
                     <h3 data-i18n="about.v4.title">Intégrité</h3>
                     <p data-i18n="about.v4.desc">Nous servons nos clients avec honnêteté et respect, à chaque étape.</p>
                 </div>
@@ -100,51 +99,51 @@
         </div>
     </section>
 
+    <!-- CTA -->
     <section class="about-cta">
         <div class="section-container">
             <h2 data-i18n="about.cta.title">Rejoignez la famille NEXUS</h2>
             <p data-i18n="about.cta.sub">Trouvez la succursale la plus proche et commencez dès aujourd'hui</p>
-            <a href="branches.html" class="btn-primary" data-i18n="nav.branches">Succursales</a>
+            <a href="branches.html" class="btn-primary" data-i18n="footer.branches">Succursales</a>
         </div>
     </section>
 
+    <!-- FOOTER -->
     <footer class="footer">
         <div class="footer-container">
             <div class="footer-grid">
                 <div class="footer-brand">
                     <div class="footer-logo">
                         <div class="logo-icon">N</div>
-                        <div class="logo-text">
-                            <span class="logo-name">NEXUS</span>
-                            <span class="logo-year">2030</span>
-                        </div>
+                        <span class="logo-name">NEXUS <span class="logo-year">2030</span></span>
                     </div>
-                    <p data-i18n="footer.tagline">Services financiers de confiance pour les communautés haïtiennes et dominicaines.</p>
+                    <p class="footer-desc" data-i18n="footer.desc">Services financiers de confiance pour les communautés haïtiennes et dominicaines.</p>
                 </div>
                 <div class="footer-col">
-                    <h4 data-i18n="footer.services">SERVICES</h4>
+                    <h4 data-i18n="footer.services">Services</h4>
                     <ul>
-                        <li><a href="services.html" data-i18n="service.moncash">MonCash &amp; NatCash</a></li>
-                        <li><a href="services.html" data-i18n="service.change">Change de Devises</a></li>
-                        <li><a href="services.html" data-i18n="service.epargne">Livrets d'Épargne</a></li>
-                        <li><a href="services.html" data-i18n="service.usa">Transferts USA</a></li>
+                        <li><a href="services.html" data-i18n="footer.moncash">MonCash & NatCash</a></li>
+                        <li><a href="services.html" data-i18n="footer.change">Change de Devises</a></li>
+                        <li><a href="services.html" data-i18n="footer.livret">Livrets d'Épargne</a></li>
+                        <li><a href="services.html" data-i18n="footer.transfer">Transferts USA</a></li>
                     </ul>
                 </div>
                 <div class="footer-col">
-                    <h4 data-i18n="footer.company">ENTREPRISE</h4>
+                    <h4 data-i18n="footer.company">Entreprise</h4>
                     <ul>
-                        <li><a href="about.html" data-i18n="nav.about">À Propos</a></li>
-                        <li><a href="branches.html" data-i18n="nav.branches">Succursales</a></li>
-                        <li><a href="contact.html" data-i18n="nav.contact">Contact</a></li>
-                        <li><a href="faq.html">FAQ</a></li>
+                        <li><a href="about.html" data-i18n="footer.about">À Propos</a></li>
+                        <li><a href="branches.html" data-i18n="footer.branches">Succursales</a></li>
+                        <li><a href="contact.html" data-i18n="footer.contact">Contact</a></li>
+                        <li><a href="faq.html" data-i18n="footer.faq">FAQ</a></li>
                     </ul>
                 </div>
                 <div class="footer-col">
-                    <h4 data-i18n="footer.contact">CONTACT</h4>
+                    <h4 data-i18n="footer.contact2">Contact</h4>
                     <ul>
-                        <li>📍 Santo Domingo, RD</li>
-                        <li>📞 +1 (809) 000-0000</li>
-                        <li>✉️ info@nexus2030.com</li>
+                        <li>📍 <span data-i18n="footer.hq">Siège Social</span>: <span id="footerAddress">Chargement...</span></li>
+                        <li>📞 <a id="footerPhoneLink" href="tel:+18090000000">+1 (809) 000-0000</a></li>
+                        <li>💬 <a id="footerWhatsappLink" href="#" target="_blank" data-i18n="contact.info.whatsappBtn">Écrire sur WhatsApp</a></li>
+                        <li>✉️ <span id="footerEmail">info@nexus2030.com</span></li>
                     </ul>
                 </div>
             </div>
@@ -160,8 +159,28 @@
 
     <script src="assets/js/i18n.js"></script>
     <script src="assets/js/main.js"></script>
+<script>
+const NEXUS_SUPA_URL = "https://fnuplvbiwfvauwkpxsoc.supabase.co";
+const NEXUS_SUPA_KEY = "sb_publishable_QBqdKkpcjDS3_psUdmc4uA_sMCzLqLo";
+document.addEventListener("DOMContentLoaded", async () => {
+    try{
+        const r = await fetch(`${NEXUS_SUPA_URL}/rest/v1/site_settings?id=eq.1`, {
+            headers: { "apikey": NEXUS_SUPA_KEY, "Authorization": `Bearer ${NEXUS_SUPA_KEY}` }
+        });
+        const data = await r.json();
+        if(!data || !data[0]) return;
+        const s = data[0];
+        const addrEl = document.getElementById("footerAddress");
+        if(addrEl) addrEl.textContent = `${s.address_line}, ${s.city}, ${s.province}`;
+        const phoneEl = document.getElementById("footerPhoneLink");
+        if(phoneEl){ phoneEl.textContent = s.phone_number; phoneEl.href = "tel:" + s.phone_number.replace(/[^0-9+]/g, ""); }
+        const waEl = document.getElementById("footerWhatsappLink");
+        if(waEl && s.whatsapp_number) waEl.href = "https://wa.me/" + s.whatsapp_number.replace(/[^0-9]/g, "");
+        const emailEl = document.getElementById("footerEmail");
+        if(emailEl && s.email) emailEl.textContent = s.email;
+    }catch(e){}
+});
+</script>
 
 <div style='position:fixed;bottom:0;left:0;right:0;background:#081440;color:rgba(255,255,255,0.7);text-align:center;padding:6px;font-size:0.72rem;font-family:Inter,sans-serif;z-index:9999;border-top:1px solid rgba(255,255,255,0.1)'>Developed by <strong style=color:white>Jonathan Grolot</strong> (+1 849 453 6553). All rights reserved until full payment is received.</div></body>
 </html>
-
-

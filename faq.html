@@ -3,307 +3,214 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FAQ — NEXUS 2030</title>
+    <meta name="description" content="NEXUS - Trouvez une succursale en République Dominicaine ou en Haïti">
+    <title>NEXUS 2030 — Succursales</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="assets/css/design-system.css">
     <link rel="stylesheet" href="assets/css/navbar.css">
-    <link rel="stylesheet" href="assets/css/faq.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/dashboard.css">
 </head>
 <body>
 
-<!-- NAVBAR -->
-<nav class="navbar" id="navbar">
-    <div class="navbar-container">
-        <a href="index.html" class="navbar-brand">
-            <div class="brand-logo">N</div>
-            <div class="brand-text">
-                <span class="brand-name">NEXUS</span>
-                <span class="brand-year">2030</span>
-            </div>
-        </a>
-        <div class="navbar-menu" id="navbarMenu">
-            <a href="index.html" class="nav-link" data-i18n="nav.home">Accueil</a>
-            <a href="services.html" class="nav-link" data-i18n="nav.services">Services</a>
-            <a href="about.html" class="nav-link" data-i18n="nav.about">À Propos</a>
-            <a href="branches.html" class="nav-link" data-i18n="nav.branches">Succursales</a>
-            <a href="contact.html" class="nav-link" data-i18n="nav.contact">Contact</a>
-        </div>
-        <div class="navbar-actions">
-            <div class="lang-selector" id="langSelector">
-                <button class="lang-btn" id="langBtn">
-                    <span id="currentFlag">🇫🇷</span>
-                    <span id="currentLang">FR</span>
-                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                        <path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-                    </svg>
-                </button>
-                <div class="lang-dropdown" id="langDropdown">
-                    <div class="lang-option active" data-lang="fr">🇫🇷 Français</div>
-                    <div class="lang-option" data-lang="es">🇪🇸 Español</div>
-                    <div class="lang-option" data-lang="en">🇺🇸 English</div>
-                    <div class="lang-option" data-lang="ht">🇭🇹 Kreyòl</div>
-                    <div class="lang-option" data-lang="pt">🇵🇹 Português</div>
+    <!-- NAVBAR -->
+    <nav class="navbar" id="navbar">
+        <div class="navbar-container">
+            <a href="index.html" class="navbar-logo">
+                <div class="logo-icon">N</div>
+                <div class="logo-text">
+                    <span class="logo-name">NEXUS</span>
+                    <span class="logo-year">2030</span>
                 </div>
-            </div>
-            <a href="login.html" class="btn btn-primary btn-sm" data-i18n="nav.login">Connexion</a>
-            <button class="mobile-menu-btn" id="mobileMenuBtn">
-                <span></span><span></span><span></span>
-            </button>
-        </div>
-    </div>
-</nav>
-
-<!-- HERO -->
-<section class="faq-hero">
-    <div class="faq-hero-content">
-        <div class="page-badge" data-i18n="footer.faq">FAQ</div>
-        <h1 data-i18n="faq.title">Questions fréquentes</h1>
-        <p data-i18n="faq.subtitle">Tout ce que vous devez savoir sur nos services</p>
-    </div>
-</section>
-
-<!-- FAQ MAIN -->
-<section class="faq-main">
-    <div class="faq-container">
-
-        <!-- CATEGORIES -->
-        <div class="faq-categories">
-            <button class="faq-cat active" data-cat="all" data-i18n="faq.cat.all">Toutes</button>
-            <button class="faq-cat" data-cat="general" data-i18n="faq.cat.general">Général</button>
-            <button class="faq-cat" data-cat="moncash" data-i18n="faq.cat.moncash">MonCash / NatCash</button>
-            <button class="faq-cat" data-cat="change" data-i18n="faq.cat.change">Change</button>
-            <button class="faq-cat" data-cat="epargne" data-i18n="faq.cat.savings">Épargne</button>
-            <button class="faq-cat" data-cat="usa" data-i18n="faq.cat.usa">Transferts USA</button>
-            <button class="faq-cat" data-cat="securite" data-i18n="faq.cat.security">Sécurité</button>
-        </div>
-
-        <!-- FAQ LIST -->
-        <div class="faq-list" id="faqList">
-
-            <!-- GÉNÉRAL -->
-            <div class="faq-item" data-cat="general">
-                <button class="faq-question">
-                    <span data-i18n="faq.g1.q">Qu'est-ce que NEXUS 2030 ?</span>
-                    <span class="faq-icon">+</span>
-                </button>
-                <div class="faq-answer">
-                    <p data-i18n="faq.g1.a">NEXUS 2030 est une entreprise de services financiers spécialisée dans les transferts d'argent, le change de devises et les livrets d'épargne pour les communautés haïtiennes et dominicaines. Nous opérons dans plus de 100 succursales en République Dominicaine et en Haïti.</p>
-                </div>
-            </div>
-
-            <div class="faq-item" data-cat="general">
-                <button class="faq-question">
-                    <span data-i18n="faq.g2.q">Dans quels pays opérez-vous ?</span>
-                    <span class="faq-icon">+</span>
-                </button>
-                <div class="faq-answer">
-                    <p data-i18n="faq.g2.a">Nous opérons principalement en République Dominicaine (32 provinces) et en Haïti (10 départements). Nous facilitons également les transferts depuis les États-Unis via CashApp et Zelle.</p>
-                </div>
-            </div>
-
-            <div class="faq-item" data-cat="general">
-                <button class="faq-question">
-                    <span data-i18n="faq.g3.q">Quels sont vos horaires d'ouverture ?</span>
-                    <span class="faq-icon">+</span>
-                </button>
-                <div class="faq-answer">
-                    <p data-i18n="faq.g3.a">Nos succursales sont ouvertes du lundi au samedi, de 8h00 à 18h00. En Haïti, les horaires peuvent varier selon la région. Le dimanche, nos succursales sont fermées.</p>
-                </div>
-            </div>
-
-            <!-- MONCASH -->
-            <div class="faq-item" data-cat="moncash">
-                <button class="faq-question">
-                    <span data-i18n="faq.m1.q">Comment fonctionne MonCash chez NEXUS ?</span>
-                    <span class="faq-icon">+</span>
-                </button>
-                <div class="faq-answer">
-                    <p data-i18n="faq.m1.a">Vous pouvez envoyer et recevoir de l'argent via MonCash et NatCash directement dans nos succursales. Nos agents vous accompagnent à chaque étape. Les transferts sont instantanés et disponibles 24/7.</p>
-                </div>
-            </div>
-
-            <div class="faq-item" data-cat="moncash">
-                <button class="faq-question">
-                    <span data-i18n="faq.m2.q">Ai-je besoin d'un compte bancaire pour utiliser MonCash ?</span>
-                    <span class="faq-icon">+</span>
-                </button>
-                <div class="faq-answer">
-                    <p data-i18n="faq.m2.a">Non. MonCash et NatCash ne nécessitent pas de compte bancaire. Vous avez seulement besoin d'un téléphone mobile actif avec une carte SIM haïtienne.</p>
-                </div>
-            </div>
-
-            <!-- CHANGE -->
-            <div class="faq-item" data-cat="change">
-                <button class="faq-question">
-                    <span data-i18n="faq.c1.q">Quelles devises acceptez-vous ?</span>
-                    <span class="faq-icon">+</span>
-                </button>
-                <div class="faq-answer">
-                    <p data-i18n="faq.c1.a">Nous acceptons le DOP (Peso Dominicain), HTG (Gourde Haïtienne), USD (Dollar américain), EUR (Euro) et CAD (Dollar Canadien). Les taux sont mis à jour en temps réel selon le marché.</p>
-                </div>
-            </div>
-
-            <div class="faq-item" data-cat="change">
-                <button class="faq-question">
-                    <span data-i18n="faq.c2.q">Y a-t-il des frais cachés sur le change ?</span>
-                    <span class="faq-icon">+</span>
-                </button>
-                <div class="faq-answer">
-                    <p data-i18n="faq.c2.a">Non. Chez NEXUS, nous appliquons une politique de transparence totale. Les taux affichés sont les taux réels, sans frais cachés. Un reçu officiel est remis pour chaque transaction.</p>
-                </div>
-            </div>
-
-            <!-- ÉPARGNE -->
-            <div class="faq-item" data-cat="epargne">
-                <button class="faq-question">
-                    <span data-i18n="faq.e1.q">Comment ouvrir un livret d'épargne ?</span>
-                    <span class="faq-icon">+</span>
-                </button>
-                <div class="faq-answer">
-                    <p data-i18n="faq.e1.a">Pour ouvrir un livret d'épargne NEXUS, rendez-vous dans n'importe quelle succursale avec une pièce d'identité valide. L'ouverture est rapide et ne nécessite pas de dépôt minimum.</p>
-                </div>
-            </div>
-
-            <div class="faq-item" data-cat="epargne">
-                <button class="faq-question">
-                    <span data-i18n="faq.e2.q">Puis-je retirer mon argent à tout moment ?</span>
-                    <span class="faq-icon">+</span>
-                </button>
-                <div class="faq-answer">
-                    <p data-i18n="faq.e2.a">Oui. Vos fonds sont disponibles à tout moment dans n'importe quelle succursale NEXUS. Il n'y a pas de période de blocage ni de frais de retrait.</p>
-                </div>
-            </div>
-
-            <!-- USA -->
-            <div class="faq-item" data-cat="usa">
-                <button class="faq-question">
-                    <span data-i18n="faq.u1.q">Comment recevoir de l'argent depuis les USA ?</span>
-                    <span class="faq-icon">+</span>
-                </button>
-                <div class="faq-answer">
-                    <p data-i18n="faq.u1.a">La personne aux États-Unis vous envoie de l'argent via CashApp ou Zelle à notre compte dédié. Vous recevez ensuite une notification et vous rendez dans notre succursale pour récupérer votre argent en DOP ou USD.</p>
-                </div>
-            </div>
-
-            <div class="faq-item" data-cat="usa">
-                <button class="faq-question">
-                    <span data-i18n="faq.u2.q">Combien de temps prend un transfert USA ?</span>
-                    <span class="faq-icon">+</span>
-                </button>
-                <div class="faq-answer">
-                    <p data-i18n="faq.u2.a">Les transferts via CashApp et Zelle sont traités en moins de 30 minutes pendant les heures d'ouverture. Vous recevez une notification SMS dès que votre argent est prêt à être retiré.</p>
-                </div>
-            </div>
-
-            <!-- SÉCURITÉ -->
-            <div class="faq-item" data-cat="securite">
-                <button class="faq-question">
-                    <span data-i18n="faq.s1.q">Comment NEXUS protège-t-il mes données ?</span>
-                    <span class="faq-icon">+</span>
-                </button>
-                <div class="faq-answer">
-                    <p data-i18n="faq.s1.a">NEXUS utilise un chiffrement de bout en bout pour toutes les transactions, une vérification KYC obligatoire et une reconnaissance faciale pour prévenir la fraude. Chaque transaction est auditée et traçable.</p>
-                </div>
-            </div>
-
-            <div class="faq-item" data-cat="securite">
-                <button class="faq-question">
-                    <span data-i18n="faq.s2.q">Qu'est-ce que la vérification KYC ?</span>
-                    <span class="faq-icon">+</span>
-                </button>
-                <div class="faq-answer">
-                    <p data-i18n="faq.s2.a">KYC signifie "Know Your Customer" (Connaître votre client). C'est un processus obligatoire qui nous permet de vérifier votre identité avant toute transaction, afin de protéger votre argent et de prévenir la fraude.</p>
-                </div>
-            </div>
-
-        </div>
-
-        <!-- CTA -->
-        <div class="faq-cta">
-            <p data-i18n="faq.cta.text">Vous n'avez pas trouvé la réponse à votre question ?</p>
-            <a href="contact.html" class="btn btn-primary" data-i18n="faq.cta.btn">Contacter notre équipe</a>
-        </div>
-
-    </div>
-</section>
-
-<!-- FOOTER -->
-<footer class="footer">
-    <div class="footer-container">
-        <div class="footer-grid">
-            <div class="footer-brand">
-                <a href="index.html" class="navbar-brand">
-                    <div class="brand-logo">N</div>
-                    <div class="brand-text">
-                        <span class="brand-name">NEXUS</span>
-                        <span class="brand-year">2030</span>
+            </a>
+            <ul class="navbar-menu" id="navbarMenu">
+                <li><a href="index.html" class="nav-link" data-i18n="nav.home">Accueil</a></li>
+                <li><a href="services.html" class="nav-link" data-i18n="nav.services">Services</a></li>
+                <li><a href="about.html" class="nav-link" data-i18n="nav.about">À Propos</a></li>
+                <li><a href="branches.html" class="nav-link active" data-i18n="nav.branches">Succursales</a></li>
+                <li><a href="contact.html" class="nav-link" data-i18n="nav.contact">Contact</a></li>
+            </ul>
+            <div class="navbar-right">
+                <div class="lang-selector" id="langSelector">
+                    <button class="lang-btn" id="langBtn">
+                        <span class="lang-flag" id="currentFlag">🇫🇷</span>
+                        <span class="lang-code" id="currentLang">FR</span>
+                        <span class="lang-arrow">▾</span>
+                    </button>
+                    <div class="lang-dropdown" id="langDropdown">
+                        <div class="lang-option active" data-lang="fr">🇫🇷 Français</div>
+                        <div class="lang-option" data-lang="es">🇩🇴 Español</div>
+                        <div class="lang-option" data-lang="en">🇺🇸 English</div>
+                        <div class="lang-option" data-lang="ht">🇭🇹 Kreyòl</div>
+                        <div class="lang-option" data-lang="pt">🇧🇷 Português</div>
                     </div>
-                </a>
-                <p class="footer-desc" data-i18n="footer.desc">Services financiers de confiance.</p>
-            </div>
-            <div class="footer-col">
-                <h4 data-i18n="footer.services">Services</h4>
-                <a href="services.html" data-i18n="footer.moncash">MonCash & NatCash</a>
-                <a href="services.html" data-i18n="footer.change">Change de Devises</a>
-                <a href="services.html" data-i18n="footer.livret">Livrets d'Épargne</a>
-                <a href="services.html" data-i18n="footer.transfer">Transferts USA</a>
-            </div>
-            <div class="footer-col">
-                <h4 data-i18n="footer.company">Entreprise</h4>
-                <a href="about.html" data-i18n="footer.about">À Propos</a>
-                <a href="branches.html" data-i18n="footer.branches">Succursales</a>
-                <a href="contact.html" data-i18n="footer.contact">Contact</a>
-                <a href="faq.html" data-i18n="footer.faq">FAQ</a>
-            </div>
-            <div class="footer-col">
-                <h4 data-i18n="footer.contact2">Contact</h4>
-                <p>📍 Santo Domingo, RD</p>
-                <p>📞 +1 (809) 000-0000</p>
-                <p>✉️ info@nexus2030.com</p>
+                </div>
+                <a href="login.html" class="btn-login" data-i18n="nav.login">Connexion</a>
+                <button class="mobile-menu-btn" id="mobileMenuBtn">
+                    <span></span><span></span><span></span>
+                </button>
             </div>
         </div>
-        <div class="footer-bottom">
-            <span data-i18n="footer.rights">© 2026 NEXUS. Tous droits réservés.</span>
-            <div class="footer-links">
-                <a href="#" data-i18n="footer.privacy">Confidentialité</a>
-                <a href="#" data-i18n="footer.terms">Conditions</a>
-            </div>
-        </div>
-    </div>
-</footer>
+    </nav>
 
-<script src="assets/js/i18n.js"></script>
-<script src="assets/js/main.js"></script>
+    <!-- HERO -->
+    <section class="branches-hero">
+        <div class="branches-hero-content">
+            <span class="section-badge" data-i18n="branches.badge">Nos Succursales</span>
+            <h1 data-i18n="branches.title">Trouvez une succursale près de vous</h1>
+            <p data-i18n="branches.subtitle">Plus de 100 succursales en République Dominicaine et en Haïti, prêtes à vous servir.</p>
+        </div>
+    </section>
+
+    <!-- RECHERCHE -->
+    <section class="branches-search">
+        <div class="section-container">
+            <div class="search-box">
+
+                <div class="search-field">
+                    <label data-i18n="branches.country">Pays</label>
+                    <select id="countrySelect" class="search-select">
+                        <option value="all" data-i18n="branches.allCountries">Tous les pays</option>
+                        <option value="do">🇩🇴 République Dominicaine</option>
+                        <option value="ht">🇭🇹 Haïti</option>
+                    </select>
+                </div>
+
+                <div class="search-field">
+                    <label id="regionLabel" data-i18n="branches.province">Province</label>
+                    <select id="regionSelect" class="search-select">
+                        <option value="all" data-i18n="branches.allRegions">Toutes les régions</option>
+                    </select>
+                </div>
+
+                <div class="search-field search-field-input">
+                    <label data-i18n="branches.searchLabel">Rechercher</label>
+                    <input type="text" id="searchInput" class="search-input" data-i18n-placeholder="branches.searchPlaceholder" placeholder="Nom de la succursale ou de la ville...">
+                </div>
+
+                <button class="btn-primary search-btn" id="searchBtn" data-i18n="branches.searchBtn">Rechercher</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- GRID DES SUCCURSALES -->
+    <section class="branches-grid-section">
+        <div class="section-container">
+            <div class="branches-grid" id="branchesGrid">
+                <!-- Les cartes sont injectées par branches.js -->
+            </div>
+            <div class="no-results" id="noResults" style="display:none;">
+                <p data-i18n="branches.noResults">Aucune succursale trouvée pour cette recherche.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- CARTE GOOGLE MAPS -->
+    <section class="branches-map-section">
+        <div class="section-container">
+            <div class="section-header">
+                <span class="section-badge" data-i18n="branches.mapBadge">Localisation</span>
+                <h2 class="section-title" data-i18n="branches.mapTitle">Toutes nos succursales sur la carte</h2>
+            </div>
+            <div class="map-wrapper">
+                <iframe
+                    id="branchesMap"
+                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d119312.0!2d-69.93!3d18.48!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMTjCsDI4JzQ4LjAiTiA2OcKwNTUnNDguMCJX!5e0!3m2!1sfr!2sdo!4v1700000000000"
+                    width="100%"
+                    height="450"
+                    style="border:0;"
+                    allowfullscreen=""
+                    loading="lazy"
+                    referrerpolicy="no-referrer-when-downgrade">
+                </iframe>
+            </div>
+        </div>
+    </section>
+
+    <!-- CONTACT CTA -->
+    <section class="branches-cta">
+        <div class="section-container">
+            <div class="cta-box">
+                <h2 data-i18n="branches.cta.title">Vous ne trouvez pas de succursale près de vous ?</h2>
+                <p data-i18n="branches.cta.sub">Contactez-nous, nous vous aiderons à trouver la solution la plus proche.</p>
+                <a href="contact.html" class="btn-primary" data-i18n="nav.contact">Contact</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <div class="footer-logo">
+                        <div class="logo-icon">N</div>
+                        <span class="logo-name">NEXUS <span class="logo-year">2030</span></span>
+                    </div>
+                    <p class="footer-desc" data-i18n="footer.desc">Services financiers de confiance pour les communautés haïtiennes et dominicaines.</p>
+                </div>
+                <div class="footer-col">
+                    <h4 data-i18n="footer.services">Services</h4>
+                    <ul>
+                        <li><a href="services.html" data-i18n="footer.moncash">MonCash & NatCash</a></li>
+                        <li><a href="services.html" data-i18n="footer.change">Change de Devises</a></li>
+                        <li><a href="services.html" data-i18n="footer.livret">Livrets d'Épargne</a></li>
+                        <li><a href="services.html" data-i18n="footer.transfer">Transferts USA</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4 data-i18n="footer.company">Entreprise</h4>
+                    <ul>
+                        <li><a href="about.html" data-i18n="footer.about">À Propos</a></li>
+                        <li><a href="branches.html" data-i18n="footer.branches">Succursales</a></li>
+                        <li><a href="contact.html" data-i18n="footer.contact">Contact</a></li>
+                        <li><a href="faq.html" data-i18n="footer.faq">FAQ</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4 data-i18n="footer.contact2">Contact</h4>
+                    <ul>
+                        <li>📍 <span data-i18n="footer.hq">Siège Social</span>: <span id="footerAddress">Chargement...</span></li>
+                        <li>📞 <a id="footerPhoneLink" href="tel:+18090000000">+1 (809) 000-0000</a></li>
+                        <li>💬 <a id="footerWhatsappLink" href="#" target="_blank" data-i18n="contact.info.whatsappBtn">Écrire sur WhatsApp</a></li>
+                        <li>✉️ <span id="footerEmail">info@nexus2030.com</span></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p data-i18n="footer.rights">© 2026 NEXUS. Tous droits réservés.</p>
+                <div class="footer-links">
+                    <a href="#" data-i18n="footer.privacy">Confidentialité</a>
+                    <a href="#" data-i18n="footer.terms">Conditions</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="assets/js/i18n.js"></script>
+    <script src="assets/js/branches-data.js"></script>
+    <script src="assets/js/branches.js"></script>
+    <script src="assets/js/main.js"></script>
 <script>
-// FAQ Accordion + Categories
-document.addEventListener('DOMContentLoaded', function() {
-
-    // Accordion
-    document.querySelectorAll('.faq-question').forEach(function(btn) {
-        btn.addEventListener('click', function() {
-            const item = this.closest('.faq-item');
-            const isOpen = item.classList.contains('open');
-            document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
-            if (!isOpen) item.classList.add('open');
+const NEXUS_SUPA_URL = "https://fnuplvbiwfvauwkpxsoc.supabase.co";
+const NEXUS_SUPA_KEY = "sb_publishable_QBqdKkpcjDS3_psUdmc4uA_sMCzLqLo";
+document.addEventListener("DOMContentLoaded", async () => {
+    try{
+        const r = await fetch(`${NEXUS_SUPA_URL}/rest/v1/site_settings?id=eq.1`, {
+            headers: { "apikey": NEXUS_SUPA_KEY, "Authorization": `Bearer ${NEXUS_SUPA_KEY}` }
         });
-    });
-
-    // Categories
-    document.querySelectorAll('.faq-cat').forEach(function(cat) {
-        cat.addEventListener('click', function() {
-            document.querySelectorAll('.faq-cat').forEach(c => c.classList.remove('active'));
-            this.classList.add('active');
-            const selected = this.getAttribute('data-cat');
-            document.querySelectorAll('.faq-item').forEach(function(item) {
-                if (selected === 'all' || item.getAttribute('data-cat') === selected) {
-                    item.style.display = 'block';
-                } else {
-                    item.style.display = 'none';
-                }
-            });
-        });
-    });
-
+        const data = await r.json();
+        if(!data || !data[0]) return;
+        const s = data[0];
+        const addrEl = document.getElementById("footerAddress");
+        if(addrEl) addrEl.textContent = `${s.address_line}, ${s.city}, ${s.province}`;
+        const phoneEl = document.getElementById("footerPhoneLink");
+        if(phoneEl){ phoneEl.textContent = s.phone_number; phoneEl.href = "tel:" + s.phone_number.replace(/[^0-9+]/g, ""); }
+        const waEl = document.getElementById("footerWhatsappLink");
+        if(waEl && s.whatsapp_number) waEl.href = "https://wa.me/" + s.whatsapp_number.replace(/[^0-9]/g, "");
+        const emailEl = document.getElementById("footerEmail");
+        if(emailEl && s.email) emailEl.textContent = s.email;
+    }catch(e){}
 });
 </script>
 

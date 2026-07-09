@@ -124,7 +124,7 @@
                 <div class="contact-info-icon">📍</div>
                 <div>
                     <h3 data-i18n="contact.info.address">Adresse principale</h3>
-                    <p>Santo Domingo, República Dominicana</p>
+                    <p id="ciAddressText">Chargement...</p>
                 </div>
             </div>
 
@@ -132,8 +132,7 @@
                 <div class="contact-info-icon">📞</div>
                 <div>
                     <h3 data-i18n="contact.info.phone">Téléphone</h3>
-                    <p><a href="tel:+18090000000">+1 (809) 000-0000</a></p>
-                    <p><a href="tel:+50922220000">+509 2222-0000</a> <span class="info-tag">Haïti</span></p>
+                    <p><a id="ciPhoneLink" href="tel:+18090000000">+1 (809) 000-0000</a></p>
                 </div>
             </div>
 
@@ -141,7 +140,7 @@
                 <div class="contact-info-icon">✉️</div>
                 <div>
                     <h3 data-i18n="contact.info.email">Email</h3>
-                    <p><a href="mailto:info@nexus2030.com">info@nexus2030.com</a></p>
+                    <p><a id="ciEmailLink" href="mailto:info@nexus2030.com">info@nexus2030.com</a></p>
                 </div>
             </div>
 
@@ -158,7 +157,7 @@
                 <div class="contact-info-icon">💬</div>
                 <div>
                     <h3 data-i18n="contact.info.whatsapp">WhatsApp</h3>
-                    <a href="https://wa.me/18090000000" target="_blank" class="btn-whatsapp" data-i18n="contact.info.whatsappBtn">Écrire sur WhatsApp</a>
+                    <a href="https://wa.me/18090000000" id="ciWhatsappBtn" target="_blank" class="btn-whatsapp" data-i18n="contact.info.whatsappBtn">Écrire sur WhatsApp</a>
                 </div>
             </div>
 
@@ -196,9 +195,10 @@
             </div>
             <div class="footer-col">
                 <h4 data-i18n="footer.contact2">Contact</h4>
-                <p>📍 Santo Domingo, RD</p>
-                <p>📞 +1 (809) 000-0000</p>
-                <p>✉️ info@nexus2030.com</p>
+                <p>📍 <span data-i18n="footer.hq">Siège Social</span>: <span id="footerAddress">Chargement...</span></p>
+                <p>📞 <a id="footerPhoneLink" href="tel:+18090000000">+1 (809) 000-0000</a></p>
+                <p>💬 <a id="footerWhatsappLink" href="#" target="_blank" data-i18n="contact.info.whatsappBtn">Écrire sur WhatsApp</a></p>
+                <p>✉️ <span id="footerEmail">info@nexus2030.com</span></p>
             </div>
         </div>
         <div class="footer-bottom">
@@ -213,6 +213,40 @@
 
 <script src="assets/js/i18n.js"></script>
 <script src="assets/js/main.js"></script>
+<script>
+const NEXUS_SUPA_URL = "https://fnuplvbiwfvauwkpxsoc.supabase.co";
+const NEXUS_SUPA_KEY = "sb_publishable_QBqdKkpcjDS3_psUdmc4uA_sMCzLqLo";
+document.addEventListener("DOMContentLoaded", async () => {
+    try{
+        const r = await fetch(`${NEXUS_SUPA_URL}/rest/v1/site_settings?id=eq.1`, {
+            headers: { "apikey": NEXUS_SUPA_KEY, "Authorization": `Bearer ${NEXUS_SUPA_KEY}` }
+        });
+        const data = await r.json();
+        if(!data || !data[0]) return;
+        const s = data[0];
+
+        // Footer
+        const addrEl = document.getElementById("footerAddress");
+        if(addrEl) addrEl.textContent = `${s.address_line}, ${s.city}, ${s.province}`;
+        const phoneEl = document.getElementById("footerPhoneLink");
+        if(phoneEl){ phoneEl.textContent = s.phone_number; phoneEl.href = "tel:" + s.phone_number.replace(/[^0-9+]/g, ""); }
+        const waEl = document.getElementById("footerWhatsappLink");
+        if(waEl && s.whatsapp_number) waEl.href = "https://wa.me/" + s.whatsapp_number.replace(/[^0-9]/g, "");
+        const emailEl = document.getElementById("footerEmail");
+        if(emailEl && s.email) emailEl.textContent = s.email;
+
+        // Cartes Informations Contact
+        const ciAddr = document.getElementById("ciAddressText");
+        if(ciAddr) ciAddr.textContent = `${s.address_line}, ${s.city}, ${s.province}`;
+        const ciPhone = document.getElementById("ciPhoneLink");
+        if(ciPhone){ ciPhone.textContent = s.phone_number; ciPhone.href = "tel:" + s.phone_number.replace(/[^0-9+]/g, ""); }
+        const ciEmail = document.getElementById("ciEmailLink");
+        if(ciEmail && s.email){ ciEmail.textContent = s.email; ciEmail.href = "mailto:" + s.email; }
+        const ciWa = document.getElementById("ciWhatsappBtn");
+        if(ciWa && s.whatsapp_number) ciWa.href = "https://wa.me/" + s.whatsapp_number.replace(/[^0-9]/g, "");
+    }catch(e){}
+});
+</script>
 <script>
 document.getElementById('contactSubmit').addEventListener('click', async function() {
     const name = document.getElementById('contactName').value.trim();
