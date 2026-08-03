@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
@@ -13,7 +13,7 @@
 <aside class="sidebar" id="sidebar">
     <div class="sidebar-logo">
         <div class="logo-icon">N</div>
-        <div><span class="logo-name">NEXUS</span><span class="logo-year">2030</span></div>
+        <div><span class="logo-name">NEXUS</span><span class="logo-year">2030</span></div><button class="sidebar-close" onclick="toggleSidebar()">✕</button>
     </div>
     <div class="agent-badge-side">
         <img id="agentAvatarSideImg" src="" style="display:none;width:44px;height:44px;border-radius:50%;object-fit:cover">
@@ -46,6 +46,7 @@
     </nav>
 </aside>
 
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
 <main class="main-content">
     <header class="topbar">
         <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
@@ -773,7 +774,7 @@ function goTo(id){
     if(nav)nav.classList.add("active");
 }
 
-function toggleSidebar(){document.getElementById("sidebar").classList.toggle("open");}
+function toggleSidebar(){document.getElementById("sidebar").classList.toggle("open");document.getElementById("sidebarOverlay").classList.toggle("show");}
 
 async function agentLogout(){
     await supabaseClient.auth.signOut();

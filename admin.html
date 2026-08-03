@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
@@ -12,7 +12,7 @@
 <aside class="sidebar" id="sidebar">
 <div class="sidebar-logo">
 <div class="logo-icon">N</div>
-<div><span class="logo-name">NEXUS</span><span class="logo-year">2030</span></div>
+<div><span class="logo-name">NEXUS</span><span class="logo-year">2030</span></div><button class="sidebar-close" onclick="toggleSidebar()">✕</button>
 </div>
 <nav class="sidebar-nav">
 <div class="nav-section">PRINCIPAL</div>
@@ -37,6 +37,7 @@
 <a href="#" class="nav-item logout" onclick="logout()"><span>🚪</span>Deconnexion</a>
 </nav>
 </aside>
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
 <main class="main-content">
 <header class="topbar">
 <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
@@ -493,7 +494,7 @@ function showSectionByName(e, id) {
     document.getElementById("section-" + id).classList.add("active");
 }
 
-function toggleSidebar() { document.getElementById("sidebar").classList.toggle("open"); }
+function toggleSidebar() { document.getElementById("sidebar").classList.toggle("open"); document.getElementById("sidebarOverlay").classList.toggle("show"); }
 
 async function logout() {
     await supabaseClient.auth.signOut();
