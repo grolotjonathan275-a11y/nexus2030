@@ -35,6 +35,8 @@
         <a href="#kyc" class="nav-item" onclick="showSection(this,event)"><span>🪪</span>Suivi KYC</a>
         <div class="nav-section">EQUIPE</div>
         <a href="#team" class="nav-item" onclick="showSection(this,event)"><span>👥</span>Mon Equipe</a>
+        <div class="nav-section">DEVISES</div>
+        <a href="#currency-distribution" class="nav-item" onclick="showSection(this,event)"><span>💵</span>Distribution Devises</a>
         <div class="nav-section">RAPPORTS</div>
         <a href="#reports" class="nav-item" onclick="showSection(this,event)"><span>📈</span>Rapports</a>
         <div class="nav-section">COMPTE</div>
@@ -180,7 +182,25 @@
             </div>
         </section>
 
-        <!-- MON PROFIL -->
+        <section class="section" id="section-currency-distribution">
+<h2 class="section-title">💵 Distribution Devises a Mon Equipe</h2>
+<div class="card">
+<div style="padding:1.5rem">
+<div id="allocMsg" style="display:none;padding:0.75rem 1rem;border-radius:8px;margin-bottom:1rem;font-size:0.9rem;"></div>
+<div class="form-group"><label>Caissier / Agent (mon equipe) *</label><select id="allocStaff" style="width:100%;padding:0.75rem;border-radius:10px;border:1.5px solid #E2E8F0;font-family:inherit;"></select></div>
+<div class="form-group"><label>Devise *</label><select id="allocCurrency" style="width:100%;padding:0.75rem;border-radius:10px;border:1.5px solid #E2E8F0;font-family:inherit;"></select></div>
+<div class="form-group"><label>Montant *</label><input type="number" id="allocAmount" placeholder="0.00" min="0.01"></div>
+<div class="form-group"><label>Notes (optionnel)</label><input type="text" id="allocNotes" placeholder="Ex: Effectif du matin"></div>
+<button class="btn-primary" onclick="allocateCurrencySup()">➕ Donner l'Effectif</button>
+</div>
+</div>
+<div class="card" style="margin-top:1.5rem">
+<div class="card-header"><h3>Historique de mes Distributions</h3><span class="badge" id="allocCount">0</span></div>
+<div class="table-wrap"><table class="data-table"><thead><tr><th>Date</th><th>Beneficiaire</th><th>Devise</th><th>Montant</th><th>Notes</th></tr></thead><tbody id="allocHistoryList"><tr><td colspan="5">Chargement...</td></tr></tbody></table></div>
+</div>
+</section>
+
+<!-- MON PROFIL -->
         <section class="section" id="section-profile">
             <div class="card">
                 <div class="card-header"><h3>👤 Mon Profil</h3></div>
@@ -241,6 +261,7 @@ function showSection(el,e){
     if(id==="accounts")loadAccounts();
     if(id==="kyc")loadKyc();
     if(id==="team")loadTeam();
+    if(id==="currency-distribution")loadAllocationFormSup();
 }
 
 function goSec(id){
@@ -406,6 +427,69 @@ async function loadKyc(){
 }
 
 function exportData(table){window.open(`${SUPA_URL}/rest/v1/${table}?select=*&apikey=${SUPA_KEY}`);}
+
+// ===== DISTRIBUTION DEVISES (SUPERVISEUR) =====
+async function loadAllocationFormSup(){
+    if(!currentSupervisorId){
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if(session) currentSupervisorId = session.user.id;
+    }
+    const { data: staff } = await supabaseClient.from("profiles").select("*").eq("supervisor_id", currentSupervisorId).in("role", ["caissier","agent"]);
+    const sel = document.getElementById("allocStaff");
+    sel.innerHTML = (staff||[]).map(s => `<option value="${s.id}" data-name="${s.full_name}">${s.full_name} (${s.role})</option>`).join("") || "<option value=''>Aucun membre dans mon equipe</option>";
+
+    const { data: rates } = await supabaseClient.from("exchange_rates").select("*").eq("active", true).order("display_order");
+    const curSel = document.getElementById("allocCurrency");
+    curSel.innerHTML = (rates||[]).map(r => `<option value="${r.currency_code}">${r.flag_emoji} ${r.currency_name} (${r.currency_code})</option>`).join("");
+
+    loadAllocationHistorySup();
+}
+
+function showAllocMsgSup(text, isError){
+    const el = document.getElementById("allocMsg");
+    el.style.display = "block";
+    el.style.background = isError ? "#FEE2E2" : "#DCFCE7";
+    el.style.color = isError ? "#991B1B" : "#166534";
+    el.textContent = text;
+}
+
+async function allocateCurrencySup(){
+    const staffSel = document.getElementById("allocStaff");
+    const staffId = staffSel.value;
+    const staffName = staffSel.options[staffSel.selectedIndex]?.dataset.name || "";
+    const currencyCode = document.getElementById("allocCurrency").value;
+    const amount = Number(document.getElementById("allocAmount").value);
+    const notes = document.getElementById("allocNotes").value.trim();
+
+    if(!staffId || !currencyCode || !amount || amount <= 0){ showAllocMsgSup("Remplissez tous les champs obligatoires (*).", true); return; }
+
+    const { error: allocError } = await supabaseClient.from("currency_allocations").insert({
+        staff_id: staffId, staff_name: staffName, currency_code: currencyCode, amount: amount,
+        allocated_by: currentSupervisorId, allocated_by_name: "Superviseur", notes: notes
+    });
+    if(allocError){ showAllocMsgSup("Erreur: " + allocError.message, true); return; }
+
+    const { data: existingWallet } = await supabaseClient.from("currency_wallets").select("*").eq("cashier_id", staffId).eq("currency_code", currencyCode).maybeSingle();
+    if(existingWallet){
+        await supabaseClient.from("currency_wallets").update({ balance: Number(existingWallet.balance) + amount, updated_at: new Date().toISOString() }).eq("id", existingWallet.id);
+    } else {
+        await supabaseClient.from("currency_wallets").insert({ cashier_id: staffId, currency_code: currencyCode, balance: amount });
+    }
+
+    showAllocMsgSup(`✅ ${amount.toLocaleString("fr-FR",{minimumFractionDigits:2})} ${currencyCode} donne a ${staffName}!`, false);
+    document.getElementById("allocAmount").value = "";
+    document.getElementById("allocNotes").value = "";
+    loadAllocationHistorySup();
+}
+
+async function loadAllocationHistorySup(){
+    const { data, error } = await supabaseClient.from("currency_allocations").select("*").eq("allocated_by", currentSupervisorId).order("created_at",{ascending:false}).limit(50);
+    const tbody = document.getElementById("allocHistoryList");
+    if(error || !data || !data.length){ tbody.innerHTML = "<tr><td colspan='5'>Aucune distribution.</td></tr>"; document.getElementById("allocCount").textContent = "0"; return; }
+    document.getElementById("allocCount").textContent = data.length;
+    tbody.innerHTML = data.map(a => `
+        <tr><td>${new Date(a.created_at).toLocaleString("fr-FR")}</td><td>${a.staff_name}</td><td>${a.currency_code}</td><td>${Number(a.amount).toLocaleString("fr-FR",{minimumFractionDigits:2})}</td><td>${a.notes || "-"}</td></tr>`).join("");
+}
 
 let currentSupervisorId=null;
 
