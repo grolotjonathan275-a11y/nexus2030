@@ -30,6 +30,7 @@
             <a href="#depot" class="nav-item" onclick="showSection(this,event)"><span>💰</span>Depot</a>
             <a href="#retrait" class="nav-item" onclick="showSection(this,event)"><span>💸</span>Retrait</a>
             <a href="#moneyservice" class="nav-item" onclick="showSection(this,event)"><span>📱</span>MonCash / NatCash</a>
+            <a href="#change" class="nav-item" onclick="showSection(this,event)"><span>💱</span>Change Devises</a>
             <a href="#search" class="nav-item" onclick="showSection(this,event)"><span>🔍</span>Recherche Client</a>
             <a href="#history" class="nav-item" onclick="showSection(this,event)"><span>📋</span>Historique</a>
             <div class="nav-section">CAISSE</div>
@@ -333,6 +334,76 @@
                 </div>
             </section>
 
+            <!-- CHANGE DE DEVISES -->
+            <section class="section" id="section-change">
+                <div class="operation-card">
+                    <div class="op-header" style="background:linear-gradient(135deg,#EFF6FF,#DBEAFE)">
+                        <div class="op-icon">💱</div>
+                        <div>
+                            <h2>Change de Devises</h2>
+                            <p>Achat ou vente de devises etrangeres</p>
+                        </div>
+                    </div>
+                    <div class="op-form">
+                        <div class="form-group">
+                            <label>Type d'operation *</label>
+                            <select id="chgType" onchange="calcChange()">
+                                <option value="achat">Achat (le client vend, nous achetons)</option>
+                                <option value="vente">Vente (le client achete, nous vendons)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Devise *</label>
+                            <select id="chgCurrency" onchange="calcChange()"></select>
+                        </div>
+                        <div class="form-group">
+                            <label>Montant en devise *</label>
+                            <input type="number" id="chgAmount" placeholder="0.00" min="0.01" oninput="calcChange()">
+                        </div>
+                        <div id="chgResultBox" style="display:none;background:#F8FAFC;border-radius:10px;padding:1rem;margin:1rem 0">
+                            <div style="display:flex;justify-content:space-between;padding:0.35rem 0"><span>Taux applique:</span><strong id="chgShowRate">-</strong></div>
+                            <div style="display:flex;justify-content:space-between;padding:0.5rem 0;border-top:1px solid #E2E8F0;margin-top:0.35rem"><span><strong id="chgTotalLabel">Montant en DOP:</strong></span><strong id="chgShowTotal" style="font-size:1.1rem">-</strong></div>
+                        </div>
+                        <div class="form-group">
+                            <label>Nom du Client *</label>
+                            <input type="text" id="chgClientName" placeholder="Nom complet">
+                        </div>
+                        <div class="form-group">
+                            <label>Telephone Client</label>
+                            <input type="tel" id="chgClientPhone" placeholder="+1 809...">
+                        </div>
+                        <div class="form-group">
+                            <label>Notes (optionnel)</label>
+                            <input type="text" id="chgNotes" placeholder="Remarques...">
+                        </div>
+                        <div class="form-actions">
+                            <button class="btn-cancel" onclick="resetChangeForm()">Annuler</button>
+                            <button class="btn-confirm green" onclick="executeChange()">✅ Confirmer l'Operation</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mt-2">
+                    <div class="card-header"><h3>💰 Mes Devises en Caisse</h3></div>
+                    <div class="table-wrap">
+                        <table class="data-table">
+                            <thead><tr><th>Devise</th><th>Solde</th></tr></thead>
+                            <tbody id="currencyWalletsList"><tr><td colspan="2">Chargement...</td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="card mt-2">
+                    <div class="card-header"><h3>Historique des Changes</h3><span class="badge" id="changeCount">0</span></div>
+                    <div class="table-wrap">
+                        <table class="data-table">
+                            <thead><tr><th>Heure</th><th>Type</th><th>Client</th><th>Devise</th><th>Montant</th><th>DOP</th></tr></thead>
+                            <tbody id="changeHistoryList"><tr><td colspan="6">Chargement...</td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
             <!-- RECHERCHE CLIENT -->
             <section class="section" id="section-search">
                 <div class="card">
@@ -540,6 +611,7 @@ function showSection(el, e) {
     document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
     document.getElementById("section-" + id).classList.add("active");
     document.getElementById("pageTitle").textContent = el.textContent.trim();
+    if(id === "change"){ loadExchangeRatesCashier(); loadMyCurrencyWallets(); loadChangeHistory(); }
 }
 
 function showSectionByName(e, id) {
@@ -656,6 +728,158 @@ async function loadTransactions() {
     document.getElementById("allTxns").innerHTML = txns.map(t =>
         `<tr><td>${fmt(t.created_at)}</td><td>${t.client_name||"-"}</td><td>${t.account_no||"-"}</td><td><span class="txn-badge ${t.transaction_type}">${t.transaction_type}</span></td><td>${fmtAmount(t.amount)} ${t.currency}</td><td>${fmtAmount(t.balance_after)} ${t.currency}</td><td><span class="status-badge">${t.status}</span></td></tr>`
     ).join("") || "<tr><td colspan='7'>Aucune transaction</td></tr>";
+}
+
+// CHANGE DE DEVISES
+let cashierRates = [];
+
+async function loadExchangeRatesCashier(){
+    const { data, error } = await supabaseClient.from("exchange_rates").select("*").eq("active", true).order("display_order");
+    if(error || !data) return;
+    cashierRates = data;
+    const sel = document.getElementById("chgCurrency");
+    sel.innerHTML = data.map(r => `<option value="${r.currency_code}">${r.flag_emoji} ${r.currency_name} (${r.currency_code})</option>`).join("");
+    calcChange();
+}
+
+function calcChange(){
+    const type = document.getElementById("chgType").value;
+    const code = document.getElementById("chgCurrency").value;
+    const amount = Number(document.getElementById("chgAmount").value);
+    const rate = cashierRates.find(r => r.currency_code === code);
+    const box = document.getElementById("chgResultBox");
+    if(!rate || !amount || amount <= 0){ box.style.display = "none"; return; }
+    box.style.display = "block";
+    const usedRate = type === "achat" ? Number(rate.buy_rate) : Number(rate.sell_rate);
+    const dopAmount = amount * usedRate;
+    document.getElementById("chgShowRate").textContent = `1 ${code} = ${usedRate.toLocaleString("fr-FR",{minimumFractionDigits:2})} DOP`;
+    document.getElementById("chgTotalLabel").textContent = type === "achat" ? "Montant a remettre au client (DOP):" : "Montant a percevoir du client (DOP):";
+    document.getElementById("chgShowTotal").textContent = dopAmount.toLocaleString("fr-FR",{minimumFractionDigits:2}) + " DOP";
+}
+
+async function executeChange(){
+    const type = document.getElementById("chgType").value;
+    const code = document.getElementById("chgCurrency").value;
+    const amount = Number(document.getElementById("chgAmount").value);
+    const clientName = document.getElementById("chgClientName").value.trim();
+    const clientPhone = document.getElementById("chgClientPhone").value.trim();
+    const notes = document.getElementById("chgNotes").value.trim();
+    const rate = cashierRates.find(r => r.currency_code === code);
+
+    if(!amount || amount <= 0) return alert("Entrez un montant valide.");
+    if(!clientName) return alert("Le nom du client est obligatoire.");
+    if(!rate) return alert("Taux introuvable pour cette devise.");
+
+    const usedRate = type === "achat" ? Number(rate.buy_rate) : Number(rate.sell_rate);
+    const dopAmount = amount * usedRate;
+
+    if(type === "vente"){
+        const { data: cw } = await supabaseClient.from("currency_wallets").select("*").eq("cashier_id", CASHIER_ID).eq("currency_code", code).maybeSingle();
+        if(!cw || Number(cw.balance) < amount){
+            alert(`Stock insuffisant en ${code}. Disponible: ${cw ? fmtAmount(cw.balance) : "0.00"}`);
+            return;
+        }
+    }
+
+    const { error: txnError } = await supabaseClient.from("exchange_transactions").insert({
+        cashier_id: CASHIER_ID, cashier_name: CASHIER_NAME, client_name: clientName, client_phone: clientPhone,
+        operation_type: type, currency_code: code, foreign_amount: amount, rate_used: usedRate,
+        dop_amount: dopAmount, branch: CASHIER_BRANCH, notes: notes
+    });
+    if(txnError){ alert("Erreur: " + txnError.message); return; }
+
+    const { data: existingWallet } = await supabaseClient.from("currency_wallets").select("*").eq("cashier_id", CASHIER_ID).eq("currency_code", code).maybeSingle();
+    const currentBalance = existingWallet ? Number(existingWallet.balance) : 0;
+    const newBalance = type === "achat" ? currentBalance + amount : currentBalance - amount;
+
+    if(existingWallet){
+        await supabaseClient.from("currency_wallets").update({ balance: newBalance, updated_at: new Date().toISOString() }).eq("id", existingWallet.id);
+    } else {
+        await supabaseClient.from("currency_wallets").insert({ cashier_id: CASHIER_ID, currency_code: code, balance: newBalance });
+    }
+
+    const walletData = await supaFetch("cashier_wallets", "GET", null, `?cashier_id=eq.${CASHIER_ID}`);
+    if(walletData && walletData[0]){
+        const currentDop = Number(walletData[0].balance_dop);
+        const newDop = type === "achat" ? currentDop - dopAmount : currentDop + dopAmount;
+        await supaFetch("cashier_wallets", "PATCH", { balance_dop: newDop }, `?cashier_id=eq.${CASHIER_ID}`);
+    }
+
+    printExchangeReceipt({ type, code, amount, usedRate, dopAmount, clientName, clientPhone, notes });
+
+    alert("✅ Operation de change effectuee avec succes!");
+    resetChangeForm();
+    loadMyCurrencyWallets();
+    loadChangeHistory();
+    loadWallet();
+}
+
+function resetChangeForm(){
+    document.getElementById("chgAmount").value = "";
+    document.getElementById("chgClientName").value = "";
+    document.getElementById("chgClientPhone").value = "";
+    document.getElementById("chgNotes").value = "";
+    document.getElementById("chgResultBox").style.display = "none";
+}
+
+async function loadMyCurrencyWallets(){
+    const { data, error } = await supabaseClient.from("currency_wallets").select("*").eq("cashier_id", CASHIER_ID);
+    const tbody = document.getElementById("currencyWalletsList");
+    if(error || !data || !data.length){ tbody.innerHTML = "<tr><td colspan='2'>Aucune devise en stock.</td></tr>"; return; }
+    tbody.innerHTML = data.map(w => {
+        const r = cashierRates.find(x => x.currency_code === w.currency_code);
+        const flag = r ? r.flag_emoji : "";
+        return `<tr><td>${flag} ${w.currency_code}</td><td><strong>${fmtAmount(w.balance)}</strong></td></tr>`;
+    }).join("");
+}
+
+async function loadChangeHistory(){
+    const { data, error } = await supabaseClient.from("exchange_transactions").select("*").eq("cashier_id", CASHIER_ID).order("created_at",{ascending:false}).limit(30);
+    const tbody = document.getElementById("changeHistoryList");
+    if(error || !data || !data.length){ tbody.innerHTML = "<tr><td colspan='6'>Aucune operation.</td></tr>"; document.getElementById("changeCount").textContent = "0"; return; }
+    document.getElementById("changeCount").textContent = data.length;
+    tbody.innerHTML = data.map(t => `
+        <tr>
+            <td>${fmtT(t.created_at)}</td>
+            <td>${t.operation_type === "achat" ? "📥 Achat" : "📤 Vente"}</td>
+            <td>${t.client_name}</td>
+            <td>${t.currency_code}</td>
+            <td>${fmtAmount(t.foreign_amount)}</td>
+            <td>${fmtAmount(t.dop_amount)} DOP</td>
+        </tr>`).join("");
+}
+
+function printExchangeReceipt(d){
+    const w = window.open("", "_blank");
+    const opLabel = d.type === "achat" ? "ACHAT DE DEVISE" : "VENTE DE DEVISE";
+    w.document.write(`
+        <html><head><title>Recu de Change</title>
+        <style>
+            body{font-family:Arial,sans-serif;max-width:380px;margin:0 auto;padding:20px;color:#111}
+            h2{text-align:center;margin-bottom:4px}
+            .sub{text-align:center;color:#666;font-size:12px;margin-bottom:16px}
+            table{width:100%;border-collapse:collapse;margin-top:12px}
+            td{padding:6px 0;font-size:14px;border-bottom:1px solid #eee}
+            td:first-child{color:#666}
+            td:last-child{text-align:right;font-weight:bold}
+            .total{font-size:18px;margin-top:12px;text-align:center;background:#F8FAFC;padding:12px;border-radius:8px}
+        </style></head><body>
+        <h2>NEXUS 2030</h2>
+        <div class="sub">${opLabel} — ${new Date().toLocaleString("fr-FR")}</div>
+        <table>
+            <tr><td>Client</td><td>${d.clientName}</td></tr>
+            <tr><td>Telephone</td><td>${d.clientPhone || "-"}</td></tr>
+            <tr><td>Devise</td><td>${d.code}</td></tr>
+            <tr><td>Montant devise</td><td>${d.amount.toLocaleString("fr-FR",{minimumFractionDigits:2})} ${d.code}</td></tr>
+            <tr><td>Taux applique</td><td>${d.usedRate.toLocaleString("fr-FR",{minimumFractionDigits:2})} DOP</td></tr>
+            <tr><td>Caissier</td><td>${CASHIER_NAME}</td></tr>
+            <tr><td>Succursale</td><td>${CASHIER_BRANCH}</td></tr>
+        </table>
+        <div class="total">Total: ${d.dopAmount.toLocaleString("fr-FR",{minimumFractionDigits:2})} DOP</div>
+        <script>window.print();</` + `script>
+        </body></html>
+    `);
+    w.document.close();
 }
 
 // SEARCH ACCOUNT
