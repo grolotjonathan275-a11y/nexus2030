@@ -8,7 +8,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Recu Retrait NEXUS</title>
 <style>
-body{margin:0;padding:20px;background:#e0e0e0;font-family:Arial,sans-serif;display:flex;justify-content:center;}
+body{margin:0;padding:20px;background:#e0e0e0;font-family:Arial,sans-serif;display:flex;flex-direction:column;align-items:center;}
 .receipt{width:360px;background:white;border-radius:4px;box-shadow:0 4px 20px rgba(0,0,0,0.3);overflow:hidden;}
 .header{background:linear-gradient(135deg,#7F1D1D,#DC2626);padding:20px;text-align:center;}
 .logo{width:55px;height:55px;background:white;border-radius:50%;margin:0 auto 8px;display:flex;align-items:center;justify-content:center;font-size:1.5rem;font-weight:900;color:#DC2626;border:3px solid #FF6600;}
@@ -17,14 +17,11 @@ body{margin:0;padding:20px;background:#e0e0e0;font-family:Arial,sans-serif;displ
 .badge{background:#FF6600;color:white;padding:4px 16px;border-radius:100px;font-size:0.75rem;font-weight:700;display:inline-block;margin-top:8px;letter-spacing:1px;}
 .strip{height:6px;background:repeating-linear-gradient(90deg,#7F1D1D 0px,#7F1D1D 10px,#FF6600 10px,#FF6600 20px,gold 20px,gold 30px);}
 .section{padding:12px 18px;border-bottom:1px dashed #ccc;}
-.section-title{font-size:0.65rem;color:#DC2626;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;border-bottom:1px solid #FECACA;padding-bottom:4px;}
 .row{display:flex;justify-content:space-between;margin-bottom:6px;}
 .label{font-size:0.68rem;color:#888;text-transform:uppercase;}
 .value{font-size:0.8rem;font-weight:700;color:#7F1D1D;}
 .amount-box{padding:15px 18px;background:linear-gradient(135deg,#FFF1F1,#FFE4E4);border-bottom:1px dashed #ccc;text-align:center;}
-.amount-label{font-size:0.68rem;color:#666;text-transform:uppercase;letter-spacing:1px;}
 .amount{font-size:2rem;font-weight:900;color:#DC2626;}
-.words{font-size:0.7rem;color:#555;font-style:italic;margin-top:4px;}
 .balance{padding:12px 18px;border-bottom:1px dashed #ccc;}
 .bal-row{display:flex;justify-content:space-between;font-size:0.78rem;padding:3px 0;}
 .bal-total{font-weight:700;color:#7F1D1D;border-top:1px solid #DC2626;margin-top:4px;padding-top:4px;}
@@ -33,19 +30,62 @@ body{margin:0;padding:20px;background:#e0e0e0;font-family:Arial,sans-serif;displ
 .warn-text{font-size:0.65rem;color:#666;}
 .sigs{display:flex;justify-content:space-between;padding:15px 18px;border-bottom:1px dashed #ccc;}
 .sig{text-align:center;width:45%;}
-.sig-line{border-top:1px solid #333;margin-bottom:4px;padding-top:30px;}
+.sig-line{border-top:1px solid #333;margin-bottom:4px;}
 .sig-label{font-size:0.62rem;color:#888;text-transform:uppercase;}
 .footer{background:#7F1D1D;padding:10px;text-align:center;}
 .serial{color:white;font-size:0.7rem;font-weight:700;letter-spacing:2px;}
 .foot-text{color:rgba(255,255,255,0.6);font-size:0.6rem;margin-top:3px;}
-.microtext{color:rgba(255,255,255,0.15);font-size:0.4rem;letter-spacing:1px;overflow:hidden;white-space:nowrap;margin-top:3px;}
-.btn{display:block;width:100%;padding:14px;background:#DC2626;color:white;border:none;font-size:1rem;font-weight:700;cursor:pointer;letter-spacing:1px;}
-@media print{.btn{display:none;}body{background:white;padding:0;}}
+.actions{display:flex;gap:0.6rem;width:360px;margin-top:1rem;}
+.btn{flex:1;padding:14px;border:none;border-radius:8px;color:white;font-size:0.95rem;font-weight:700;cursor:pointer;}
+.btn-print{background:#7F1D1D;}
+.btn-whatsapp{background:#25D366;}
+.btn:disabled{opacity:0.6;cursor:wait;}
+
+.print-header-text{display:none;}
+
+@media print {
+    @page { size: 58mm auto; margin: 0; }
+    html, body{ width:58mm; background:#fff !important; padding:0 !important; margin:0 !important; display:block !important; }
+    .actions{ display:none !important; }
+    .receipt{ width:58mm !important; box-shadow:none !important; border-radius:0 !important; margin:0 !important; }
+    .header{ background:#fff !important; padding:0.3rem 0 0.5rem !important; border-bottom:2px solid #000; }
+    .logo{ display:none !important; }
+    .title, .sub{ display:none !important; }
+    .print-header-text{
+        display:block !important;
+        color:#000 !important;
+        font-size:1rem !important;
+        font-weight:900 !important;
+    }
+    .print-header-text .sub-line{
+        display:block; font-size:0.62rem; font-weight:700; letter-spacing:1px; margin-top:2px;
+    }
+    .badge{ background:#fff !important; color:#000 !important; border:1px solid #000 !important; font-size:0.62rem !important; padding:1px 8px !important; }
+    .strip{ display:none !important; }
+    .section{ padding:0.35rem 0.3rem !important; }
+    .label{ color:#000 !important; font-size:0.62rem !important; }
+    .value{ color:#000 !important; font-size:0.7rem !important; }
+    .amount-box{ background:#fff !important; padding:0.4rem 0 !important; border-bottom:1px dashed #000 !important; }
+    .amount{ color:#000 !important; font-size:1.3rem !important; }
+    .balance{ padding:0.35rem 0.3rem !important; }
+    .bal-row{ color:#000 !important; font-size:0.68rem !important; }
+    .bal-total{ color:#000 !important; border-top:1px solid #000 !important; }
+    .warning{ background:#fff !important; border:1px dashed #000 !important; padding:0.35rem !important; }
+    .warn-title{ color:#000 !important; font-size:0.58rem !important; }
+    .warn-text{ color:#000 !important; font-size:0.58rem !important; }
+    .sigs{ padding:0.5rem 0.3rem !important; }
+    .sig-line{ border-top:1px solid #000 !important; }
+    .sig-label{ color:#000 !important; font-size:0.55rem !important; }
+    .footer{ background:#fff !important; padding:0.3rem !important; border-top:1px solid #000; }
+    .serial{ color:#000 !important; font-size:0.6rem !important; }
+    .foot-text{ color:#000 !important; font-size:0.5rem !important; }
+}
 </style>
 </head>
 <body>
-<div class="receipt">
+<div class="receipt" id="receipt">
 <div class="header">
+<div class="print-header-text">NEXUS CASA DE CAMBIO<span class="sub-line">SERVICES FINANCIERS</span></div>
 <div class="logo">N</div>
 <div class="title">NEXUS</div>
 <div class="sub">CASA DE CAMBIO</div>
@@ -53,29 +93,25 @@ body{margin:0;padding:20px;background:#e0e0e0;font-family:Arial,sans-serif;displ
 </div>
 <div class="strip"></div>
 <div class="section">
-<div class="section-title">Informations Transaction</div>
 <div class="row"><span class="label">No. Transaction</span><span class="value" id="txnId"></span></div>
 <div class="row"><span class="label">Date</span><span class="value" id="txnDate"></span></div>
 <div class="row"><span class="label">Heure</span><span class="value" id="txnTime"></span></div>
-<div class="row"><span class="label">Succursale</span><span class="value">Santo Domingo</span></div>
-<div class="row"><span class="label">Caissier</span><span class="value">Agent NEXUS</span></div>
+<div class="row"><span class="label">Succursale</span><span class="value" id="branchName">-</span></div>
 </div>
 <div class="section">
-<div class="section-title">Informations Client</div>
-<div class="row"><span class="label">No. Compte</span><span class="value">NEXUS-2026-272748</span></div>
-<div class="row"><span class="label">Titulaire</span><span class="value">JEAN DUPONT</span></div>
-<div class="row"><span class="label">Type Compte</span><span class="value">Individuel - HTG</span></div>
-<div class="row"><span class="label">Piece Identite</span><span class="value">CIN-001234</span></div>
+<div class="row"><span class="label">No. Compte</span><span class="value" id="accountNo">-</span></div>
+<div class="row"><span class="label">Titulaire</span><span class="value" id="clientName">-</span></div>
+<div class="row"><span class="label">Devise</span><span class="value" id="currencyLabel">-</span></div>
+<div class="row"><span class="label">Caissier</span><span class="value" id="staffName">Agent NEXUS</span></div>
 </div>
 <div class="amount-box">
-<div class="amount-label">Montant Retire</div>
-<div class="amount">3,000.00 HTG</div>
-<div class="words">Trois mille gourdes exactement</div>
+<div class="label">Montant Retire</div>
+<div class="amount" id="amountValue">0.00</div>
 </div>
 <div class="balance">
-<div class="bal-row"><span>Solde Precedent:</span><span>15,000.00 HTG</span></div>
-<div class="bal-row"><span>Retrait:</span><span style="color:#DC2626;font-weight:700;">-3,000.00 HTG</span></div>
-<div class="bal-row bal-total"><span>Nouveau Solde:</span><span>12,000.00 HTG</span></div>
+<div class="bal-row"><span>Solde Precedent:</span><span id="balBefore">-</span></div>
+<div class="bal-row"><span>Retrait:</span><span style="color:#DC2626;font-weight:700;" id="balOp">-</span></div>
+<div class="bal-row bal-total"><span>Nouveau Solde:</span><span id="balAfter">-</span></div>
 </div>
 <div class="warning">
 <div class="warn-title">Important</div>
@@ -86,22 +122,77 @@ body{margin:0;padding:20px;background:#e0e0e0;font-family:Arial,sans-serif;displ
 <div class="sig"><div class="sig-line"></div><div class="sig-label">Signature Caissier</div></div>
 </div>
 <div class="footer">
-<div class="serial" id="serial">SER: NX26-0001</div>
+<div class="serial" id="serial">SER: -</div>
 <div class="foot-text">Document officiel NEXUS Casa de Cambio</div>
-<div class="microtext">NEXUS NEXUS NEXUS NEXUS NEXUS NEXUS NEXUS NEXUS NEXUS NEXUS NEXUS NEXUS NEXUS NEXUS</div>
 </div>
-<button class="btn" onclick="window.print()">IMPRIMER LE RECU</button>
 </div>
+<div class="actions">
+<button class="btn btn-print" onclick="window.print()">IMPRIMER</button>
+<button class="btn btn-whatsapp" id="btnWhatsapp" onclick="shareWhatsapp()">WHATSAPP</button>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
-var n=new Date();
-document.getElementById("txnDate").textContent=n.toLocaleDateString("fr-FR");
-document.getElementById("txnTime").textContent=n.toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"});
-document.getElementById("txnId").textContent="NX-"+n.getFullYear()+"-"+String(Math.floor(Math.random()*999999)).padStart(6,"0");
-document.getElementById("serial").textContent="SER: NX"+String(n.getFullYear()).slice(2)+"-"+Math.random().toString(36).substring(2,6).toUpperCase();
-</script>
+const p = new URLSearchParams(window.location.search);
+const n = new Date();
 
+function fmtA(v){ return Number(v||0).toLocaleString("fr-FR",{minimumFractionDigits:2}); }
+
+const clientName = p.get("client_name") || "-";
+const accountNo = p.get("account_no") || "-";
+const currency = p.get("currency") || "HTG";
+const amount = Number(p.get("amount")||0);
+const balBefore = Number(p.get("balance_before")||0);
+const balAfter = Number(p.get("balance_after")||0);
+
+document.getElementById("txnDate").textContent = n.toLocaleDateString("fr-FR");
+document.getElementById("txnTime").textContent = n.toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"});
+document.getElementById("txnId").textContent = "NX-"+n.getFullYear()+"-"+String(Math.floor(Math.random()*999999)).padStart(6,"0");
+document.getElementById("serial").textContent = "SER: NX"+String(n.getFullYear()).slice(2)+"-"+Math.random().toString(36).substring(2,6).toUpperCase();
+
+document.getElementById("clientName").textContent = clientName.toUpperCase();
+document.getElementById("accountNo").textContent = accountNo;
+document.getElementById("currencyLabel").textContent = currency;
+document.getElementById("amountValue").textContent = fmtA(amount) + " " + currency;
+document.getElementById("balBefore").textContent = fmtA(balBefore) + " " + currency;
+document.getElementById("balOp").textContent = "-" + fmtA(amount) + " " + currency;
+document.getElementById("balAfter").textContent = fmtA(balAfter) + " " + currency;
+
+async function shareWhatsapp(){
+    const receiptEl = document.getElementById("receipt");
+    const btn = document.getElementById("btnWhatsapp");
+    const originalHtml = btn.innerHTML;
+    btn.innerHTML = "Preparation...";
+    btn.disabled = true;
+    try {
+        const canvas = await html2canvas(receiptEl, { scale: 2, backgroundColor: "#ffffff", useCORS: true });
+        const blob = await new Promise(resolve => canvas.toBlob(resolve, "image/png"));
+        if(!blob){ alert("Erreur lors de la generation de l'image."); return; }
+        const file = new File([blob], "recu-retrait-nexus.png", { type: "image/png" });
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            try {
+                await navigator.share({ files: [file], title: "Recu Retrait Nexus Casa de Cambio", text: "Voici votre recu de retrait." });
+            } catch (shareErr) {
+                if (shareErr.name !== "AbortError") downloadImageFallback(blob);
+            }
+        } else {
+            downloadImageFallback(blob);
+        }
+    } catch (err) {
+        alert("Erreur lors de la generation de l'image: " + err.message);
+    } finally {
+        btn.innerHTML = originalHtml;
+        btn.disabled = false;
+    }
+}
+
+function downloadImageFallback(blob){
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url; link.download = "recu-retrait-nexus.png";
+    document.body.appendChild(link); link.click(); document.body.removeChild(link);
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+    alert("Votre navigateur ne supporte pas le partage direct d'image. L'image a ete telechargee -- vous pouvez l'envoyer manuellement sur WhatsApp.");
+}
+</script>
 </body>
 </html>
-
-
-
