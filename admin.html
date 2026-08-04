@@ -27,6 +27,7 @@
 <a href="#reports" class="nav-item" onclick="showSection(this,event)"><span>📈</span>Rapports</a>
 <div class="nav-section">SYSTEME</div>
 <a href="#users" class="nav-item" onclick="showSection(this,event)"><span>🔐</span>Gestion Utilisateurs</a>
+<a href="#currency-distribution" class="nav-item" onclick="showSection(this,event)"><span>💵</span>Distribution Devises</a>
 <a href="#promotions" class="nav-item" onclick="showSection(this,event)"><span>📢</span>Publicites & Promotions</a>
 <a href="#news" class="nav-item" onclick="showSection(this,event)"><span>📰</span>Actualites</a>
 <a href="#partners" class="nav-item" onclick="showSection(this,event)"><span>🤝</span>Logos Partenaires</a>
@@ -177,6 +178,39 @@
 <div class="card" style="margin-top:1.5rem;">
 <div class="card-header"><h3>Comptes de l'Equipe</h3><span class="badge" id="usersCount">0</span></div>
 <div class="table-wrap"><table class="data-table"><thead><tr><th>Nom</th><th>Email</th><th>Telephone</th><th>Role</th><th>Superviseur</th><th>Statut</th><th>Action</th></tr></thead><tbody id="allUsers"><tr><td colspan="7">Chargement...</td></tr></tbody></table></div>
+</div>
+</section>
+
+<section class="section" id="section-currency-distribution">
+<div class="card">
+<div class="card-header"><h3>💵 Donner un Effectif (Devises)</h3></div>
+<div style="padding:1.5rem;">
+<div id="allocMsg" style="display:none;padding:0.75rem 1rem;border-radius:8px;margin-bottom:1rem;font-size:0.9rem;"></div>
+<div class="settings-grid">
+<div class="setting-item">
+<label>Caissier / Agent *</label>
+<select id="allocStaff" style="width:100%;padding:0.6rem;border-radius:8px;border:1px solid #CBD5E1;font-family:inherit;"></select>
+</div>
+<div class="setting-item">
+<label>Devise *</label>
+<select id="allocCurrency" style="width:100%;padding:0.6rem;border-radius:8px;border:1px solid #CBD5E1;font-family:inherit;"></select>
+</div>
+<div class="setting-item">
+<label>Montant *</label>
+<input type="number" id="allocAmount" placeholder="0.00" min="0.01">
+</div>
+</div>
+<div class="setting-item" style="margin-top:1rem">
+<label>Notes (optionnel)</label>
+<input type="text" id="allocNotes" placeholder="Ex: Effectif du matin">
+</div>
+<button class="btn-approve" style="margin-top:1rem;padding:0.7rem 1.5rem;" onclick="allocateCurrency()">➕ Donner l'Effectif</button>
+</div>
+</div>
+
+<div class="card" style="margin-top:1.5rem;">
+<div class="card-header"><h3>Historique des Distributions</h3><span class="badge" id="allocCount">0</span></div>
+<div class="table-wrap"><table class="data-table"><thead><tr><th>Date</th><th>Beneficiaire</th><th>Devise</th><th>Montant</th><th>Distribue par</th><th>Notes</th></tr></thead><tbody id="allocHistoryList"><tr><td colspan="6">Chargement...</td></tr></tbody></table></div>
 </div>
 </section>
 
@@ -476,6 +510,7 @@ function showSection(el, e) {
     document.getElementById("section-" + id).classList.add("active");
     document.getElementById("pageTitle").textContent = el.textContent.trim();
     if (id === "users") loadUsers();
+    if (id === "currency-distribution") loadAllocationForm();
     if (id === "promotions") loadPromotions();
     if (id === "news") loadNews();
     if (id === "partners") loadPartnerLogos();
@@ -1144,6 +1179,78 @@ async function deleteNews(id){
     const { error } = await supabaseClient.from("news_announcements").delete().eq("id", id);
     if(error){ alert("Erreur: " + error.message); return; }
     loadNews();
+}
+
+// ===== DISTRIBUTION DEVISES =====
+async function loadAllocationForm(){
+    const { data: staff } = await supabaseClient.from("profiles").select("*").in("role", ["caissier","agent"]).eq("status","active");
+    const sel = document.getElementById("allocStaff");
+    sel.innerHTML = (staff||[]).map(s => `<option value="${s.id}" data-name="${s.full_name}">${s.full_name} (${ROLE_LABELS[s.role]||s.role})</option>`).join("") || "<option value=''>Aucun caissier/agent</option>";
+
+    const { data: rates } = await supabaseClient.from("exchange_rates").select("*").eq("active", true).order("display_order");
+    const curSel = document.getElementById("allocCurrency");
+    curSel.innerHTML = (rates||[]).map(r => `<option value="${r.currency_code}">${r.flag_emoji} ${r.currency_name} (${r.currency_code})</option>`).join("");
+
+    loadAllocationHistory();
+}
+
+function showAllocMsg(text, isError){
+    const el = document.getElementById("allocMsg");
+    el.style.display = "block";
+    el.style.background = isError ? "#FEE2E2" : "#DCFCE7";
+    el.style.color = isError ? "#991B1B" : "#166534";
+    el.textContent = text;
+}
+
+async function allocateCurrency(){
+    const staffSel = document.getElementById("allocStaff");
+    const staffId = staffSel.value;
+    const staffName = staffSel.options[staffSel.selectedIndex]?.dataset.name || "";
+    const currencyCode = document.getElementById("allocCurrency").value;
+    const amount = Number(document.getElementById("allocAmount").value);
+    const notes = document.getElementById("allocNotes").value.trim();
+
+    if(!staffId || !currencyCode || !amount || amount <= 0){
+        showAllocMsg("Remplissez tous les champs obligatoires (*).", true);
+        return;
+    }
+
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    const { data: myProfile } = await supabaseClient.from("profiles").select("full_name").eq("id", session.user.id).single();
+
+    const { error: allocError } = await supabaseClient.from("currency_allocations").insert({
+        staff_id: staffId, staff_name: staffName, currency_code: currencyCode, amount: amount,
+        allocated_by: session.user.id, allocated_by_name: myProfile?.full_name || "-", notes: notes
+    });
+    if(allocError){ showAllocMsg("Erreur: " + allocError.message, true); return; }
+
+    const { data: existingWallet } = await supabaseClient.from("currency_wallets").select("*").eq("cashier_id", staffId).eq("currency_code", currencyCode).maybeSingle();
+    if(existingWallet){
+        await supabaseClient.from("currency_wallets").update({ balance: Number(existingWallet.balance) + amount, updated_at: new Date().toISOString() }).eq("id", existingWallet.id);
+    } else {
+        await supabaseClient.from("currency_wallets").insert({ cashier_id: staffId, currency_code: currencyCode, balance: amount });
+    }
+
+    showAllocMsg(`✅ ${amount.toLocaleString("fr-FR",{minimumFractionDigits:2})} ${currencyCode} donne a ${staffName}!`, false);
+    document.getElementById("allocAmount").value = "";
+    document.getElementById("allocNotes").value = "";
+    loadAllocationHistory();
+}
+
+async function loadAllocationHistory(){
+    const { data, error } = await supabaseClient.from("currency_allocations").select("*").order("created_at",{ascending:false}).limit(50);
+    const tbody = document.getElementById("allocHistoryList");
+    if(error || !data || !data.length){ tbody.innerHTML = "<tr><td colspan='6'>Aucune distribution.</td></tr>"; document.getElementById("allocCount").textContent = "0"; return; }
+    document.getElementById("allocCount").textContent = data.length;
+    tbody.innerHTML = data.map(a => `
+        <tr>
+            <td>${new Date(a.created_at).toLocaleString("fr-FR")}</td>
+            <td>${a.staff_name}</td>
+            <td>${a.currency_code}</td>
+            <td>${Number(a.amount).toLocaleString("fr-FR",{minimumFractionDigits:2})}</td>
+            <td>${a.allocated_by_name || "-"}</td>
+            <td>${a.notes || "-"}</td>
+        </tr>`).join("");
 }
 
 // ===== LOGOS PARTENAIRES =====
