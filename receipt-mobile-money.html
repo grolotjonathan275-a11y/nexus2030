@@ -304,10 +304,12 @@ async function refreshStatus(){
 // ===== PATAJE WHATSAPP KOM IMAJ REYEL (pa tekst) =====
 async function shareWhatsapp(){
     const receiptEl = document.getElementById("receipt");
+    const logoPrint = document.querySelector(".r-logo-print");
     const btn = document.getElementById("btnWhatsapp");
     const originalHtml = btn.innerHTML;
     btn.innerHTML = "Preparation...";
     btn.disabled = true;
+    logoPrint.style.display = "block";
 
     try {
         const canvas = await html2canvas(receiptEl, {
@@ -316,36 +318,32 @@ async function shareWhatsapp(){
             useCORS: true
         });
 
-        canvas.toBlob(async (blob) => {
-            if(!blob){
-                alert("Erreur lors de la generation de l'image.");
-                btn.innerHTML = originalHtml;
-                btn.disabled = false;
-                return;
-            }
-            const file = new File([blob], "recu-nexus.png", { type: "image/png" });
+        const blob = await new Promise(resolve => canvas.toBlob(resolve, "image/png"));
+        if(!blob){
+            alert("Erreur lors de la generation de l'image.");
+            return;
+        }
+        const file = new File([blob], "recu-nexus.png", { type: "image/png" });
 
-            if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                try {
-                    await navigator.share({
-                        files: [file],
-                        title: "Recu Nexus Casa de Cambio",
-                        text: "Voici votre recu de transaction Nexus Casa de Cambio."
-                    });
-                } catch (shareErr) {
-                    if (shareErr.name !== "AbortError") {
-                        downloadImageFallback(blob);
-                    }
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            try {
+                await navigator.share({
+                    files: [file],
+                    title: "Recu Nexus Casa de Cambio",
+                    text: "Voici votre recu de transaction Nexus Casa de Cambio."
+                });
+            } catch (shareErr) {
+                if (shareErr.name !== "AbortError") {
+                    downloadImageFallback(blob);
                 }
-            } else {
-                downloadImageFallback(blob);
             }
-
-            btn.innerHTML = originalHtml;
-            btn.disabled = false;
-        }, "image/png");
+        } else {
+            downloadImageFallback(blob);
+        }
     } catch (err) {
         alert("Erreur lors de la generation de l'image: " + err.message);
+    } finally {
+        logoPrint.style.display = "none";
         btn.innerHTML = originalHtml;
         btn.disabled = false;
     }
