@@ -89,7 +89,6 @@ body { background:#EEF2F7; padding:2rem 1rem; display:flex; flex-direction:colum
         border-radius: 0 !important;
         margin: 0 !important;
     }
-    .r-logo-print { display: none !important; }
     .r-header {
         background: #fff !important;
         color: #000 !important;
@@ -162,9 +161,6 @@ body { background:#EEF2F7; padding:2rem 1rem; display:flex; flex-direction:colum
 <body>
 
 <div class="receipt" id="receipt">
-    <div class="r-logo-print">
-        <img src="assets/img/logo.png" alt="Nexus Casa de Cambio">
-    </div>
     <div class="r-header" id="rHeader">
         <div class="r-logo">NEXUS <span>CASA DE CAMBIO</span></div>
         <div class="r-service" id="rServiceName">Vente MonCash</div>
@@ -303,12 +299,10 @@ async function refreshStatus(){
 // ===== PATAJE WHATSAPP KOM IMAJ REYEL (pa tekst) =====
 async function shareWhatsapp(){
     const receiptEl = document.getElementById("receipt");
-    const logoPrint = document.querySelector(".r-logo-print");
     const btn = document.getElementById("btnWhatsapp");
     const originalHtml = btn.innerHTML;
     btn.innerHTML = "Preparation...";
     btn.disabled = true;
-    logoPrint.style.display = "block";
 
     try {
         const canvas = await html2canvas(receiptEl, {
@@ -342,7 +336,6 @@ async function shareWhatsapp(){
     } catch (err) {
         alert("Erreur lors de la generation de l'image: " + err.message);
     } finally {
-        logoPrint.style.display = "none";
         btn.innerHTML = originalHtml;
         btn.disabled = false;
     }
