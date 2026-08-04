@@ -854,33 +854,110 @@ async function loadChangeHistory(){
 function printExchangeReceipt(d){
     const w = window.open("", "_blank");
     const opLabel = d.type === "achat" ? "ACHAT DE DEVISE" : "VENTE DE DEVISE";
-    w.document.write(`
-        <html><head><title>Recu de Change</title>
-        <style>
-            body{font-family:Arial,sans-serif;max-width:380px;margin:0 auto;padding:20px;color:#111}
-            h2{text-align:center;margin-bottom:4px}
-            .sub{text-align:center;color:#666;font-size:12px;margin-bottom:16px}
-            table{width:100%;border-collapse:collapse;margin-top:12px}
-            td{padding:6px 0;font-size:14px;border-bottom:1px solid #eee}
-            td:first-child{color:#666}
-            td:last-child{text-align:right;font-weight:bold}
-            .total{font-size:18px;margin-top:12px;text-align:center;background:#F8FAFC;padding:12px;border-radius:8px}
-        </style></head><body>
-        <h2>Nexus Casa de Cambio</h2>
-        <div class="sub">${opLabel} — ${new Date().toLocaleString("fr-FR")}</div>
-        <table>
-            <tr><td>Client</td><td>${d.clientName}</td></tr>
-            <tr><td>Telephone</td><td>${d.clientPhone || "-"}</td></tr>
-            <tr><td>Devise</td><td>${d.code}</td></tr>
-            <tr><td>Montant devise</td><td>${d.amount.toLocaleString("fr-FR",{minimumFractionDigits:2})} ${d.code}</td></tr>
-            <tr><td>Taux applique</td><td>${d.usedRate.toLocaleString("fr-FR",{minimumFractionDigits:2})} DOP</td></tr>
-            <tr><td>Caissier</td><td>${CASHIER_NAME}</td></tr>
-            <tr><td>Succursale</td><td>${CASHIER_BRANCH}</td></tr>
-        </table>
-        <div class="total">Total: ${d.dopAmount.toLocaleString("fr-FR",{minimumFractionDigits:2})} DOP</div>
-        <script>window.print();</` + `script>
-        </body></html>
-    `);
+    const dateStr = new Date().toLocaleString("fr-FR");
+    const amountStr = d.amount.toLocaleString("fr-FR",{minimumFractionDigits:2}) + " " + d.code;
+    const rateStr = d.usedRate.toLocaleString("fr-FR",{minimumFractionDigits:2}) + " DOP";
+    const totalStr = d.dopAmount.toLocaleString("fr-FR",{minimumFractionDigits:2}) + " DOP";
+
+    const html = ""
+    + "<!DOCTYPE html><html><head><meta charset='UTF-8'>"
+    + "<title>Recu de Change - Nexus Casa de Cambio</title>"
+    + "<style>"
+    + "*{margin:0;padding:0;box-sizing:border-box;font-family:Arial,sans-serif;}"
+    + "body{background:#EEF2F7;padding:2rem 1rem;display:flex;flex-direction:column;align-items:center;}"
+    + ".receipt{background:#fff;width:100%;max-width:380px;border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,0.08);overflow:hidden;}"
+    + ".r-header{padding:1.5rem;text-align:center;color:#fff;background:linear-gradient(135deg,#7C3AED,#6D28D9);}"
+    + ".r-logo{font-size:1.2rem;font-weight:800;letter-spacing:0.5px;}"
+    + ".r-op{font-size:1rem;font-weight:700;margin-top:0.4rem;background:rgba(255,255,255,0.2);display:inline-block;padding:3px 14px;border-radius:999px;}"
+    + ".r-body{padding:1.5rem;}"
+    + ".r-total-big{text-align:center;padding:1rem 0 1.25rem;border-bottom:1px dashed #E2E8F0;margin-bottom:1rem;}"
+    + ".r-total-big .label{font-size:0.8rem;color:#64748B;margin-bottom:0.25rem;}"
+    + ".r-total-big .value{font-size:1.9rem;font-weight:800;color:#0F172A;}"
+    + ".r-row{display:flex;justify-content:space-between;padding:0.5rem 0;font-size:0.88rem;border-bottom:1px solid #F1F5F9;}"
+    + ".r-row span:first-child{color:#64748B;}"
+    + ".r-row strong{color:#0F172A;font-weight:600;text-align:right;}"
+    + ".r-footer{text-align:center;padding:1rem 1.5rem 1.5rem;font-size:0.7rem;color:#94A3B8;}"
+    + ".print-header-text{display:none;}"
+    + ".actions{display:flex;gap:0.6rem;max-width:380px;width:100%;margin-top:1rem;}"
+    + ".btn{flex:1;padding:0.85rem;border:none;border-radius:10px;font-weight:600;font-size:0.9rem;cursor:pointer;color:#fff;}"
+    + ".btn-print{background:#0F172A;}"
+    + ".btn-whatsapp{background:#25D366;}"
+    + ".btn:disabled{opacity:0.6;cursor:wait;}"
+    + "@media print{"
+    + "@page{size:58mm auto;margin:0;}"
+    + "html,body{width:58mm;background:#fff !important;padding:0 !important;margin:0 !important;display:block !important;}"
+    + ".actions{display:none !important;}"
+    + ".receipt{width:58mm !important;box-shadow:none !important;border-radius:0 !important;margin:0 !important;}"
+    + ".r-header{background:#fff !important;color:#000 !important;padding:0.3rem 0 0.5rem !important;border-bottom:2px solid #000;}"
+    + ".r-logo{display:none !important;}"
+    + ".print-header-text{display:block !important;color:#000 !important;font-size:1rem !important;font-weight:900 !important;}"
+    + ".print-header-text .sub-line{display:block;font-size:0.62rem;font-weight:700;letter-spacing:1px;margin-top:2px;}"
+    + ".r-op{background:#fff !important;color:#000 !important;border:1px solid #000 !important;font-size:0.65rem !important;padding:1px 8px !important;}"
+    + ".r-body{padding:0.4rem 0.3rem !important;}"
+    + ".r-total-big{padding:0.4rem 0 0.5rem !important;border-bottom:1px dashed #000 !important;}"
+    + ".r-total-big .label{color:#000 !important;font-size:0.65rem !important;}"
+    + ".r-total-big .value{color:#000 !important;font-size:1.2rem !important;}"
+    + ".r-row{padding:0.2rem 0 !important;font-size:0.68rem !important;border-bottom:1px dotted #000 !important;}"
+    + ".r-row span:first-child{color:#000 !important;}"
+    + ".r-row strong{color:#000 !important;font-weight:700 !important;}"
+    + ".r-footer{color:#000 !important;font-size:0.5rem !important;padding:0.4rem 0.3rem !important;}"
+    + "}"
+    + "</style></head><body>"
+    + "<div class='receipt' id='receipt'>"
+    + "<div class='r-header'>"
+    + "<div class='print-header-text'>NEXUS CASA DE CAMBIO<span class='sub-line'>SERVICES FINANCIERS</span></div>"
+    + "<div class='r-logo'>NEXUS <span style=\"font-weight:400;opacity:0.85\">CASA DE CAMBIO</span></div>"
+    + "<div class='r-op'>" + opLabel + "</div>"
+    + "</div>"
+    + "<div class='r-body'>"
+    + "<div class='r-total-big'><div class='label'>Total " + (d.type==="achat"?"remis au client":"percu du client") + "</div><div class='value'>" + totalStr + "</div></div>"
+    + "<div class='r-row'><span>Date & Heure</span><strong>" + dateStr + "</strong></div>"
+    + "<div class='r-row'><span>Client</span><strong>" + d.clientName + "</strong></div>"
+    + "<div class='r-row'><span>Telephone</span><strong>" + (d.clientPhone || "-") + "</strong></div>"
+    + "<div class='r-row'><span>Devise</span><strong>" + d.code + "</strong></div>"
+    + "<div class='r-row'><span>Montant devise</span><strong>" + amountStr + "</strong></div>"
+    + "<div class='r-row'><span>Taux applique</span><strong>" + rateStr + "</strong></div>"
+    + "<div class='r-row'><span>Caissier</span><strong>" + CASHIER_NAME + "</strong></div>"
+    + "<div class='r-row'><span>Succursale</span><strong>" + CASHIER_BRANCH + "</strong></div>"
+    + "</div>"
+    + "<div class='r-footer'>Recu genere electroniquement par Nexus Casa de Cambio -- Conservez ce recu comme preuve de transaction.</div>"
+    + "</div>"
+    + "<div class='actions'>"
+    + "<button class='btn btn-print' onclick='window.print()'>Imprimer</button>"
+    + "<button class='btn btn-whatsapp' id='btnWhatsapp' onclick='shareWhatsapp()'>WhatsApp</button>"
+    + "</div>"
+    + "<script src='https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'></" + "script>"
+    + "<script>"
+    + "async function shareWhatsapp(){"
+    + "const receiptEl=document.getElementById('receipt');"
+    + "const btn=document.getElementById('btnWhatsapp');"
+    + "const originalHtml=btn.innerHTML;"
+    + "btn.innerHTML='Preparation...';"
+    + "btn.disabled=true;"
+    + "try{"
+    + "const canvas=await html2canvas(receiptEl,{scale:2,backgroundColor:'#ffffff',useCORS:true});"
+    + "const blob=await new Promise(function(resolve){canvas.toBlob(resolve,'image/png');});"
+    + "if(!blob){alert('Erreur lors de la generation de l\\'image.');return;}"
+    + "const file=new File([blob],'recu-change-nexus.png',{type:'image/png'});"
+    + "if(navigator.canShare && navigator.canShare({files:[file]})){"
+    + "try{await navigator.share({files:[file],title:'Recu Change Nexus Casa de Cambio',text:'Voici votre recu de change.'});}"
+    + "catch(shareErr){if(shareErr.name!=='AbortError'){downloadImageFallback(blob);}}"
+    + "}else{downloadImageFallback(blob);}"
+    + "}catch(err){alert('Erreur lors de la generation de l\\'image: '+err.message);}"
+    + "finally{btn.innerHTML=originalHtml;btn.disabled=false;}"
+    + "}"
+    + "function downloadImageFallback(blob){"
+    + "const url=URL.createObjectURL(blob);"
+    + "const link=document.createElement('a');"
+    + "link.href=url;link.download='recu-change-nexus.png';"
+    + "document.body.appendChild(link);link.click();document.body.removeChild(link);"
+    + "setTimeout(function(){URL.revokeObjectURL(url);},5000);"
+    + "alert('Votre navigateur ne supporte pas le partage direct d\\'image. L\\'image a ete telechargee -- vous pouvez l\\'envoyer manuellement sur WhatsApp.');"
+    + "}"
+    + "</script>"
+    + "</body></html>";
+
+    w.document.write(html);
     w.document.close();
 }
 
