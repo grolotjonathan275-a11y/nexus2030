@@ -35,6 +35,8 @@
         <div class="nav-section">RAPPORTS</div>
         <a href="#reports" class="nav-item" onclick="showSection(this,event)"><span>📋</span>Rapports</a>
         <a href="#cashiers" class="nav-item" onclick="showSection(this,event)"><span>👤</span>Caissiers</a>
+        <div class="nav-section">DEVISES</div>
+        <a href="#currency-distribution" class="nav-item" onclick="showSection(this,event)"><span>💵</span>Distribution Devises</a>
         <div class="nav-section">SYSTEME</div>
         <a href="#mm-settings" class="nav-item" onclick="showSection(this,event)"><span>📱</span>Parametres MonCash/NatCash</a>
         <a href="#web-rates" class="nav-item" onclick="showSection(this,event)"><span>💱</span>Taux de Change Site Web</a>
@@ -400,7 +402,27 @@
             </div>
         </section>
 
-        <!-- PARAMETRES MONCASH / NATCASH -->
+        <section class="section" id="section-currency-distribution">
+<h2 class="section-title">💵 Distribution Devises</h2>
+<div class="operation-card">
+<div style="padding:0">
+<div id="allocMsg" style="display:none;padding:0.75rem 1rem;border-radius:8px;margin-bottom:1rem;font-size:0.9rem;"></div>
+<div class="form-grid-2">
+<div class="form-group"><label>Caissier / Agent *</label><select id="allocStaff" style="width:100%;padding:0.75rem;border-radius:10px;border:1.5px solid #E2E8F0;font-family:inherit;"></select></div>
+<div class="form-group"><label>Devise *</label><select id="allocCurrency" style="width:100%;padding:0.75rem;border-radius:10px;border:1.5px solid #E2E8F0;font-family:inherit;"></select></div>
+</div>
+<div class="form-group"><label>Montant *</label><input type="number" id="allocAmount" placeholder="0.00" min="0.01"></div>
+<div class="form-group"><label>Notes (optionnel)</label><input type="text" id="allocNotes" placeholder="Ex: Effectif du matin"></div>
+<div class="form-actions"><button class="btn-ceo-action" onclick="allocateCurrencyCeo()">➕ Donner l'Effectif</button></div>
+</div>
+</div>
+<div class="card" style="margin-top:1.5rem">
+<div class="card-header"><h3>Historique des Distributions</h3><span class="badge" id="allocCount">0</span></div>
+<div class="table-wrap"><table class="data-table"><thead><tr><th>Date</th><th>Beneficiaire</th><th>Devise</th><th>Montant</th><th>Distribue par</th><th>Notes</th></tr></thead><tbody id="allocHistoryList"><tr><td colspan="6">Chargement...</td></tr></tbody></table></div>
+</div>
+</section>
+
+<!-- PARAMETRES MONCASH / NATCASH -->
         <section class="section" id="section-mm-settings">
             <h2 class="section-title">📱 Parametres MonCash / NatCash</h2>
             <div class="card">
@@ -650,6 +672,7 @@ function showSection(el,e){
     document.getElementById("section-"+id).classList.add("active");
     document.getElementById("pageTitle").textContent=el.textContent.trim();
     if(id==="mm-settings")loadMoneyServiceSettings();
+    if(id==="currency-distribution")loadAllocationFormCeo();
     if(id==="web-rates")loadExchangeRates();
     if(id==="promotions")loadPromotions();
     if(id==="news")loadNews();
@@ -927,6 +950,67 @@ function exportReport(table){
 }
 
 function printSummary(){window.print();}
+
+// ===== DISTRIBUTION DEVISES (CEO) =====
+async function loadAllocationFormCeo(){
+    const { data: staff } = await supabaseClient.from("profiles").select("*").in("role", ["caissier","agent"]).eq("status","active");
+    const sel = document.getElementById("allocStaff");
+    sel.innerHTML = (staff||[]).map(s => `<option value="${s.id}" data-name="${s.full_name}">${s.full_name} (${s.role})</option>`).join("") || "<option value=''>Aucun caissier/agent</option>";
+
+    const { data: rates } = await supabaseClient.from("exchange_rates").select("*").eq("active", true).order("display_order");
+    const curSel = document.getElementById("allocCurrency");
+    curSel.innerHTML = (rates||[]).map(r => `<option value="${r.currency_code}">${r.flag_emoji} ${r.currency_name} (${r.currency_code})</option>`).join("");
+
+    loadAllocationHistoryCeo();
+}
+
+function showAllocMsgCeo(text, isError){
+    const el = document.getElementById("allocMsg");
+    el.style.display = "block";
+    el.style.background = isError ? "#FEE2E2" : "#DCFCE7";
+    el.style.color = isError ? "#991B1B" : "#166534";
+    el.textContent = text;
+}
+
+async function allocateCurrencyCeo(){
+    const staffSel = document.getElementById("allocStaff");
+    const staffId = staffSel.value;
+    const staffName = staffSel.options[staffSel.selectedIndex]?.dataset.name || "";
+    const currencyCode = document.getElementById("allocCurrency").value;
+    const amount = Number(document.getElementById("allocAmount").value);
+    const notes = document.getElementById("allocNotes").value.trim();
+
+    if(!staffId || !currencyCode || !amount || amount <= 0){ showAllocMsgCeo("Remplissez tous les champs obligatoires (*).", true); return; }
+
+    const { data: { session } } = await supabaseClient.auth.getSession();
+
+    const { error: allocError } = await supabaseClient.from("currency_allocations").insert({
+        staff_id: staffId, staff_name: staffName, currency_code: currencyCode, amount: amount,
+        allocated_by: session.user.id, allocated_by_name: "CEO", notes: notes
+    });
+    if(allocError){ showAllocMsgCeo("Erreur: " + allocError.message, true); return; }
+
+    const { data: existingWallet } = await supabaseClient.from("currency_wallets").select("*").eq("cashier_id", staffId).eq("currency_code", currencyCode).maybeSingle();
+    if(existingWallet){
+        await supabaseClient.from("currency_wallets").update({ balance: Number(existingWallet.balance) + amount, updated_at: new Date().toISOString() }).eq("id", existingWallet.id);
+    } else {
+        await supabaseClient.from("currency_wallets").insert({ cashier_id: staffId, currency_code: currencyCode, balance: amount });
+    }
+
+    showAllocMsgCeo(`✅ ${amount.toLocaleString("fr-FR",{minimumFractionDigits:2})} ${currencyCode} donne a ${staffName}!`, false);
+    document.getElementById("allocAmount").value = "";
+    document.getElementById("allocNotes").value = "";
+    loadAllocationHistoryCeo();
+}
+
+async function loadAllocationHistoryCeo(){
+    const { data, error } = await supabaseClient.from("currency_allocations").select("*").order("created_at",{ascending:false}).limit(50);
+    const tbody = document.getElementById("allocHistoryList");
+    if(error || !data || !data.length){ tbody.innerHTML = "<tr><td colspan='6'>Aucune distribution.</td></tr>"; document.getElementById("allocCount").textContent = "0"; return; }
+    document.getElementById("allocCount").textContent = data.length;
+    tbody.innerHTML = data.map(a => `
+        <tr><td>${new Date(a.created_at).toLocaleString("fr-FR")}</td><td>${a.staff_name}</td><td>${a.currency_code}</td><td>${Number(a.amount).toLocaleString("fr-FR",{minimumFractionDigits:2})}</td><td>${a.allocated_by_name || "-"}</td><td>${a.notes || "-"}</td></tr>`).join("");
+}
 
 // ===== PARAMETRES MONCASH / NATCASH =====
 
