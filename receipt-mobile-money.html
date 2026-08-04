@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Recu Transaction - NEXUS 2030</title>
+<title>Recu Transaction - Nexus Casa de Cambio</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 * { margin:0; padding:0; box-sizing:border-box; font-family:'Inter',sans-serif; }
@@ -112,7 +112,7 @@ body { background:#EEF2F7; padding:2rem 1rem; display:flex; flex-direction:colum
         </div>
     </div>
     <div class="r-footer">
-        Recu genere electroniquement par NEXUS 2030 — Conservez ce recu comme preuve de transaction.
+        Recu genere electroniquement par Nexus Casa de Cambio — Conservez ce recu comme preuve de transaction.
     </div>
 </div>
 
@@ -212,7 +212,7 @@ async function refreshStatus(){
 function shareWhatsapp(){
     const t = getDataFromParams();
     const isMoncash = t.service_type==="moncash";
-    const msg = `*NEXUS 2030 — Recu de Transaction*\n\n`+
+    const msg = `*Nexus Casa de Cambio — Recu de Transaction*\n\n`+
         `Service: ${isMoncash?"MonCash":"NatCash"}\n`+
         `Client: ${t.sender_full_name}\n`+
         `Montant envoye: ${fmtA(t.amount_dop)} DOP\n`+

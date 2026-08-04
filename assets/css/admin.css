@@ -63,3 +63,4 @@ body{font-family:Inter,sans-serif;background:#F0F4FF;}
 @media(max-width:768px){.sidebar-close{display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.08);border:none;color:#fff;width:32px;height:32px;border-radius:50%;font-size:1rem;cursor:pointer;margin-left:auto;}
 .sidebar-logo{display:flex;align-items:center;}
 .sidebar{transform:translateX(-100%);}.sidebar.open{transform:translateX(0);}.main-content{margin-left:0;}.menu-toggle{display:block;}.stats-grid{grid-template-columns:repeat(2,1fr);}.dashboard-grid{grid-template-columns:1fr;}}
+.site-logo-img{height:40px;width:auto;object-fit:contain;display:block;}

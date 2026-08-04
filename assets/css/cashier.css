@@ -165,3 +165,4 @@ body{font-family:Inter,sans-serif;background:#F0F4FF;}
 .wallet-grid{grid-template-columns:1fr;}
 .wallet-stats{grid-template-columns:1fr;}
 }
+.site-logo-img{height:40px;width:auto;object-fit:contain;display:block;}
