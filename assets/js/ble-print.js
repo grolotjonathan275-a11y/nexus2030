@@ -2,7 +2,9 @@
 const NEXUS_BLE_CHAR = '49535343-8841-43f4-a8d4-ecbe34729bb3';
 
 function nexusStripAccents(s){
-    return (s||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+    let r = (s||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+    r = r.replace(/[\u00A0\u202F\u2009\u2007]/g, " ");
+    return r;
 }
 
 function nexusBuildReceiptBytes(lines){
