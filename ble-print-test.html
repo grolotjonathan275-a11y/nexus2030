@@ -1,0 +1,71 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Test Print Direct - Nexus</title>
+<style>
+body{font-family:Arial,sans-serif;padding:20px;background:#f0f0f0;}
+button{padding:15px 25px;font-size:1.1rem;color:#fff;border:none;border-radius:8px;margin:8px 5px;cursor:pointer;display:block;width:100%;max-width:320px;}
+.btn1{background:#7C3AED;}
+.btn2{background:#0EA5E9;}
+#log{background:#000;color:#0f0;padding:15px;border-radius:8px;font-family:monospace;font-size:0.85rem;white-space:pre-wrap;margin-top:15px;min-height:150px;}
+h2{color:#0F172A}
+</style>
+</head>
+<body>
+<h2>🖨️ Test Enprime Dirèk</h2>
+<p>Peze youn nan bouton yo, chwazi enprimant ou a, epi gade si li enprime yon tès.</p>
+<button class="btn1" onclick="testPrint('49535343-fe7d-4ae5-8fa9-9fafd205e455','49535343-8841-43f4-a8d4-ecbe34729bb3')">1️⃣ Eseye Sèvis UART (49535343...)</button>
+<button class="btn2" onclick="testPrint('0000ff00-0000-1000-8000-00805f9b34fb','0000ff02-0000-1000-8000-00805f9b34fb')">2️⃣ Eseye Sèvis FF00 (0000ff00...)</button>
+<div id="log">Ap tann...</div>
+
+<script>
+function log(msg){
+    document.getElementById("log").textContent += msg + "\n";
+}
+
+async function testPrint(serviceUUID, charUUID){
+    document.getElementById("log").textContent = "";
+    try{
+        log("Ap chèche enprimant...");
+        const device = await navigator.bluetooth.requestDevice({
+            acceptAllDevices: true,
+            optionalServices: [serviceUUID]
+        });
+        log("✅ Jwenn: " + device.name);
+
+        const server = await device.gatt.connect();
+        log("✅ Konekte!");
+
+        const service = await server.getPrimaryService(serviceUUID);
+        const characteristic = await service.getCharacteristic(charUUID);
+        log("✅ Karakteristik jwenn, ap voye done...");
+
+        // ESC/POS: initialize + tèks tès + line feeds + cut
+        const encoder = new TextEncoder();
+        const init = new Uint8Array([0x1B, 0x40]); // ESC @ (initialize)
+        const text = encoder.encode("NEXUS TEST PRINT\n\n\n");
+        const cut = new Uint8Array([0x1D, 0x56, 0x00]); // GS V 0 (full cut)
+
+        const fullData = new Uint8Array(init.length + text.length + cut.length);
+        fullData.set(init, 0);
+        fullData.set(text, init.length);
+        fullData.set(cut, init.length + text.length);
+
+        // Voye an ti pake (anpil enprimant bon mache aksepte sèlman 20 bytes alafwa)
+        const chunkSize = 20;
+        for(let i = 0; i < fullData.length; i += chunkSize){
+            const chunk = fullData.slice(i, i + chunkSize);
+            await characteristic.writeValueWithoutResponse(chunk);
+            log("  Voye pake " + (i/chunkSize + 1) + " (" + chunk.length + " bytes)");
+            await new Promise(r => setTimeout(r, 50));
+        }
+
+        log("\n✅ FINI! Gade si enprimant lan enprime 'NEXUS TEST PRINT'");
+    }catch(err){
+        log("❌ ERE: " + err.message);
+    }
+}
+</script>
+</body>
+</html>
