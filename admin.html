@@ -84,7 +84,7 @@
 <section class="section" id="section-clients">
 <div class="card">
 <div class="card-header"><h3>Clients Enregistres</h3></div>
-<div class="table-wrap"><table class="data-table"><thead><tr><th>Nom</th><th>Email</th><th>Telephone</th><th>Pays</th><th>Date</th><th>Document</th></tr></thead><tbody id="allClients"><tr><td colspan="5">Chargement...</td></tr></tbody></table></div>
+<div class="table-wrap"><table class="data-table"><thead><tr><th>Nom</th><th>Email</th><th>Telephone</th><th>Pays</th><th>Solde</th><th>KYC</th><th>Statut</th><th>Date</th><th>Document</th><th>Actions</th></tr></thead><tbody id="allClients"><tr><td colspan="5">Chargement...</td></tr></tbody></table></div>
 </div>
 </section>
 <section class="section" id="section-reports">
@@ -603,6 +603,29 @@ async function approuver(id) {
     loadDashboard();
 }
 
+async function toggleClientKyc(accountNo, currentStatus){
+    const newStatus = currentStatus === "approved" ? "pending" : "approved";
+    const label = newStatus === "approved" ? "approuver" : "suspendre";
+    if(!confirm("Confirmer: " + label + " le KYC de ce client?")) return;
+    await fetch(`${SUPA_URL}/rest/v1/savings_accounts?account_no=eq.${accountNo}`, {
+        method: "PATCH",
+        headers: {"apikey": SUPA_KEY, "Authorization": `Bearer ${SUPA_KEY}`, "Content-Type": "application/json", "Prefer": "return=minimal"},
+        body: JSON.stringify({kyc_status: newStatus})
+    });
+    loadClientsList();
+}
+
+async function toggleClientBlock(accountNo, isBlocked){
+    const label = isBlocked ? "debloquer" : "bloquer";
+    if(!confirm("Confirmer: " + label + " ce compte client?")) return;
+    await fetch(`${SUPA_URL}/rest/v1/savings_accounts?account_no=eq.${accountNo}`, {
+        method: "PATCH",
+        headers: {"apikey": SUPA_KEY, "Authorization": `Bearer ${SUPA_KEY}`, "Content-Type": "application/json", "Prefer": "return=minimal"},
+        body: JSON.stringify({is_blocked: !isBlocked})
+    });
+    loadClientsList();
+}
+
 async function viewDocument(accountNo){
     const r = await fetch(`${SUPA_URL}/rest/v1/savings_accounts?account_no=eq.${accountNo}&select=id_document_photo`, {headers:{"apikey":SUPA_KEY,"Authorization":`Bearer ${SUPA_KEY}`}});
     const data = await r.json();
@@ -851,7 +874,7 @@ function showSettingsMsg(text, isError){
 // ===== SUCCURSALES =====
 
 async function loadBranches(){
-    const clients = await (await fetch(`${SUPA_URL}/rest/v1/savings_accounts?select=account_no,client_name,email,client_phone,client_nat,created_at,is_blocked,status,balance,currency,kyc_status&order=created_at.desc`, {headers:{"apikey":SUPA_KEY,"Authorization":`Bearer ${SUPA_KEY}`}})).json();
+    const clients = await fetchData('savings_accounts');
     const bankTxns = await fetchData("transactions");
     const { data: mmTxns } = await supabaseClient.from("mobile_money_transactions").select("*");
 
@@ -1030,9 +1053,16 @@ async function loadClientsList(){
             <td>${c.email || "-"}</td>
             <td>${c.client_phone || "-"}</td>
             <td>${c.client_nat || "-"}</td>
+            <td><strong>${Number(c.balance||0).toLocaleString("fr-FR",{minimumFractionDigits:2})} ${c.currency||""}</strong></td>
+            <td><span class="badge-status ${c.kyc_status==="approved"?"approved":"pending"}">${c.kyc_status||"pending"}</span></td>
+            <td><span class="badge-status ${c.status==="active"?"approved":"pending"}">${c.status||"active"}</span></td>
             <td>${fmt(c.created_at)}</td>
             <td><button class="btn-approve" style="background:#7C3AED;padding:0.35rem 0.7rem;font-size:0.8rem" onclick="viewDocument('${c.account_no}')">Voir</button></td>
-        </tr>`).join("") || "<tr><td colspan=''6''>Aucun client</td></tr>";
+            <td>
+                <button class="btn-approve" style="padding:0.35rem 0.7rem;font-size:0.8rem" onclick="toggleClientKyc('${c.account_no}','${c.kyc_status}')">${c.kyc_status==="approved"?"Suspendre KYC":"Approuver KYC"}</button>
+                <button class="btn-approve" style="background:${c.is_blocked?"#10B981":"#EF4444"};padding:0.35rem 0.7rem;font-size:0.8rem;margin-left:0.35rem" onclick="toggleClientBlock('${c.account_no}',${c.is_blocked})">${c.is_blocked?"Debloquer":"Bloquer"}</button>
+            </td>
+        </tr>`).join("") || "<tr><td colspan='10'>Aucun client</td></tr>";
 }
 
 // ===== TAUX DE CHANGE SITE WEB =====
