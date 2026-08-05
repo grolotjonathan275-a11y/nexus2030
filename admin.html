@@ -1013,7 +1013,17 @@ async function loadGlobalTransactions(){
 // ===== LISTE CLIENTS =====
 
 async function loadClientsList(){
-    const clients = await fetchData("savings_accounts");
+    let clients;
+    try {
+        clients = await fetchData("savings_accounts");
+        if(!Array.isArray(clients)){
+            document.getElementById("allClients").innerHTML = "<tr><td colspan='6' style='color:red'>ERREUR: " + JSON.stringify(clients) + "</td></tr>";
+            return;
+        }
+    } catch(err) {
+        document.getElementById("allClients").innerHTML = "<tr><td colspan='6' style='color:red'>ERREUR JS: " + err.message + "</td></tr>";
+        return;
+    }
     document.getElementById("allClients").innerHTML = clients.map(c => `
         <tr>
             <td><strong>${c.client_name || "-"}</strong></td>
@@ -1021,7 +1031,7 @@ async function loadClientsList(){
             <td>${c.client_phone || "-"}</td>
             <td>${c.client_nat || "-"}</td>
             <td>${fmt(c.created_at)}</td>
-            <td>${c.id_document_photo ? `<button class="btn-approve" style="background:#7C3AED;padding:0.35rem 0.7rem;font-size:0.8rem" onclick="viewDocument(''${c.account_no}'')">Voir</button>` : "-"}</td>
+            <td>${c.id_document_photo ? `<button class="btn-approve" style="background:#7C3AED;padding:0.35rem 0.7rem;font-size:0.8rem" onclick="viewDocument('${c.account_no}')">Voir</button>` : "-"}</td>
         </tr>`).join("") || "<tr><td colspan=''6''>Aucun client</td></tr>";
 }
 
