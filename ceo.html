@@ -645,6 +645,17 @@
 </main>
 </div>
 
+<!-- MODAL DOCUMENT IDENTITE -->
+<div id="docModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:9999;align-items:center;justify-content:center">
+    <div style="background:#fff;border-radius:12px;padding:1.5rem;max-width:500px;width:90%;max-height:85vh;overflow:auto">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+            <h3 style="margin:0">Document d''Identite</h3>
+            <button onclick="closeDocModal()" style="background:none;border:none;font-size:1.5rem;cursor:pointer">✕</button>
+        </div>
+        <img id="docModalImg" src="" style="width:100%;border-radius:8px">
+    </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 const SUPA_URL="https://fnuplvbiwfvauwkpxsoc.supabase.co";
@@ -741,6 +752,7 @@ async function loadOverview(){
             <td><span class="status-badge ${c.status==="active"?"active":""}">${c.status||"active"}</span></td>
             <td>
                 <button class="btn-sm" onclick="viewClient('${c.account_no}')">Voir</button>
+                ${c.id_document_photo ? `<button class="btn-sm" style="background:#7C3AED" onclick="viewDocument('${c.account_no}')">Doc</button>` : ""}
                 <button class="btn-sm danger" onclick="toggleBlock('${c.account_no}',${c.is_blocked})">${c.is_blocked?"Debloquer":"Bloquer"}</button>
             </td>
         </tr>`).join("")||"<tr><td colspan='7'>Aucun client</td></tr>";
@@ -839,6 +851,7 @@ async function searchClients(){
             <td><span class="status-badge ${c.status==="active"?"active":""}">${c.status||"active"}</span></td>
             <td>
                 <button class="btn-sm" onclick="viewClient('${c.account_no}')">Voir</button>
+                ${c.id_document_photo ? `<button class="btn-sm" style="background:#7C3AED" onclick="viewDocument('${c.account_no}')">Doc</button>` : ""}
                 <button class="btn-sm danger" onclick="toggleBlock('${c.account_no}',${c.is_blocked})">${c.is_blocked?"Debloquer":"Bloquer"}</button>
             </td>
         </tr>`).join("")||"<tr><td colspan='7'>Aucun resultat</td></tr>";
@@ -848,6 +861,20 @@ async function toggleBlock(accountNo,isBlocked){
     if(!confirm(isBlocked?"Debloquer ce compte?":"Bloquer ce compte?"))return;
     await sf("savings_accounts","PATCH",{is_blocked:!isBlocked},`?account_no=eq.${accountNo}`);
     loadOverview();
+}
+
+async function viewDocument(accountNo){
+    const data = await sf("savings_accounts","GET",null,`?account_no=eq.${accountNo}`);
+    if(!data || !data[0] || !data[0].id_document_photo){
+        alert("Aucun document trouve pour ce client.");
+        return;
+    }
+    document.getElementById("docModalImg").src = data[0].id_document_photo;
+    document.getElementById("docModal").style.display = "flex";
+}
+
+function closeDocModal(){
+    document.getElementById("docModal").style.display = "none";
 }
 
 function viewClient(accountNo){
