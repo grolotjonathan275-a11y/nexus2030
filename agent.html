@@ -37,6 +37,7 @@
         <a href="#retrait" class="nav-item" onclick="showSection(this,event)"><span>💸</span>Retrait Client</a>
         <a href="#transfer" class="nav-item" onclick="showSection(this,event)"><span>🔄</span>Transferts</a>
         <a href="#change" class="nav-item" onclick="showSection(this,event)"><span>💱</span>Change Devises</a>
+        <a href="#banking" class="nav-item" onclick="showSection(this,event)"><span>🏦</span>Depots Bancaires</a>
         <div class="nav-section">CAISSE</div>
         <a href="#wallet" class="nav-item" onclick="showSection(this,event)"><span>👛</span>Ma Caisse</a>
         <a href="#history" class="nav-item" onclick="showSection(this,event)"><span>📋</span>Historique</a>
@@ -548,6 +549,65 @@
             </div>
         </section>
 
+        <!-- DEPOTS BANCAIRES -->
+        <section class="section" id="section-banking">
+            <h2 class="section-title">🏦 Services Bancaires (Subagent)</h2>
+            <div class="card" style="margin-bottom:1.5rem">
+                <div style="padding:1.5rem;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem">
+                    <div onclick="openBankDeposit('banreservas')" style="cursor:pointer;border:2px solid #003DA5;border-radius:12px;padding:1.25rem;text-align:center">
+                        <div style="font-size:1.8rem">🏦</div>
+                        <div style="font-weight:700;margin-top:0.5rem">Banreservas</div>
+                        <div style="font-size:0.8rem;color:#64748B">Solde: <strong id="walletBankBanreservas">0.00</strong> DOP</div>
+                    </div>
+                    <div onclick="openBankDeposit('popular')" style="cursor:pointer;border:2px solid #F7941E;border-radius:12px;padding:1.25rem;text-align:center">
+                        <div style="font-size:1.8rem">🏦</div>
+                        <div style="font-weight:700;margin-top:0.5rem">Banco Popular</div>
+                        <div style="font-size:0.8rem;color:#64748B">Solde: <strong id="walletBankPopular">0.00</strong> DOP</div>
+                    </div>
+                    <div onclick="openBankDeposit('bhd')" style="cursor:pointer;border:2px solid #DA291C;border-radius:12px;padding:1.25rem;text-align:center">
+                        <div style="font-size:1.8rem">🏦</div>
+                        <div style="font-weight:700;margin-top:0.5rem">BHD</div>
+                        <div style="font-size:0.8rem;color:#64748B">Solde: <strong id="walletBankBhd">0.00</strong> DOP</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="op-card" id="bankDepositForm" style="display:none">
+                <div class="op-card-header" id="bankFormHeader" style="background:#003DA5">
+                    <div class="op-icon">🏦</div>
+                    <div>
+                        <h2>Depot <span id="bankServiceName">Banreservas</span></h2>
+                        <p>Renseignez les informations du compte a crediter</p>
+                    </div>
+                </div>
+                <div class="op-form">
+                    <div class="form-group"><label>Nom du Titulaire du Compte *</label><input type="text" id="bankHolderName" placeholder="Nom complet"></div>
+                    <div class="form-group"><label>Numero de Compte *</label><input type="text" id="bankAccountNumber" placeholder="000-000000-0"></div>
+                    <div class="form-group"><label>Numero de Cedula *</label><input type="text" id="bankCedula" placeholder="000-0000000-0"></div>
+                    <div class="form-group"><label>Montant a Deposer (DOP) *</label><input type="number" id="bankAmount" placeholder="0.00" min="1"></div>
+                    <div class="form-group"><label>Commentaire</label><input type="text" id="bankComment" placeholder="Remarques..."></div>
+                    <div class="security-check">
+                        <input type="checkbox" id="bankConfirm">
+                        <label for="bankConfirm">Je confirme avoir recu les fonds en especes et verifie les informations du compte</label>
+                    </div>
+                    <div class="form-actions">
+                        <button class="btn-cancel" onclick="closeBankDepositForm()">Annuler</button>
+                        <button class="btn-action" id="bankSubmitBtn" style="background:#003DA5" onclick="submitBankDeposit()">📤 Soumettre le Depot</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" style="margin-top:1.5rem">
+                <div class="card-header"><h3>Mes Depots Bancaires</h3><span class="badge" id="bankTxnCount">0</span></div>
+                <div class="table-wrap">
+                    <table class="data-table">
+                        <thead><tr><th>Heure</th><th>Banque</th><th>Titulaire</th><th>Montant DOP</th><th>Statut</th></tr></thead>
+                        <tbody id="bankTxnList"><tr><td colspan="5">Chargement...</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
         <!-- MA CAISSE -->
         <section class="section" id="section-wallet">
             <h2 class="section-title">👛 Ma Caisse</h2>
@@ -804,6 +864,7 @@ function showSection(el,e){
     document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
     document.getElementById("section-"+id).classList.add("active");
     document.getElementById("pageTitle").textContent=el.textContent.trim();
+    if(id === "banking"){ loadBankWallets(); loadMyBankTransactions(); }
 }
 
 function goTo(id){
@@ -812,6 +873,7 @@ function goTo(id){
     document.querySelectorAll(".nav-item").forEach(i=>i.classList.remove("active"));
     const nav=document.querySelector('[href="#'+id+'"]');
     if(nav)nav.classList.add("active");
+    if(id === "banking"){ loadBankWallets(); loadMyBankTransactions(); }
 }
 
 function toggleSidebar(){document.getElementById("sidebar").classList.toggle("open");document.getElementById("sidebarOverlay").classList.toggle("show");}
@@ -899,6 +961,106 @@ async function loadStats(){
             <td class="${t.transaction_type==="depot"?"pos":"neg"}">${fmtA(t.amount)} ${t.currency}</td>
             <td><span class="status-ok">✅</span></td>
         </tr>`).join("")||"<tr><td colspan='5'>Aucune operation</td></tr>";
+}
+
+// ===== DEPOTS BANCAIRES (SUBAGENT) =====
+let currentBankService = "banreservas";
+const BANK_LABELS_A = {banreservas:"Banreservas", popular:"Banco Popular", bhd:"BHD"};
+const BANK_COLORS_A = {banreservas:"#003DA5", popular:"#F7941E", bhd:"#DA291C"};
+
+async function loadBankWallets(){
+    const { data } = await supabaseClient.from("bank_wallets").select("*").eq("cashier_id", AGENT_ID);
+    const map = {};
+    (data||[]).forEach(w => map[w.bank_name] = Number(w.balance));
+    document.getElementById("walletBankBanreservas").textContent = fmtA(map.banreservas||0);
+    document.getElementById("walletBankPopular").textContent = fmtA(map.popular||0);
+    document.getElementById("walletBankBhd").textContent = fmtA(map.bhd||0);
+}
+
+function openBankDeposit(bank){
+    currentBankService = bank;
+    document.getElementById("bankServiceName").textContent = BANK_LABELS_A[bank];
+    document.getElementById("bankFormHeader").style.background = BANK_COLORS_A[bank];
+    document.getElementById("bankSubmitBtn").style.background = BANK_COLORS_A[bank];
+    document.getElementById("bankDepositForm").style.display = "block";
+    document.getElementById("bankDepositForm").scrollIntoView({behavior:"smooth"});
+}
+
+function closeBankDepositForm(){
+    document.getElementById("bankDepositForm").style.display = "none";
+    document.getElementById("bankHolderName").value = "";
+    document.getElementById("bankAccountNumber").value = "";
+    document.getElementById("bankCedula").value = "";
+    document.getElementById("bankAmount").value = "";
+    document.getElementById("bankComment").value = "";
+    document.getElementById("bankConfirm").checked = false;
+}
+
+async function submitBankDeposit(){
+    if(!document.getElementById("bankConfirm").checked) return alert("Confirmez avoir recu les fonds et verifie les informations.");
+    const holderName = document.getElementById("bankHolderName").value.trim();
+    const accountNumber = document.getElementById("bankAccountNumber").value.trim();
+    const cedula = document.getElementById("bankCedula").value.trim();
+    const amount = Number(document.getElementById("bankAmount").value);
+    const comment = document.getElementById("bankComment").value.trim();
+
+    if(!holderName || !accountNumber || !cedula || !amount || amount <= 0){
+        alert("Remplissez tous les champs obligatoires.");
+        return;
+    }
+
+    const { data: wallet } = await supabaseClient.from("bank_wallets").select("*").eq("cashier_id", AGENT_ID).eq("bank_name", currentBankService).maybeSingle();
+    const balance = wallet ? Number(wallet.balance) : 0;
+
+    if(balance < amount){
+        alert("Vous n'avez pas l'autorisation d'effectuer cette transaction actuellement.");
+        return;
+    }
+
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    const { data, error } = await supabaseClient.from("bank_deposit_transactions").insert({
+        bank_name: currentBankService,
+        account_holder_name: holderName,
+        account_number: accountNumber,
+        cedula: cedula,
+        comentario: comment,
+        amount: amount,
+        created_by: session.user.id,
+        staff_name: AGENT_NAME,
+        branch: AGENT_BRANCH
+    }).select().single();
+
+    if(error){ alert("Erreur: " + error.message); return; }
+
+    await supabaseClient.from("bank_wallets").update({
+        balance: balance - amount, updated_at: new Date().toISOString()
+    }).eq("cashier_id", AGENT_ID).eq("bank_name", currentBankService);
+
+    const p = new URLSearchParams({
+        id: data.id, bank_name: currentBankService, account_holder_name: holderName,
+        account_number: accountNumber, cedula: cedula, amount: amount, comentario: comment,
+        branch: AGENT_BRANCH, staff_name: AGENT_NAME, created_at: data.created_at, status: "pending_validation"
+    });
+    window.open("receipt-bank-deposit.html?" + p.toString(), "_blank");
+
+    closeBankDepositForm();
+    loadBankWallets();
+    loadMyBankTransactions();
+}
+
+async function loadMyBankTransactions(){
+    const { data, error } = await supabaseClient.from("bank_deposit_transactions").select("*").eq("created_by", AGENT_ID).order("created_at",{ascending:false}).limit(20);
+    if(error || !data){ document.getElementById("bankTxnList").innerHTML = "<tr><td colspan='5'>Erreur de chargement</td></tr>"; return; }
+    document.getElementById("bankTxnCount").textContent = data.length;
+    const statusLabels = {pending_validation:"⏳ En attente", approved:"✅ Approuve", rejected:"❌ Rejete"};
+    document.getElementById("bankTxnList").innerHTML = data.map(t => `
+        <tr>
+            <td>${fmtT(t.created_at)}</td>
+            <td>${BANK_LABELS_A[t.bank_name]||t.bank_name}</td>
+            <td>${t.account_holder_name}</td>
+            <td>${fmtA(t.amount)} DOP</td>
+            <td>${statusLabels[t.status]||t.status}</td>
+        </tr>`).join("") || "<tr><td colspan='5'>Aucun depot</td></tr>";
 }
 
 async function searchForDepot(){
