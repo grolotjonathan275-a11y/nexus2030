@@ -1,0 +1,227 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Recu Depot Bancaire - Nexus Casa de Cambio</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; font-family:Arial,sans-serif; }
+body { background:#EEF2F7; padding:2rem 1rem; display:flex; flex-direction:column; align-items:center; }
+.receipt { background:#fff; width:100%; max-width:420px; border-radius:16px; box-shadow:0 10px 30px rgba(0,0,0,0.08); overflow:hidden; }
+.r-header { padding:1.5rem; text-align:center; color:#fff; background:linear-gradient(135deg,#003DA5,#0057D9); }
+.r-logo { font-size:1.2rem; font-weight:800; }
+.r-op { font-size:1.05rem; font-weight:700; margin-top:0.4rem; background:rgba(255,255,255,0.2); display:inline-block; padding:3px 14px; border-radius:999px; }
+.r-status { display:inline-block; margin-top:0.6rem; padding:0.3rem 0.9rem; background:rgba(255,255,255,0.25); border-radius:999px; font-size:0.8rem; font-weight:600; }
+.r-body { padding:1.5rem; }
+.r-total-big { text-align:center; padding:1rem 0 1.25rem; border-bottom:1px dashed #E2E8F0; margin-bottom:1rem; }
+.r-total-big .label { font-size:0.8rem; color:#64748B; margin-bottom:0.25rem; }
+.r-total-big .value { font-size:1.9rem; font-weight:800; color:#0F172A; }
+.r-section-title { font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px; color:#94A3B8; margin:1.1rem 0 0.4rem; font-weight:700; }
+.r-row { display:flex; justify-content:space-between; padding:0.5rem 0; font-size:0.88rem; border-bottom:1px solid #F1F5F9; }
+.r-row span:first-child { color:#64748B; }
+.r-row strong { color:#0F172A; font-weight:600; text-align:right; }
+.r-note { background:#FFFBEB; border:1px solid #FDE68A; border-radius:10px; padding:0.85rem; margin-top:1.1rem; font-size:0.8rem; color:#92400E; line-height:1.5; }
+.r-footer { text-align:center; padding:1rem 1.5rem 1.5rem; font-size:0.7rem; color:#94A3B8; }
+.print-header-text { display:none; }
+.print-full-logo { display:none; }
+.actions { display:flex; gap:0.6rem; max-width:420px; width:100%; margin-top:1rem; }
+.btn { flex:1; padding:0.85rem; border:none; border-radius:10px; font-weight:600; font-size:0.9rem; cursor:pointer; color:#fff; }
+.btn-print { background:#0F172A; }
+.btn-ble { background:#7C3AED; }
+.btn-whatsapp { background:#25D366; }
+.btn:disabled { opacity:0.6; cursor:wait; }
+
+@media print {
+    @page { size: 58mm auto; margin: 0; }
+    html, body { width:58mm; background:#fff !important; padding:0 !important; margin:0 !important; display:block !important; }
+    .actions { display:none !important; }
+    .receipt { width:58mm !important; box-shadow:none !important; border-radius:0 !important; margin:0 !important; }
+    .r-header { background:#fff !important; color:#000 !important; padding:0.3rem 0 0.5rem !important; border-bottom:2px solid #000; }
+    .r-logo { display:none !important; }
+    .print-header-text { display:block !important; color:#000 !important; font-size:1rem !important; font-weight:900 !important; }
+    .print-header-text .sub-line { display:block; font-size:0.62rem; font-weight:700; letter-spacing:1px; margin-top:2px; }
+    .print-full-logo { display:block !important; width:30mm; height:auto; margin:0 auto 4px; }
+    .r-op { background:#fff !important; color:#000 !important; border:1px solid #000 !important; font-size:0.65rem !important; padding:1px 8px !important; }
+    .r-status { background:#fff !important; color:#000 !important; border:1px solid #000 !important; font-size:0.62rem !important; padding:1px 8px !important; }
+    .r-body { padding:0.4rem 0.3rem !important; }
+    .r-total-big { padding:0.4rem 0 0.5rem !important; border-bottom:1px dashed #000 !important; }
+    .r-total-big .label { color:#000 !important; font-size:0.65rem !important; }
+    .r-total-big .value { color:#000 !important; font-size:1.2rem !important; }
+    .r-section-title { color:#000 !important; font-size:0.6rem !important; margin:0.5rem 0 0.2rem !important; border-bottom:1px solid #000; padding-bottom:2px; }
+    .r-row { padding:0.2rem 0 !important; font-size:0.68rem !important; border-bottom:1px dotted #000 !important; }
+    .r-row span:first-child { color:#000 !important; }
+    .r-row strong { color:#000 !important; font-weight:700 !important; }
+    .r-note { background:#fff !important; border:1px dashed #000 !important; color:#000 !important; font-size:0.58rem !important; padding:0.35rem !important; }
+    .r-footer { color:#000 !important; font-size:0.5rem !important; padding:0.4rem 0.3rem !important; }
+}
+</style>
+</head>
+<body>
+
+<div class="receipt" id="receipt">
+    <div class="print-header-text"><img src="assets/img/logo-print.jpeg" class="print-full-logo" alt="Nexus Casa de Cambio"></div>
+    <div class="r-header" id="rHeader">
+        <div class="r-logo">NEXUS <span>CASA DE CAMBIO</span></div>
+        <div class="r-op" id="rBankName">Banreservas</div>
+        <div class="r-status" id="rStatusBadge">En attente de validation</div>
+    </div>
+    <div class="r-body">
+        <div class="r-total-big">
+            <div class="label">Montant Depose</div>
+            <div class="value" id="rAmount">-- DOP</div>
+        </div>
+
+        <div class="r-section-title">Details de la Transaction</div>
+        <div class="r-row"><span>Date & Heure</span><strong id="rDateTime">-</strong></div>
+        <div class="r-row"><span>Succursale</span><strong id="rBranch">-</strong></div>
+        <div class="r-row"><span>Traite par</span><strong id="rStaffName">-</strong></div>
+
+        <div class="r-section-title">Informations Compte</div>
+        <div class="r-row"><span>Titulaire</span><strong id="rHolderName">-</strong></div>
+        <div class="r-row"><span>N. Compte</span><strong id="rAccountNumber">-</strong></div>
+        <div class="r-row"><span>Cedula</span><strong id="rCedula">-</strong></div>
+        <div class="r-row"><span>Commentaire</span><strong id="rComment">-</strong></div>
+
+        <div class="r-note" id="rNote">
+            Ce depot sera valide par notre partenaire bancaire. Conservez ce recu comme preuve de transaction.
+        </div>
+    </div>
+    <div class="r-footer">
+        Recu genere electroniquement par Nexus Casa de Cambio -- Service Subagent Bancaire.
+    </div>
+</div>
+
+<div class="actions">
+    <button class="btn btn-print" onclick="window.print()">Imprimer</button>
+    <button class="btn btn-ble" id="btnBlePrint" onclick="printReceiptBLE()">Imprimer Direct</button>
+    <button class="btn btn-whatsapp" id="btnWhatsapp" onclick="shareWhatsapp()">WhatsApp</button>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/js/ble-print.js"></script>
+<script>
+const SUPA_URL="https://fnuplvbiwfvauwkpxsoc.supabase.co";
+const SUPA_KEY="sb_publishable_QBqdKkpcjDS3_psUdmc4uA_sMCzLqLo";
+const supabaseClient = supabase.createClient(SUPA_URL, SUPA_KEY);
+
+const params = new URLSearchParams(window.location.search);
+const txId = params.get("id");
+
+const BANK_LABELS = {banreservas:"Banreservas", popular:"Banco Popular", bhd:"BHD"};
+const statusLabels = {
+    pending_validation: "En attente de validation",
+    approved: "Depot Approuve",
+    rejected: "Depot Rejete"
+};
+const statusNotes = {
+    pending_validation: "Ce depot sera valide par notre partenaire bancaire. Conservez ce recu comme preuve de transaction.",
+    approved: "Ce depot a ete verifie et approuve. Operation completee avec succes.",
+    rejected: "Ce depot a ete rejete. Veuillez contacter votre superviseur pour plus d'informations."
+};
+
+function fmtA(n){return Number(n||0).toLocaleString("fr-FR",{minimumFractionDigits:2});}
+
+let currentData = null;
+
+function renderReceipt(t){
+    currentData = t;
+    document.getElementById("rBankName").textContent = BANK_LABELS[t.bank_name] || t.bank_name;
+    document.getElementById("rStatusBadge").textContent = statusLabels[t.status] || t.status;
+    document.getElementById("rAmount").textContent = fmtA(t.amount) + " DOP";
+    document.getElementById("rDateTime").textContent = new Date(t.created_at).toLocaleString("fr-FR");
+    document.getElementById("rBranch").textContent = t.branch || "-";
+    document.getElementById("rStaffName").textContent = t.staff_name || "-";
+    document.getElementById("rHolderName").textContent = t.account_holder_name || "-";
+    document.getElementById("rAccountNumber").textContent = t.account_number || "-";
+    document.getElementById("rCedula").textContent = t.cedula || "-";
+    document.getElementById("rComment").textContent = t.comentario || "-";
+    document.getElementById("rNote").textContent = statusNotes[t.status] || "";
+}
+
+function getDataFromParams(){
+    return {
+        bank_name: params.get("bank_name"),
+        account_holder_name: params.get("account_holder_name"),
+        account_number: params.get("account_number"),
+        cedula: params.get("cedula"),
+        amount: params.get("amount"),
+        comentario: params.get("comentario"),
+        branch: params.get("branch"),
+        staff_name: params.get("staff_name"),
+        created_at: params.get("created_at"),
+        status: params.get("status") || "pending_validation"
+    };
+}
+
+function printReceiptBLE(){
+    const t = currentData;
+    if(!t){ alert("Donnees non disponibles."); return; }
+    const lines = [
+        {text:"NEXUS", bold:true, big:true, align:"center"},
+        {text:"CASA DE CAMBIO", bold:true, align:"center"},
+        {text:"Services Financiers", align:"center"},
+        {text:"--------------------------------", align:"left"},
+        {text:"Depot " + (BANK_LABELS[t.bank_name]||t.bank_name), bold:true, align:"center"},
+        {text:"", align:"left"},
+        {text:"Montant depose:", align:"left"},
+        {text:fmtA(t.amount) + " DOP", bold:true, big:true, align:"center"},
+        {text:"", align:"left"},
+        {text:"Date: " + new Date(t.created_at).toLocaleString("fr-FR"), align:"left"},
+        {text:"Succursale: " + (t.branch||"-"), align:"left"},
+        {text:"Traite par: " + (t.staff_name||"-"), align:"left"},
+        {text:"", align:"left"},
+        {text:"Titulaire: " + (t.account_holder_name||"-"), align:"left"},
+        {text:"N. Compte: " + (t.account_number||"-"), align:"left"},
+        {text:"Cedula: " + (t.cedula||"-"), align:"left"},
+        {text:"Commentaire: " + (t.comentario||"-"), align:"left"},
+        {text:"--------------------------------", align:"left"},
+        {text:"Merci Nexus Casa de Cambio", align:"center"}
+    ];
+    nexusPrintBLE(lines, document.getElementById("btnBlePrint"));
+}
+
+async function shareWhatsapp(){
+    const receiptEl = document.getElementById("receipt");
+    const btn = document.getElementById("btnWhatsapp");
+    const originalHtml = btn.innerHTML;
+    btn.innerHTML = "Preparation...";
+    btn.disabled = true;
+    try {
+        const canvas = await html2canvas(receiptEl, { scale: 2, backgroundColor: "#ffffff", useCORS: true });
+        const blob = await new Promise(resolve => canvas.toBlob(resolve, "image/png"));
+        if(!blob){ alert("Erreur lors de la generation de l'image."); return; }
+        const file = new File([blob], "recu-depot-bancaire.png", { type: "image/png" });
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            try {
+                await navigator.share({ files: [file], title: "Recu Depot Bancaire Nexus", text: "Voici votre recu de depot bancaire." });
+            } catch (shareErr) {
+                if (shareErr.name !== "AbortError") downloadImageFallback(blob);
+            }
+        } else {
+            downloadImageFallback(blob);
+        }
+    } catch (err) {
+        alert("Erreur: " + err.message);
+    } finally {
+        btn.innerHTML = originalHtml;
+        btn.disabled = false;
+    }
+}
+
+function downloadImageFallback(blob){
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url; link.download = "recu-depot-bancaire.png";
+    document.body.appendChild(link); link.click(); document.body.removeChild(link);
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+    alert("Image telechargee -- vous pouvez l'envoyer manuellement sur WhatsApp.");
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    renderReceipt(getDataFromParams());
+});
+</script>
+
+</body>
+</html>
