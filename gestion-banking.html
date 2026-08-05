@@ -1,0 +1,228 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nexus Casa de Cambio - Gestion Depot Banking</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/secretaire.css">
+</head>
+<body>
+<div class="sec-layout">
+
+<aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+        <img src="assets/img/logo.png" alt="Nexus Casa de Cambio" class="site-logo-img">
+    </div>
+    <div class="sec-badge-side">
+        <div class="sec-avatar" id="secAvatarPlaceholder">GB</div>
+        <div>
+            <div class="sec-name">Gestion Depot Banking</div>
+            <div class="sec-title">Validation Depots Bancaires</div>
+        </div>
+    </div>
+    <nav class="sidebar-nav">
+        <div class="nav-section">TABLEAU DE BORD</div>
+        <a href="#overview" class="nav-item active" onclick="showSection(this,event)"><span>📊</span>Vue d'ensemble</a>
+        <div class="nav-section">VALIDATION</div>
+        <a href="#pending" class="nav-item" onclick="showSection(this,event)"><span>⏳</span>Depots en Attente</a>
+        <a href="#history" class="nav-item" onclick="showSection(this,event)"><span>📋</span>Historique</a>
+        <div class="nav-section">SYSTEME</div>
+        <a href="#" class="nav-item logout" onclick="logout()"><span>🚪</span>Deconnexion</a>
+    </nav>
+</aside>
+
+<main class="main-content">
+    <header class="topbar">
+        <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+        <div class="topbar-title" id="pageTitle">Vue d'ensemble</div>
+        <div class="topbar-right">
+            <div class="time-display" id="secTime"></div>
+            <div class="sec-badge-top">Gestion Banking</div>
+        </div>
+    </header>
+
+    <div class="content-area">
+
+        <section class="section active" id="section-overview">
+            <div class="welcome-banner">
+                <div>
+                    <div class="wb-greeting">Bonjour, Gestion Depot Banking</div>
+                    <div class="wb-subtitle">Voici les depots bancaires a valider</div>
+                </div>
+                <div class="wb-date" id="wbDate"></div>
+            </div>
+            <div class="kpi-grid">
+                <div class="kpi-card orange"><div class="kpi-icon">⏳</div><div class="kpi-info"><div class="kpi-number" id="ovPending">0</div><div class="kpi-label">En attente</div></div></div>
+                <div class="kpi-card green"><div class="kpi-icon">✅</div><div class="kpi-info"><div class="kpi-number" id="ovApproved">0</div><div class="kpi-label">Approuves (total)</div></div></div>
+                <div class="kpi-card red"><div class="kpi-icon">❌</div><div class="kpi-info"><div class="kpi-number" id="ovRejected">0</div><div class="kpi-label">Rejetes (total)</div></div></div>
+                <div class="kpi-card blue"><div class="kpi-icon">💵</div><div class="kpi-info"><div class="kpi-number" id="ovVolume">0</div><div class="kpi-label">Volume DOP (attente)</div></div></div>
+            </div>
+        </section>
+
+        <section class="section" id="section-pending">
+            <h2 class="section-title">⏳ Depots Bancaires en Attente</h2>
+            <div id="pendingList"></div>
+        </section>
+
+        <section class="section" id="section-history">
+            <h2 class="section-title">📋 Historique des Validations</h2>
+            <div class="card">
+                <div class="card-header"><h3>Tous les depots traites</h3><span class="badge" id="histCount">0</span></div>
+                <div class="table-wrap">
+                    <table class="data-table">
+                        <thead><tr><th>Date</th><th>Banque</th><th>Titulaire</th><th>Compte</th><th>Montant</th><th>Statut</th></tr></thead>
+                        <tbody id="histList"><tr><td colspan="6">Chargement...</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+    </div>
+</main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPA_URL="https://fnuplvbiwfvauwkpxsoc.supabase.co";
+const SUPA_KEY="sb_publishable_QBqdKkpcjDS3_psUdmc4uA_sMCzLqLo";
+const supabaseClient = supabase.createClient(SUPA_URL, SUPA_KEY);
+
+const BANK_LABELS = {banreservas:"Banreservas", popular:"Banco Popular", bhd:"BHD"};
+
+function fmt(d){return d?new Date(d).toLocaleDateString("fr-FR"):"-";}
+function fmtT(d){return d?new Date(d).toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"}):"-";}
+function fmtA(n){return Number(n||0).toLocaleString("fr-FR",{minimumFractionDigits:2});}
+
+setInterval(()=>{const el=document.getElementById("secTime");if(el)el.textContent=new Date().toLocaleTimeString("fr-FR");},1000);
+
+function showSection(el,e){
+    if(e)e.preventDefault();
+    document.querySelectorAll(".nav-item").forEach(i=>i.classList.remove("active"));
+    el.classList.add("active");
+    const id=el.getAttribute("href").replace("#","");
+    document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
+    document.getElementById("section-"+id).classList.add("active");
+    document.getElementById("pageTitle").textContent=el.textContent.trim();
+    if(id==="pending")loadPending();
+    if(id==="history")loadHistory();
+}
+
+function toggleSidebar(){document.getElementById("sidebar").classList.toggle("open");}
+
+async function logout(){
+    await supabaseClient.auth.signOut();
+    localStorage.clear();
+    window.location.href="login.html";
+}
+
+async function loadOverview(){
+    document.getElementById("wbDate").textContent=new Date().toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
+    const { data } = await supabaseClient.from("bank_deposit_transactions").select("*");
+    if(!data)return;
+    const pending = data.filter(t=>t.status==="pending_validation");
+    const approved = data.filter(t=>t.status==="approved");
+    const rejected = data.filter(t=>t.status==="rejected");
+    document.getElementById("ovPending").textContent=pending.length;
+    document.getElementById("ovApproved").textContent=approved.length;
+    document.getElementById("ovRejected").textContent=rejected.length;
+    document.getElementById("ovVolume").textContent=fmtA(pending.reduce((s,t)=>s+Number(t.amount),0));
+}
+
+async function loadPending(){
+    const { data, error } = await supabaseClient
+        .from("bank_deposit_transactions")
+        .select("*")
+        .eq("status","pending_validation")
+        .order("created_at",{ascending:true});
+
+    const container=document.getElementById("pendingList");
+    if(error){ container.innerHTML="<p style='color:#DC2626'>Erreur: "+error.message+"</p>"; return; }
+    if(!data||data.length===0){
+        container.innerHTML="<div class='card'><p style='padding:2rem;text-align:center;color:#64748B'>✅ Aucun depot en attente. Tout est a jour!</p></div>";
+        return;
+    }
+
+    container.innerHTML=data.map(t=>`
+        <div class="card" style="margin-bottom:1rem;border-left:4px solid #F59E0B">
+            <div style="padding:1.25rem">
+                <div style="font-size:1.1rem;font-weight:700;margin-bottom:1rem">
+                    🏦 ${BANK_LABELS[t.bank_name]||t.bank_name} — ${fmtA(t.amount)} DOP
+                </div>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:0.75rem;font-size:0.9rem;margin-bottom:1rem">
+                    <div><span style="color:#64748B">Titulaire:</span> <strong>${t.account_holder_name}</strong></div>
+                    <div><span style="color:#64748B">N. Compte:</span> <strong>${t.account_number}</strong></div>
+                    <div><span style="color:#64748B">Cedula:</span> <strong>${t.cedula}</strong></div>
+                    <div><span style="color:#64748B">Succursale:</span> <strong>${t.branch||"-"}</strong></div>
+                    <div><span style="color:#64748B">Soumis par:</span> <strong>${t.staff_name||"-"}</strong></div>
+                    <div><span style="color:#64748B">Date:</span> <strong>${fmt(t.created_at)} ${fmtT(t.created_at)}</strong></div>
+                    <div style="grid-column:1/-1"><span style="color:#64748B">Commentaire:</span> <strong>${t.comentario||"-"}</strong></div>
+                </div>
+                <div style="display:flex;gap:0.5rem">
+                    <button class="btn-approve" style="background:#10B981" onclick="processDeposit('${t.id}','approved')">✅ Valider</button>
+                    <button class="btn-approve" style="background:#DC2626" onclick="processDeposit('${t.id}','rejected')">❌ Rejeter</button>
+                </div>
+            </div>
+        </div>`).join("");
+}
+
+async function processDeposit(id,newStatus){
+    const label = newStatus==="approved"?"valider":"rejeter";
+    if(!confirm("Confirmer: "+label+" ce depot bancaire?"))return;
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    const { error } = await supabaseClient.from("bank_deposit_transactions").update({
+        status:newStatus, validated_by: session?.user?.id, validated_at: new Date().toISOString()
+    }).eq("id",id);
+    if(error){ alert("Erreur: "+error.message); return; }
+    alert("✅ Mis a jour.");
+    loadPending();
+    loadOverview();
+}
+
+async function loadHistory(){
+    const { data, error } = await supabaseClient
+        .from("bank_deposit_transactions")
+        .select("*")
+        .neq("status","pending_validation")
+        .order("created_at",{ascending:false})
+        .limit(100);
+
+    if(error){ document.getElementById("histList").innerHTML="<tr><td colspan='6'>Erreur</td></tr>"; return; }
+
+    const statusLabels={approved:"✅ Approuve", rejected:"❌ Rejete"};
+    document.getElementById("histCount").textContent=data.length;
+    document.getElementById("histList").innerHTML=data.map(t=>`
+        <tr>
+            <td>${fmt(t.created_at)}</td>
+            <td>${BANK_LABELS[t.bank_name]||t.bank_name}</td>
+            <td>${t.account_holder_name}</td>
+            <td>${t.account_number}</td>
+            <td>${fmtA(t.amount)} DOP</td>
+            <td>${statusLabels[t.status]||t.status}</td>
+        </tr>`).join("")||"<tr><td colspan='6'>Aucun depot traite</td></tr>";
+}
+
+document.addEventListener("DOMContentLoaded",async ()=>{
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if(!session){ localStorage.clear(); window.location.href="login.html"; return; }
+    const { data: profile } = await supabaseClient.from("profiles").select("*").eq("id",session.user.id).single();
+    if(!profile || profile.role!=="gestion_banking"){
+        await supabaseClient.auth.signOut();
+        localStorage.clear();
+        window.location.href="login.html";
+        return;
+    }
+    loadOverview();
+    loadPending();
+});
+
+setInterval(()=>{
+    const activeSection=document.querySelector(".section.active");
+    if(activeSection && activeSection.id==="section-pending")loadPending();
+    if(activeSection && activeSection.id==="section-overview")loadOverview();
+},30000);
+</script>
+
+</body>
+</html>
