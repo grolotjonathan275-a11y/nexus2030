@@ -430,7 +430,7 @@
             <h2 class="section-title">🏦 Distribution Bancaire (Subagent)</h2>
 
             <div class="card" style="margin-bottom:1.5rem">
-                <div class="card-header"><h3>Capital Disponible par Banque (Plafond: 500,000 DOP chacune)</h3></div>
+                <div class="card-header"><h3>Capital Disponible par Banque (Minimum 500,000 DOP par recharge)</h3></div>
                 <div style="padding:1.5rem;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem">
                     <div style="border:2px solid #003DA5;border-radius:12px;padding:1.25rem;text-align:center">
                         <div style="font-weight:700">Banreservas</div>
@@ -1134,14 +1134,14 @@ async function rechargeBankCapital(bank){
     const amount = Number(input.value);
     if(!amount || amount <= 0){ alert("Entrez un montant valide."); return; }
 
+    if(amount < BANK_MAX_CAPITAL){
+        alert("Le montant minimum de recharge est de " + BANK_MAX_CAPITAL.toLocaleString("fr-FR") + " DOP par operation.");
+        return;
+    }
+
     const { data: current } = await supabaseClient.from("company_bank_capital").select("*").eq("bank_name", bank).single();
     const currentBalance = current ? Number(current.balance) : 0;
     const newBalance = currentBalance + amount;
-
-    if(newBalance > BANK_MAX_CAPITAL){
-        alert("Le plafond de " + BANK_MAX_CAPITAL.toLocaleString("fr-FR") + " DOP serait depasse. Solde actuel: " + fmtA(currentBalance) + " DOP. Maximum ajoutable: " + fmtA(BANK_MAX_CAPITAL - currentBalance) + " DOP.");
-        return;
-    }
 
     const { error } = await supabaseClient.from("company_bank_capital").update({ balance: newBalance }).eq("bank_name", bank);
     if(error){ alert("Erreur: " + error.message); return; }
