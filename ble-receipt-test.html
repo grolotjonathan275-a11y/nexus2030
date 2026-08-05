@@ -1,0 +1,93 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Test Resi BLE - Nexus</title>
+<style>
+body{font-family:Arial,sans-serif;padding:20px;background:#f0f0f0;}
+button{padding:15px 25px;font-size:1.1rem;background:#E85D04;color:#fff;border:none;border-radius:8px;margin:8px 0;cursor:pointer;display:block;width:100%;max-width:320px;}
+#log{background:#000;color:#0f0;padding:15px;border-radius:8px;font-family:monospace;font-size:0.85rem;white-space:pre-wrap;margin-top:15px;min-height:150px;}
+h2{color:#0F172A}
+</style>
+</head>
+<body>
+<h2>🖨️ Test Resi Konplè via BLE</h2>
+<button onclick="printReceipt()">🖨️ Enprime Resi Tès Konplè</button>
+<div id="log">Ap tann...</div>
+
+<script>
+function log(msg){ document.getElementById("log").textContent += msg + "\n"; }
+
+function stripAccents(s){
+    return s.normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+}
+
+function buildReceipt(lines){
+    const bytes = [];
+    bytes.push(0x1B, 0x40); // init
+    for(const line of lines){
+        const align = line.align === "center" ? 1 : line.align === "right" ? 2 : 0;
+        bytes.push(0x1B, 0x61, align);
+        let mode = 0;
+        if(line.bold) mode |= 0x08;
+        if(line.big) mode |= 0x30;
+        bytes.push(0x1B, 0x21, mode);
+        const text = stripAccents(line.text || "") + "\n";
+        for(let i=0;i<text.length;i++){
+            bytes.push(text.charCodeAt(i) & 0xFF);
+        }
+    }
+    bytes.push(0x0A,0x0A,0x0A);
+    bytes.push(0x1D, 0x56, 0x00); // cut
+    return new Uint8Array(bytes);
+}
+
+async function printReceipt(){
+    document.getElementById("log").textContent = "";
+    try{
+        const lines = [
+            {text:"NEXUS CASA DE CAMBIO", bold:true, big:true, align:"center"},
+            {text:"Services Financiers", align:"center"},
+            {text:"--------------------------------", align:"left"},
+            {text:"Vente MonCash", bold:true, align:"center"},
+            {text:"", align:"left"},
+            {text:"Client va recevoir:", align:"left"},
+            {text:"900.00 HTG", bold:true, big:true, align:"center"},
+            {text:"", align:"left"},
+            {text:"Date: 05/08/2026 09:30", align:"left"},
+            {text:"Client: Teste Impression", align:"left"},
+            {text:"Montant: 500.00 DOP", align:"left"},
+            {text:"Total paye: 550.00 DOP", bold:true, align:"left"},
+            {text:"--------------------------------", align:"left"},
+            {text:"Merci Nexus Casa de Cambio", align:"center"}
+        ];
+
+        const data = buildReceipt(lines);
+        log("Done prepare (" + data.length + " bytes). Ap chèche enprimant...");
+
+        const device = await navigator.bluetooth.requestDevice({
+            acceptAllDevices: true,
+            optionalServices: ['49535343-fe7d-4ae5-8fa9-9fafd205e455']
+        });
+        log("Jwenn: " + device.name);
+
+        const server = await device.gatt.connect();
+        const service = await server.getPrimaryService('49535343-fe7d-4ae5-8fa9-9fafd205e455');
+        const characteristic = await service.getCharacteristic('49535343-8841-43f4-a8d4-ecbe34729bb3');
+        log("Konekte, ap voye " + data.length + " bytes...");
+
+        const chunkSize = 20;
+        for(let i = 0; i < data.length; i += chunkSize){
+            const chunk = data.slice(i, i + chunkSize);
+            await characteristic.writeValueWithoutResponse(chunk);
+            await new Promise(r => setTimeout(r, 30));
+        }
+
+        log("✅ FINI! Gade resi a sou papye.");
+    }catch(err){
+        log("❌ ERE: " + err.message);
+    }
+}
+</script>
+</body>
+</html>
