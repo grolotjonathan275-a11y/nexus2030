@@ -30,6 +30,7 @@
 <div class="nav-section">SYSTEME</div>
 <a href="#users" class="nav-item" onclick="showSection(this,event)"><span>🔐</span>Gestion Utilisateurs</a>
 <a href="#currency-distribution" class="nav-item" onclick="showSection(this,event)"><span>💵</span>Distribution Devises</a>
+<a href="#bank-distribution" class="nav-item" onclick="showSection(this,event)"><span>🏦</span>Distribution Bancaire</a>
 <a href="#promotions" class="nav-item" onclick="showSection(this,event)"><span>📢</span>Publicites & Promotions</a>
 <a href="#news" class="nav-item" onclick="showSection(this,event)"><span>📰</span>Actualites</a>
 <a href="#partners" class="nav-item" onclick="showSection(this,event)"><span>🤝</span>Logos Partenaires</a>
@@ -420,8 +421,7 @@
 </div>
 </div>
 
-<div class="card" style="margin-top:1.5rem">
-<div class="card-header"><h3>📱 Parametres MonCash / NatCash</h3></div>
+<!-- DISTRIBUTION BANCAIRE --><section class="section" id="section-bank-distribution"><h2 class="section-title">🏦 Distribution Bancaire (Subagent)</h2><div class="card" style="margin-bottom:1.5rem"><div class="card-header"><h3>Capital Disponible par Banque (Minimum 500,000 DOP par recharge)</h3></div><div style="padding:1.5rem;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem"><div style="border:2px solid #003DA5;border-radius:12px;padding:1.25rem;text-align:center"><div style="font-weight:700">Banreservas</div><div style="font-size:1.4rem;font-weight:800;margin:0.5rem 0" id="capBanreservas">0.00</div><button class="btn-approve" style="width:100%;padding:0.6rem" onclick="openRechargeModal('banreservas')">Recharger</button></div><div style="border:2px solid #F7941E;border-radius:12px;padding:1.25rem;text-align:center"><div style="font-weight:700">Banco Popular</div><div style="font-size:1.4rem;font-weight:800;margin:0.5rem 0" id="capPopular">0.00</div><button class="btn-approve" style="width:100%;padding:0.6rem" onclick="openRechargeModal('popular')">Recharger</button></div><div style="border:2px solid #DA291C;border-radius:12px;padding:1.25rem;text-align:center"><div style="font-weight:700">BHD</div><div style="font-size:1.4rem;font-weight:800;margin:0.5rem 0" id="capBhd">0.00</div><button class="btn-approve" style="width:100%;padding:0.6rem" onclick="openRechargeModal('bhd')">Recharger</button></div></div></div><div style="padding:0"><div id="bankAllocMsg" style="display:none;padding:0.75rem 1rem;border-radius:8px;margin-bottom:1rem;font-size:0.9rem;"></div><div class="settings-grid"><div class="setting-item"><label>Caissier / Agent *</label><select id="bankAllocStaff" style="width:100%;padding:0.6rem;border-radius:8px;border:1px solid #CBD5E1;font-family:inherit;"></select></div><div class="setting-item"><label>Banque *</label><select id="bankAllocBank" style="width:100%;padding:0.6rem;border-radius:8px;border:1px solid #CBD5E1;font-family:inherit;"><option value="banreservas">Banreservas</option><option value="popular">Banco Popular</option><option value="bhd">BHD</option></select></div></div><div class="setting-item" style="margin-top:1rem"><label>Montant (DOP) *</label><input type="number" id="bankAllocAmount" placeholder="0.00" min="0.01"></div><div class="setting-item" style="margin-top:1rem"><label>Notes (optionnel)</label><input type="text" id="bankAllocNotes" placeholder="Ex: Effectif du matin"></div><button class="btn-approve" style="margin-top:1rem;padding:0.7rem 1.5rem" onclick="allocateBankFunds()">➕ Distribuer les Fonds</button></div><div class="card" style="margin-top:1.5rem"><div class="card-header"><h3>Historique des Distributions Bancaires</h3><span class="badge" id="bankAllocCount">0</span></div><div class="table-wrap"><table class="data-table"><thead><tr><th>Date</th><th>Beneficiaire</th><th>Banque</th><th>Montant</th><th>Notes</th></tr></thead><tbody id="bankAllocHistoryList"><tr><td colspan="5">Chargement...</td></tr></tbody></table></div></div></section><div id="rechargeModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:9999;align-items:center;justify-content:center"><div style="background:#fff;border-radius:12px;padding:1.5rem;max-width:420px;width:90%;max-height:85vh;overflow:auto"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem"><h3 style="margin:0">Recharger <span id="rechargeModalBank"></span></h3><button onclick="closeRechargeModal()" style="background:none;border:none;font-size:1.5rem;cursor:pointer">✕</button></div><div id="rechargeModalOptions"><p style="color:#64748B;margin-bottom:1rem">Choisissez une methode de recharge :</p><button class="btn-approve" style="width:100%;margin-bottom:0.75rem;padding:0.85rem" onclick="showRechargeMethod('deposit')">🏦 Depot Bancaire sur compte du Fournisseur</button><button class="btn-approve" style="width:100%;padding:0.85rem;background:#0EA5E9" onclick="showRechargeMethod('card')">💳 Carte de Debit</button></div><div id="rechargeModalWaiting" style="display:none;text-align:center;padding:1.5rem 0"><div style="font-size:2.5rem">⏳</div><h4 style="margin:1rem 0 0.5rem">En attente de confirmation API</h4><p style="color:#64748B;font-size:0.9rem">Cette methode de paiement est en cours de configuration avec notre fournisseur. L'autorisation API n'est pas encore disponible.</p><button class="btn-approve" style="margin-top:1rem;background:#94A3B8" onclick="backToRechargeOptions()">Retour</button></div></div></div><div class="card" style="margin-top:1.5rem"><div class="card-header"><h3>📱 Parametres MonCash / NatCash</h3></div>
 <div style="padding:1.5rem">
 <div id="mmSettingsMsg" style="display:none;padding:0.75rem 1rem;border-radius:8px;margin-bottom:1rem;font-size:0.9rem;"></div>
 <div class="settings-grid">
@@ -524,6 +524,7 @@ function showSection(el, e) {
     document.getElementById("pageTitle").textContent = el.textContent.trim();
     if (id === "users") loadUsers();
     if (id === "currency-distribution") loadAllocationForm();
+    if (id === "bank-distribution") { loadBankCapital(); loadAllocationFormBankAdmin(); }
     if (id === "promotions") loadPromotions();
     if (id === "news") loadNews();
     if (id === "partners") loadPartnerLogos();
@@ -806,6 +807,105 @@ async function deleteUser(id, name) {
 }
 
 // ===== PARAMETRES MONCASH / NATCASH =====
+
+// ===== DISTRIBUTION BANCAIRE (SUBAGENT) =====
+const BANK_LABELS_ADMIN = {banreservas:"Banreservas", popular:"Banco Popular", bhd:"BHD"};
+const BANK_MIN_RECHARGE = 500000;
+let currentRechargeBank = null;
+
+function openRechargeModal(bank){
+    currentRechargeBank = bank;
+    document.getElementById("rechargeModalBank").textContent = BANK_LABELS_ADMIN[bank];
+    document.getElementById("rechargeModalOptions").style.display = "block";
+    document.getElementById("rechargeModalWaiting").style.display = "none";
+    document.getElementById("rechargeModal").style.display = "flex";
+}
+function closeRechargeModal(){ document.getElementById("rechargeModal").style.display = "none"; }
+function showRechargeMethod(method){
+    document.getElementById("rechargeModalOptions").style.display = "none";
+    document.getElementById("rechargeModalWaiting").style.display = "block";
+}
+function backToRechargeOptions(){
+    document.getElementById("rechargeModalOptions").style.display = "block";
+    document.getElementById("rechargeModalWaiting").style.display = "none";
+}
+
+async function loadBankCapital(){
+    const { data } = await supabaseClient.from("company_bank_capital").select("*");
+    const map = {};
+    (data||[]).forEach(r => map[r.bank_name] = Number(r.balance));
+    document.getElementById("capBanreservas").textContent = fmtA(map.banreservas||0) + " DOP";
+    document.getElementById("capPopular").textContent = fmtA(map.popular||0) + " DOP";
+    document.getElementById("capBhd").textContent = fmtA(map.bhd||0) + " DOP";
+}
+
+async function loadAllocationFormBankAdmin(){
+    const { data: staff } = await supabaseClient.from("profiles").select("*").in("role", ["caissier","agent"]).eq("status","active");
+    const sel = document.getElementById("bankAllocStaff");
+    sel.innerHTML = (staff||[]).map(s => `<option value="${s.id}" data-name="${s.full_name}">${s.full_name} (${s.role})</option>`).join("") || "<option value=''>Aucun caissier/agent</option>";
+    loadBankAllocationHistoryAdmin();
+}
+
+function showBankAllocMsgAdmin(text, isError){
+    const el = document.getElementById("bankAllocMsg");
+    el.style.display = "block";
+    el.style.background = isError ? "#FEE2E2" : "#DCFCE7";
+    el.style.color = isError ? "#991B1B" : "#166534";
+    el.textContent = text;
+}
+
+async function allocateBankFunds(){
+    const staffSel = document.getElementById("bankAllocStaff");
+    const staffId = staffSel.value;
+    const staffName = staffSel.options[staffSel.selectedIndex]?.dataset.name || "";
+    const bank = document.getElementById("bankAllocBank").value;
+    const amount = Number(document.getElementById("bankAllocAmount").value);
+    const notes = document.getElementById("bankAllocNotes").value.trim();
+
+    if(!staffId || !bank || !amount || amount <= 0){ showBankAllocMsgAdmin("Remplissez tous les champs obligatoires (*).", true); return; }
+
+    const { data: capital } = await supabaseClient.from("company_bank_capital").select("*").eq("bank_name", bank).single();
+    const capitalBalance = capital ? Number(capital.balance) : 0;
+
+    if(capitalBalance < amount){
+        showBankAllocMsgAdmin("Capital insuffisant pour " + BANK_LABELS_ADMIN[bank] + ". Disponible: " + fmtA(capitalBalance) + " DOP.", true);
+        return;
+    }
+
+    const { data: { session } } = await supabaseClient.auth.getSession();
+
+    const { error: allocError } = await supabaseClient.from("bank_wallet_allocations").insert({
+        staff_id: staffId, staff_name: staffName, bank_name: bank, amount: amount,
+        allocated_by: session.user.id, allocated_by_name: "Super Admin", notes: notes
+    });
+    if(allocError){ showBankAllocMsgAdmin("Erreur: " + allocError.message, true); return; }
+
+    await supabaseClient.from("company_bank_capital").update({ balance: capitalBalance - amount }).eq("bank_name", bank);
+
+    const { data: existingWallet } = await supabaseClient.from("bank_wallets").select("*").eq("cashier_id", staffId).eq("bank_name", bank).maybeSingle();
+    if(existingWallet){
+        await supabaseClient.from("bank_wallets").update({ balance: Number(existingWallet.balance) + amount, updated_at: new Date().toISOString() }).eq("id", existingWallet.id);
+    } else {
+        await supabaseClient.from("bank_wallets").insert({ cashier_id: staffId, bank_name: bank, balance: amount });
+    }
+
+    showBankAllocMsgAdmin(`✅ ${fmtA(amount)} DOP donne a ${staffName} pour ${BANK_LABELS_ADMIN[bank]}!`, false);
+    document.getElementById("bankAllocAmount").value = "";
+    document.getElementById("bankAllocNotes").value = "";
+    loadBankCapital();
+    loadBankAllocationHistoryAdmin();
+}
+
+async function loadBankAllocationHistoryAdmin(){
+    const { data, error } = await supabaseClient.from("bank_wallet_allocations").select("*").order("created_at",{ascending:false}).limit(50);
+    const tbody = document.getElementById("bankAllocHistoryList");
+    if(error || !data || !data.length){ tbody.innerHTML = "<tr><td colspan='5'>Aucune distribution.</td></tr>"; document.getElementById("bankAllocCount").textContent = "0"; return; }
+    document.getElementById("bankAllocCount").textContent = data.length;
+    tbody.innerHTML = data.map(a => `
+        <tr><td>${new Date(a.created_at).toLocaleString("fr-FR")}</td><td>${a.staff_name}</td><td>${BANK_LABELS_ADMIN[a.bank_name]||a.bank_name}</td><td>${fmtA(a.amount)} DOP</td><td>${a.notes || "-"}</td></tr>`).join("");
+}
+
+function fmtA(n){return Number(n||0).toLocaleString("fr-FR",{minimumFractionDigits:2});}
 
 function updateSettingsExample(){
     const rate = Number(document.getElementById("setMoncashRate").value) || 1.8;
