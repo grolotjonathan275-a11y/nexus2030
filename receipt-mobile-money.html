@@ -95,6 +95,14 @@ body { background:#EEF2F7; padding:2rem 1rem; display:flex; flex-direction:colum
         padding: 0.3rem 0 0.6rem !important;
         border-bottom: 2px solid #000;
     }
+    .print-logo-icon {
+        display: block !important;
+        margin: 0 auto 4px;
+        width: 14mm;
+        height: 14mm;
+        object-fit: contain;
+        filter: grayscale(1) contrast(1.4);
+    }
     .r-logo {
         display: block !important;
         color: #000 !important;
@@ -162,7 +170,7 @@ body { background:#EEF2F7; padding:2rem 1rem; display:flex; flex-direction:colum
 
 <div class="receipt" id="receipt">
     <div class="r-header" id="rHeader">
-        <div class="r-logo">NEXUS <span>CASA DE CAMBIO</span></div>
+        <div class="r-logo"><img src="assets/img/favicon-192.png" class="print-logo-icon" alt="Nexus">NEXUS <span>CASA DE CAMBIO</span></div>
         <div class="r-service" id="rServiceName">Vente MonCash</div>
         <div class="r-status" id="rStatusBadge">En attente de validation</div>
     </div>

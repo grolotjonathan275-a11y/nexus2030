@@ -42,6 +42,7 @@ body{margin:0;padding:20px;background:#e0e0e0;font-family:Arial,sans-serif;displ
 .btn:disabled{opacity:0.6;cursor:wait;}
 
 .print-header-text{display:none;}
+.print-logo-icon{display:none;}
 
 @media print {
     @page { size: 58mm auto; margin: 0; }
@@ -56,6 +57,14 @@ body{margin:0;padding:20px;background:#e0e0e0;font-family:Arial,sans-serif;displ
         color:#000 !important;
         font-size:1rem !important;
         font-weight:900 !important;
+    }
+    .print-logo-icon{
+        display:block !important;
+        margin:0 auto 4px;
+        width:14mm;
+        height:14mm;
+        object-fit:contain;
+        filter:grayscale(1) contrast(1.4);
     }
     .print-header-text .sub-line{
         display:block; font-size:0.62rem; font-weight:700; letter-spacing:1px; margin-top:2px;
@@ -85,7 +94,7 @@ body{margin:0;padding:20px;background:#e0e0e0;font-family:Arial,sans-serif;displ
 <body>
 <div class="receipt" id="receipt">
 <div class="header">
-<div class="print-header-text">NEXUS CASA DE CAMBIO<span class="sub-line">SERVICES FINANCIERS</span></div>
+<div class="print-header-text"><img src="assets/img/favicon-192.png" class="print-logo-icon" alt="Nexus">NEXUS CASA DE CAMBIO<span class="sub-line">SERVICES FINANCIERS</span></div>
 <div class="logo">N</div>
 <div class="title">NEXUS</div>
 <div class="sub">CASA DE CAMBIO</div>

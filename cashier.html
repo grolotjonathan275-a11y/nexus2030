@@ -889,8 +889,10 @@ function printExchangeReceipt(d){
     + ".actions{display:none !important;}"
     + ".receipt{width:58mm !important;box-shadow:none !important;border-radius:0 !important;margin:0 !important;}"
     + ".r-header{background:#fff !important;color:#000 !important;padding:0.3rem 0 0.5rem !important;border-bottom:2px solid #000;}"
-    + ".r-logo{display:none !important;}"
-    + ".print-header-text{display:block !important;color:#000 !important;font-size:1rem !important;font-weight:900 !important;}"
+    + ".r-logo{display:none !important;}
+.print-logo-icon{display:none;}"
+    + ".print-header-text{display:block !important;color:#000 !important;font-size:1rem !important;font-weight:900 !important;}
+.print-logo-icon{display:block !important;margin:0 auto 4px;width:14mm;height:14mm;object-fit:contain;filter:grayscale(1) contrast(1.4);}"
     + ".print-header-text .sub-line{display:block;font-size:0.62rem;font-weight:700;letter-spacing:1px;margin-top:2px;}"
     + ".r-op{background:#fff !important;color:#000 !important;border:1px solid #000 !important;font-size:0.65rem !important;padding:1px 8px !important;}"
     + ".r-body{padding:0.4rem 0.3rem !important;}"
@@ -906,7 +908,7 @@ function printExchangeReceipt(d){
     + "<div class='receipt' id='receipt'>"
     + "<div class='r-header'>"
     + "<div class='print-header-text'>NEXUS CASA DE CAMBIO<span class='sub-line'>SERVICES FINANCIERS</span></div>"
-    + "<div class='r-logo'>NEXUS <span style=\"font-weight:400;opacity:0.85\">CASA DE CAMBIO</span></div>"
+    + "<div class='r-logo'><img src='assets/img/favicon-192.png' class='print-logo-icon' alt='Nexus'>NEXUS <span style=\"font-weight:400;opacity:0.85\">CASA DE CAMBIO</span></div>"
     + "<div class='r-op'>" + opLabel + "</div>"
     + "</div>"
     + "<div class='r-body'>"
