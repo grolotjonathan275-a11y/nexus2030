@@ -84,7 +84,7 @@
 <section class="section" id="section-clients">
 <div class="card">
 <div class="card-header"><h3>Clients Enregistres</h3></div>
-<div class="table-wrap"><table class="data-table"><thead><tr><th>Nom</th><th>Email</th><th>Telephone</th><th>Pays</th><th>Date</th></tr></thead><tbody id="allClients"><tr><td colspan="5">Chargement...</td></tr></tbody></table></div>
+<div class="table-wrap"><table class="data-table"><thead><tr><th>Nom</th><th>Email</th><th>Telephone</th><th>Pays</th><th>Date</th><th>Document</th></tr></thead><tbody id="allClients"><tr><td colspan="5">Chargement...</td></tr></tbody></table></div>
 </div>
 </section>
 <section class="section" id="section-reports">
@@ -478,6 +478,17 @@ soit un total de <strong id="exTotal">--</strong> DOP.
 </main>
 </div>
 
+<!-- MODAL DOCUMENT IDENTITE -->
+<div id="docModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:9999;align-items:center;justify-content:center">
+    <div style="background:#fff;border-radius:12px;padding:1.5rem;max-width:500px;width:90%;max-height:85vh;overflow:auto">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+            <h3 style="margin:0">Document d''Identite</h3>
+            <button onclick="closeDocModal()" style="background:none;border:none;font-size:1.5rem;cursor:pointer">✕</button>
+        </div>
+        <img id="docModalImg" src="" style="width:100%;border-radius:8px">
+    </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 const SUPA_URL = "https://fnuplvbiwfvauwkpxsoc.supabase.co";
@@ -590,6 +601,21 @@ async function approuver(id) {
     });
     location.href = "receipt-open.html?" + p.toString();
     loadDashboard();
+}
+
+async function viewDocument(accountNo){
+    const data = await fetchData("savings_accounts");
+    const c = data.find(x => x.account_no === accountNo);
+    if(!c || !c.id_document_photo){
+        alert("Aucun document trouve pour ce client.");
+        return;
+    }
+    document.getElementById("docModalImg").src = c.id_document_photo;
+    document.getElementById("docModal").style.display = "flex";
+}
+
+function closeDocModal(){
+    document.getElementById("docModal").style.display = "none";
 }
 
 async function loadDashboard() {
@@ -995,7 +1021,8 @@ async function loadClientsList(){
             <td>${c.client_phone || "-"}</td>
             <td>${c.client_nat || "-"}</td>
             <td>${fmt(c.created_at)}</td>
-        </tr>`).join("") || "<tr><td colspan='5'>Aucun client</td></tr>";
+            <td>${c.id_document_photo ? `<button class="btn-approve" style="background:#7C3AED;padding:0.35rem 0.7rem;font-size:0.8rem" onclick="viewDocument(''${c.account_no}'')">Voir</button>` : "-"}</td>
+        </tr>`).join("") || "<tr><td colspan=''6''>Aucun client</td></tr>";
 }
 
 // ===== TAUX DE CHANGE SITE WEB =====
