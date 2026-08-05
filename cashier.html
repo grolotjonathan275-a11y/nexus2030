@@ -35,6 +35,7 @@
             <a href="#change" class="nav-item" onclick="showSection(this,event)"><span>💱</span>Change Devises</a>
             <a href="#search" class="nav-item" onclick="showSection(this,event)"><span>🔍</span>Recherche Client</a>
             <a href="#history" class="nav-item" onclick="showSection(this,event)"><span>📋</span>Historique</a>
+            <a href="#new-client" class="nav-item" onclick="showSection(this,event)"><span>➕</span>Nouveau Client</a>
             <div class="nav-section">CAISSE</div>
             <a href="#wallet" class="nav-item" onclick="showSection(this,event)"><span>👛</span>Mon Wallet</a>
             <a href="#receipts" class="nav-item" onclick="showSection(this,event)"><span>🧾</span>Recus</a>
@@ -519,6 +520,43 @@
                         <div><span style="color:#64748B">MonCash a remettre:</span> <strong id="dailyTotalMoncash">0.00 DOP</strong></div>
                         <div><span style="color:#64748B">NatCash a remettre:</span> <strong id="dailyTotalNatcash">0.00 DOP</strong></div>
                         <div><span style="color:#0F172A;font-weight:700">TOTAL A REMETTRE:</span> <strong id="dailyTotalGrand" style="font-size:1.1rem">0.00 DOP</strong></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- NOUVEAU CLIENT -->
+            <section class="section" id="section-new-client">
+                <h2 class="section-title">➕ Creer un Compte Client</h2>
+                <div class="operation-card">
+                    <div class="op-form">
+                        <div id="ncResult" style="display:none" class="result-box"></div>
+                        <div class="form-grid-2">
+                            <div class="form-group"><label>Prenom *</label><input type="text" id="ncFirstName" placeholder="Jean"></div>
+                            <div class="form-group"><label>Nom *</label><input type="text" id="ncLastName" placeholder="Dupont"></div>
+                        </div>
+                        <div class="form-grid-2">
+                            <div class="form-group"><label>Telephone *</label><input type="tel" id="ncPhone" placeholder="+509 / +1 809"></div>
+                            <div class="form-group"><label>Email</label><input type="email" id="ncEmail" placeholder="email@exemple.com"></div>
+                        </div>
+                        <div class="form-grid-2">
+                            <div class="form-group"><label>Nationalite</label>
+                                <select id="ncNat"><option value="HT">Haitienne</option><option value="DO">Dominicaine</option><option value="US">Americaine</option><option value="OTHER">Autre</option></select>
+                            </div>
+                            <div class="form-group"><label>Type de Compte *</label>
+                                <select id="ncAccountType"><option value="individuel">Individuel</option><option value="epargne">Epargne</option><option value="entreprise">Entreprise</option></select>
+                            </div>
+                        </div>
+                        <div class="form-grid-2">
+                            <div class="form-group"><label>Devise *</label>
+                                <select id="ncCurrency"><option value="HTG">Gourdes (HTG)</option><option value="DOP">Pesos (DOP)</option><option value="USD">Dollars (USD)</option></select>
+                            </div>
+                            <div class="form-group"><label>Solde Initial</label><input type="number" id="ncBalance" placeholder="0.00" min="0"></div>
+                        </div>
+                        <div class="form-group"><label>Notes (optionnel)</label><input type="text" id="ncNotes" placeholder="Informations supplementaires..."></div>
+                        <div class="form-actions">
+                            <button class="btn-cancel" onclick="resetNewClientForm()">Annuler</button>
+                            <button class="btn-confirm green" onclick="createClientAccount()">✅ Creer le Compte</button>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -1368,6 +1406,58 @@ async function loadDashboard() {
     await loadTransactions();
     await loadMyMoneyTransactions();
     await loadDailyReport();
+}
+
+function resetNewClientForm(){
+    ["ncFirstName","ncLastName","ncPhone","ncEmail","ncNotes"].forEach(id=>{document.getElementById(id).value="";});
+    document.getElementById("ncBalance").value="";
+    document.getElementById("ncResult").style.display="none";
+}
+
+async function createClientAccount(){
+    const firstName=document.getElementById("ncFirstName").value.trim();
+    const lastName=document.getElementById("ncLastName").value.trim();
+    const phone=document.getElementById("ncPhone").value.trim();
+    const email=document.getElementById("ncEmail").value.trim();
+    const nat=document.getElementById("ncNat").value;
+    const accountType=document.getElementById("ncAccountType").value;
+    const currency=document.getElementById("ncCurrency").value;
+    const balance=Number(document.getElementById("ncBalance").value)||0;
+    const notes=document.getElementById("ncNotes").value.trim();
+
+    const res=document.getElementById("ncResult");
+    if(!firstName||!lastName||!phone){
+        res.style.display="block"; res.className="result-box error";
+        res.innerHTML="Remplissez tous les champs obligatoires (*).";
+        return;
+    }
+
+    const accountNo="NEXUS-"+new Date().getFullYear()+"-"+String(Math.floor(Math.random()*999999)).padStart(6,"0");
+
+    const r=await supaFetch("savings_accounts","POST",{
+        account_no:accountNo,
+        client_name:firstName+" "+lastName,
+        client_phone:phone,
+        email:email,
+        account_type:accountType,
+        currency:currency,
+        client_nat:nat,
+        balance:balance,
+        branch:CASHIER_BRANCH,
+        kyc_status:"pending",
+        status:"active",
+        created_by:"caissier"
+    });
+
+    res.style.display="block";
+    if(r.ok){
+        res.className="result-box success";
+        res.innerHTML="✅ Compte cree avec succes!<br><strong>Numero: "+accountNo+"</strong>";
+        resetNewClientForm();
+    }else{
+        res.className="result-box error";
+        res.innerHTML="Erreur lors de la creation du compte.";
+    }
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
