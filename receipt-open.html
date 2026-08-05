@@ -167,9 +167,11 @@ body{margin:0;padding:20px;background:#e0e0e0;font-family:Arial,sans-serif;displ
 </div>
 <div class="actions">
 <button class="btn btn-print" onclick="window.print()">IMPRIMER</button>
+<button class="btn" id="btnBlePrint" style="background:#7C3AED" onclick="printReceiptBLE()">IMPRIMER DIRECT</button>
 <button class="btn btn-whatsapp" id="btnWhatsapp" onclick="shareWhatsapp()">WHATSAPP</button>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="assets/js/ble-print.js"></script>
 <script>
 const p = new URLSearchParams(window.location.search);
 const n = new Date();
@@ -195,6 +197,37 @@ document.getElementById("serial").textContent = "SER: " + securityCode;
 
 const qrData = encodeURIComponent(`NEXUS|${accountNo}|${securityCode}|${ref}`);
 document.getElementById("qrImg").src = `https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${qrData}`;
+
+function printReceiptBLE(){
+    const lines = [
+        {text:"NEXUS", bold:true, big:true, align:"center"},
+        {text:"CASA DE CAMBIO", bold:true, align:"center"},
+        {text:"Services Financiers", align:"center"},
+        {text:"--------------------------------", align:"left"},
+        {text:"OUVERTURE DE COMPTE", bold:true, align:"center"},
+        {text:"", align:"left"},
+        {text:"No. Dossier: " + ref, align:"left"},
+        {text:"Date: " + document.getElementById("txnDate").textContent + " " + document.getElementById("txnTime").textContent, align:"left"},
+        {text:"Succursale: " + (p.get("branch") || "-"), align:"left"},
+        {text:"Agent: " + (p.get("agent") || "-"), align:"left"},
+        {text:"", align:"left"},
+        {text:"Client: " + (p.get("client_name") || "-").toUpperCase(), align:"left"},
+        {text:"Telephone: " + (p.get("client_phone") || "-"), align:"left"},
+        {text:"Nationalite: " + (p.get("client_nat") || "-"), align:"left"},
+        {text:"", align:"left"},
+        {text:"Numero de Compte:", align:"center"},
+        {text:accountNo, bold:true, big:true, align:"center"},
+        {text:p.get("account_type") || "Compte Individuel", align:"center"},
+        {text:"", align:"left"},
+        {text:"Depot minimum: 500.00 HTG", align:"left"},
+        {text:"Retrait avec piece identite", align:"left"},
+        {text:"", align:"left"},
+        {text:"Code securite: " + securityCode, align:"left"},
+        {text:"--------------------------------", align:"left"},
+        {text:"Bienvenue chez Nexus Casa de Cambio", align:"center"}
+    ];
+    nexusPrintBLE(lines, document.getElementById("btnBlePrint"));
+}
 
 async function shareWhatsapp(){
     const receiptEl = document.getElementById("receipt");
