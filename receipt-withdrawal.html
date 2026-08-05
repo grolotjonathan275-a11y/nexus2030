@@ -137,9 +137,11 @@ body{margin:0;padding:20px;background:#e0e0e0;font-family:Arial,sans-serif;displ
 </div>
 <div class="actions">
 <button class="btn btn-print" onclick="window.print()">IMPRIMER</button>
+<button class="btn" id="btnBlePrint" style="background:#7C3AED" onclick="printReceiptBLE()">IMPRIMER DIRECT</button>
 <button class="btn btn-whatsapp" id="btnWhatsapp" onclick="shareWhatsapp()">WHATSAPP</button>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="assets/js/ble-print.js"></script>
 <script>
 const p = new URLSearchParams(window.location.search);
 const n = new Date();
@@ -165,6 +167,31 @@ document.getElementById("amountValue").textContent = fmtA(amount) + " " + curren
 document.getElementById("balBefore").textContent = fmtA(balBefore) + " " + currency;
 document.getElementById("balOp").textContent = "-" + fmtA(amount) + " " + currency;
 document.getElementById("balAfter").textContent = fmtA(balAfter) + " " + currency;
+
+function printReceiptBLE(){
+    const lines = [
+        {text:"NEXUS", bold:true, big:true, align:"center"},
+        {text:"CASA DE CAMBIO", bold:true, align:"center"},
+        {text:"Services Financiers", align:"center"},
+        {text:"--------------------------------", align:"left"},
+        {text:"RETRAIT", bold:true, align:"center"},
+        {text:"", align:"left"},
+        {text:"No. Transaction: " + document.getElementById("txnId").textContent, align:"left"},
+        {text:"Date: " + document.getElementById("txnDate").textContent + " " + document.getElementById("txnTime").textContent, align:"left"},
+        {text:"No. Compte: " + accountNo, align:"left"},
+        {text:"Titulaire: " + clientName.toUpperCase(), align:"left"},
+        {text:"", align:"left"},
+        {text:"Montant Retire:", align:"left"},
+        {text:fmtA(amount) + " " + currency, bold:true, big:true, align:"center"},
+        {text:"", align:"left"},
+        {text:"Solde Precedent: " + fmtA(balBefore) + " " + currency, align:"left"},
+        {text:"Retrait: -" + fmtA(amount) + " " + currency, align:"left"},
+        {text:"Nouveau Solde: " + fmtA(balAfter) + " " + currency, bold:true, align:"left"},
+        {text:"--------------------------------", align:"left"},
+        {text:"Merci Nexus Casa de Cambio", align:"center"}
+    ];
+    nexusPrintBLE(lines, document.getElementById("btnBlePrint"));
+}
 
 async function shareWhatsapp(){
     const receiptEl = document.getElementById("receipt");
