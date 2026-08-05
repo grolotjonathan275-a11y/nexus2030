@@ -135,6 +135,46 @@
                         <label data-i18n="login.reg.password">Mot de passe *</label>
                         <input type="password" class="form-input" id="regPassword" placeholder="Min. 8 caractères">
                     </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Nationalite</label>
+                            <select class="form-input" id="regNat">
+                                <option value="HT">Haitienne</option>
+                                <option value="DO">Dominicaine</option>
+                                <option value="US">Americaine</option>
+                                <option value="OTHER">Autre</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Type de Compte</label>
+                            <select class="form-input" id="regAccountType">
+                                <option value="individuel">Individuel</option>
+                                <option value="epargne">Epargne</option>
+                                <option value="entreprise">Entreprise</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Devise du Compte *</label>
+                        <select class="form-input" id="regCurrency">
+                            <option value="HTG">Gourdes (HTG)</option>
+                            <option value="DOP">Pesos (DOP)</option>
+                            <option value="USD">Dollars (USD)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Type de Piece d''Identite *</label>
+                        <select class="form-input" id="regDocType">
+                            <option value="passeport">Passeport</option>
+                            <option value="cin">Carte d''Identite Nationale</option>
+                            <option value="permis">Permis de Conduire</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Photo de la Piece d''Identite *</label>
+                        <input type="file" class="form-input" id="regIdDoc" accept="image/*">
+                        <small style="color:#888">JPG/PNG, max 5 Mo</small>
+                    </div>
                     <button class="btn btn-primary btn-full" id="registerSubmit" data-i18n="login.reg.submit">Créer mon compte</button>
                     <p class="login-terms" data-i18n="login.reg.terms">En créant un compte, vous acceptez nos conditions d'utilisation et notre politique de confidentialité.</p>
                 </div>
@@ -274,12 +314,25 @@ document.getElementById("loginSubmit").addEventListener("click", async function(
 });
 
 // REGISTER (kliyan sèlman — pa chanje)
+function nexusFileToBase64(file){
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+}
+
 document.getElementById("registerSubmit").addEventListener("click", async function(){
     const firstName = document.getElementById("regFirstName").value.trim();
     const lastName = document.getElementById("regLastName").value.trim();
     const email = document.getElementById("regEmail").value.trim();
     const phone = document.getElementById("regPhone").value.trim();
     const password = document.getElementById("regPassword").value;
+    const nat = document.getElementById("regNat").value;
+    const accountType = document.getElementById("regAccountType").value;
+    const currency = document.getElementById("regCurrency").value;
+    const idDocFile = document.getElementById("regIdDoc").files[0];
 
     if(!firstName || !lastName || !email || !phone || !password){
         alert("Remplissez tous les champs obligatoires.");
@@ -287,6 +340,14 @@ document.getElementById("registerSubmit").addEventListener("click", async functi
     }
     if(password.length < 8){
         alert("Mot de passe trop court (min. 8 caracteres).");
+        return;
+    }
+    if(!idDocFile){
+        alert("Veuillez telecharger une photo de votre piece d''identite.");
+        return;
+    }
+    if(idDocFile.size > 5*1024*1024){
+        alert("Photo trop volumineuse (max 5 Mo).");
         return;
     }
 
@@ -297,6 +358,8 @@ document.getElementById("registerSubmit").addEventListener("click", async functi
     const accountNo = "NEXUS-" + new Date().getFullYear() + "-" + String(Math.floor(Math.random()*999999)).padStart(6,"0");
 
     try {
+        const idDocBase64 = await nexusFileToBase64(idDocFile);
+
         const r = await fetch(`${SUPA_URL}/rest/v1/savings_accounts`, {
             method: "POST",
             headers: {
@@ -311,8 +374,10 @@ document.getElementById("registerSubmit").addEventListener("click", async functi
                 client_phone: phone,
                 email: email,
                 password_hash: btoa(password),
-                account_type: "individuel",
-                currency: "HTG",
+                client_nat: nat,
+                account_type: accountType,
+                currency: currency,
+                id_document_photo: idDocBase64,
                 balance: 0,
                 kyc_status: "pending",
                 status: "active",
