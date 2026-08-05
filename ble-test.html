@@ -1,0 +1,73 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Test Bluetooth Enprimant - Nexus</title>
+<style>
+body{font-family:Arial,sans-serif;padding:20px;background:#f0f0f0;}
+button{padding:15px 25px;font-size:1.1rem;background:#0F172A;color:#fff;border:none;border-radius:8px;margin:10px 0;cursor:pointer;}
+#log{background:#000;color:#0f0;padding:15px;border-radius:8px;font-family:monospace;font-size:0.85rem;white-space:pre-wrap;margin-top:15px;min-height:200px;}
+h2{color:#0F172A}
+</style>
+</head>
+<body>
+<h2>🔍 Test Bluetooth Enprimant</h2>
+<p>Peze bouton anba a, chwazi enprimant ou a nan lis la, epi voye m TOUT sa ki parèt nan kad nwa anba a.</p>
+<button onclick="scanPrinter()">📡 Chèche Enprimant</button>
+<div id="log">Ap tann...</div>
+
+<script>
+function log(msg){
+    const el = document.getElementById("log");
+    el.textContent += msg + "\n";
+}
+
+async function scanPrinter(){
+    document.getElementById("log").textContent = "";
+    try{
+        log("Ap chèche aparèy Bluetooth...");
+        const device = await navigator.bluetooth.requestDevice({
+            acceptAllDevices: true,
+            optionalServices: [
+                '000018f0-0000-1000-8000-00805f9b34fb',
+                '0000ffe0-0000-1000-8000-00805f9b34fb',
+                '0000ff00-0000-1000-8000-00805f9b34fb',
+                '49535343-fe7d-4ae5-8fa9-9fafd205e455',
+                '6e400001-b5a3-f393-e0a9-e50e24dcca9e',
+                'e7810a71-73ae-499d-8c15-faa9aef0c3f2'
+            ]
+        });
+        log("✅ Aparèy jwenn: " + device.name + " (id: " + device.id + ")");
+
+        log("Ap konekte...");
+        const server = await device.gatt.connect();
+        log("✅ Konekte ak GATT server!");
+
+        log("Ap chèche sèvis yo...");
+        const services = await server.getPrimaryServices();
+        log("Jwenn " + services.length + " sèvis:");
+
+        for(const service of services){
+            log("  📁 SEVIS: " + service.uuid);
+            try{
+                const chars = await service.getCharacteristics();
+                for(const c of chars){
+                    let props = [];
+                    if(c.properties.write) props.push("write");
+                    if(c.properties.writeWithoutResponse) props.push("writeNoResp");
+                    if(c.properties.notify) props.push("notify");
+                    if(c.properties.read) props.push("read");
+                    log("     ↳ Caracteristik: " + c.uuid + " [" + props.join(",") + "]");
+                }
+            }catch(e){
+                log("     (pa ka li karakteristik yo: " + e.message + ")");
+            }
+        }
+        log("\n✅ FINI! Voye m TOUT tèks sa a.");
+    }catch(err){
+        log("❌ ERE: " + err.message);
+    }
+}
+</script>
+</body>
+</html>
