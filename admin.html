@@ -604,13 +604,13 @@ async function approuver(id) {
 }
 
 async function viewDocument(accountNo){
-    const data = await fetchData("savings_accounts");
-    const c = data.find(x => x.account_no === accountNo);
-    if(!c || !c.id_document_photo){
+    const r = await fetch(`${SUPA_URL}/rest/v1/savings_accounts?account_no=eq.${accountNo}&select=id_document_photo`, {headers:{"apikey":SUPA_KEY,"Authorization":`Bearer ${SUPA_KEY}`}});
+    const data = await r.json();
+    if(!data || !data[0] || !data[0].id_document_photo){
         alert("Aucun document trouve pour ce client.");
         return;
     }
-    document.getElementById("docModalImg").src = c.id_document_photo;
+    document.getElementById("docModalImg").src = data[0].id_document_photo;
     document.getElementById("docModal").style.display = "flex";
 }
 
@@ -851,7 +851,7 @@ function showSettingsMsg(text, isError){
 // ===== SUCCURSALES =====
 
 async function loadBranches(){
-    const clients = await fetchData("savings_accounts");
+    const clients = await (await fetch(`${SUPA_URL}/rest/v1/savings_accounts?select=account_no,client_name,email,client_phone,client_nat,created_at,is_blocked,status,balance,currency,kyc_status&order=created_at.desc`, {headers:{"apikey":SUPA_KEY,"Authorization":`Bearer ${SUPA_KEY}`}})).json();
     const bankTxns = await fetchData("transactions");
     const { data: mmTxns } = await supabaseClient.from("mobile_money_transactions").select("*");
 
@@ -1015,7 +1015,7 @@ async function loadGlobalTransactions(){
 async function loadClientsList(){
     let clients;
     try {
-        clients = await fetchData("savings_accounts");
+        clients = await (await fetch(`${SUPA_URL}/rest/v1/savings_accounts?select=account_no,client_name,email,client_phone,client_nat,created_at,is_blocked,status,balance,currency,kyc_status&order=created_at.desc`, {headers:{"apikey":SUPA_KEY,"Authorization":`Bearer ${SUPA_KEY}`}})).json();
         if(!Array.isArray(clients)){
             document.getElementById("allClients").innerHTML = "<tr><td colspan='6' style='color:red'>ERREUR: " + JSON.stringify(clients) + "</td></tr>";
             return;
@@ -1031,7 +1031,7 @@ async function loadClientsList(){
             <td>${c.client_phone || "-"}</td>
             <td>${c.client_nat || "-"}</td>
             <td>${fmt(c.created_at)}</td>
-            <td>${c.id_document_photo ? `<button class="btn-approve" style="background:#7C3AED;padding:0.35rem 0.7rem;font-size:0.8rem" onclick="viewDocument('${c.account_no}')">Voir</button>` : "-"}</td>
+            <td><button class="btn-approve" style="background:#7C3AED;padding:0.35rem 0.7rem;font-size:0.8rem" onclick="viewDocument('${c.account_no}')">Voir</button></td>
         </tr>`).join("") || "<tr><td colspan=''6''>Aucun client</td></tr>";
 }
 
