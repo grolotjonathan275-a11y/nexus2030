@@ -435,26 +435,17 @@
                     <div style="border:2px solid #003DA5;border-radius:12px;padding:1.25rem;text-align:center">
                         <div style="font-weight:700">Banreservas</div>
                         <div style="font-size:1.4rem;font-weight:800;margin:0.5rem 0" id="capBanreservas">0.00</div>
-                        <div style="display:flex;gap:0.4rem">
-                            <input type="number" id="recharge_banreservas" placeholder="Montant" style="flex:1;padding:0.5rem;border-radius:8px;border:1px solid #E2E8F0">
-                            <button class="btn-ceo-action" style="padding:0.5rem 0.8rem" onclick="rechargeBankCapital('banreservas')">Recharger</button>
-                        </div>
+                        <button class="btn-ceo-action" style="width:100%;padding:0.6rem" onclick="openRechargeModal('banreservas')">Recharger</button>
                     </div>
                     <div style="border:2px solid #F7941E;border-radius:12px;padding:1.25rem;text-align:center">
                         <div style="font-weight:700">Banco Popular</div>
                         <div style="font-size:1.4rem;font-weight:800;margin:0.5rem 0" id="capPopular">0.00</div>
-                        <div style="display:flex;gap:0.4rem">
-                            <input type="number" id="recharge_popular" placeholder="Montant" style="flex:1;padding:0.5rem;border-radius:8px;border:1px solid #E2E8F0">
-                            <button class="btn-ceo-action" style="padding:0.5rem 0.8rem" onclick="rechargeBankCapital('popular')">Recharger</button>
-                        </div>
+                        <button class="btn-ceo-action" style="width:100%;padding:0.6rem" onclick="openRechargeModal('popular')">Recharger</button>
                     </div>
                     <div style="border:2px solid #DA291C;border-radius:12px;padding:1.25rem;text-align:center">
                         <div style="font-weight:700">BHD</div>
                         <div style="font-size:1.4rem;font-weight:800;margin:0.5rem 0" id="capBhd">0.00</div>
-                        <div style="display:flex;gap:0.4rem">
-                            <input type="number" id="recharge_bhd" placeholder="Montant" style="flex:1;padding:0.5rem;border-radius:8px;border:1px solid #E2E8F0">
-                            <button class="btn-ceo-action" style="padding:0.5rem 0.8rem" onclick="rechargeBankCapital('bhd')">Recharger</button>
-                        </div>
+                        <button class="btn-ceo-action" style="width:100%;padding:0.6rem" onclick="openRechargeModal('bhd')">Recharger</button>
                     </div>
                 </div>
             </div>
@@ -703,6 +694,27 @@
 
     </div>
 </main>
+</div>
+
+<!-- MODAL RECHARGE BANCAIRE -->
+<div id="rechargeModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:9999;align-items:center;justify-content:center">
+    <div style="background:#fff;border-radius:12px;padding:1.5rem;max-width:420px;width:90%;max-height:85vh;overflow:auto">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+            <h3 style="margin:0">Recharger <span id="rechargeModalBank"></span></h3>
+            <button onclick="closeRechargeModal()" style="background:none;border:none;font-size:1.5rem;cursor:pointer">✕</button>
+        </div>
+        <div id="rechargeModalOptions">
+            <p style="color:#64748B;margin-bottom:1rem">Choisissez une methode de recharge :</p>
+            <button class="btn-ceo-action" style="width:100%;margin-bottom:0.75rem;padding:0.85rem" onclick="showRechargeMethod('deposit')">🏦 Depot Bancaire sur compte du Fournisseur</button>
+            <button class="btn-ceo-action" style="width:100%;padding:0.85rem;background:#0EA5E9" onclick="showRechargeMethod('card')">💳 Carte de Debit</button>
+        </div>
+        <div id="rechargeModalWaiting" style="display:none;text-align:center;padding:1.5rem 0">
+            <div style="font-size:2.5rem">⏳</div>
+            <h4 style="margin:1rem 0 0.5rem">En attente de confirmation API</h4>
+            <p style="color:#64748B;font-size:0.9rem">Cette methode de paiement est en cours de configuration avec notre fournisseur. L'autorisation API n'est pas encore disponible.</p>
+            <button class="btn-ceo-action" style="margin-top:1rem;background:#94A3B8" onclick="backToRechargeOptions()">Retour</button>
+        </div>
+    </div>
 </div>
 
 <!-- MODAL DOCUMENT IDENTITE -->
@@ -1127,6 +1139,30 @@ async function loadBankCapital(){
     document.getElementById("capBanreservas").textContent = fmtA(map.banreservas||0) + " DOP";
     document.getElementById("capPopular").textContent = fmtA(map.popular||0) + " DOP";
     document.getElementById("capBhd").textContent = fmtA(map.bhd||0) + " DOP";
+}
+
+let currentRechargeBank = null;
+
+function openRechargeModal(bank){
+    currentRechargeBank = bank;
+    document.getElementById("rechargeModalBank").textContent = BANK_LABELS_CEO[bank];
+    document.getElementById("rechargeModalOptions").style.display = "block";
+    document.getElementById("rechargeModalWaiting").style.display = "none";
+    document.getElementById("rechargeModal").style.display = "flex";
+}
+
+function closeRechargeModal(){
+    document.getElementById("rechargeModal").style.display = "none";
+}
+
+function showRechargeMethod(method){
+    document.getElementById("rechargeModalOptions").style.display = "none";
+    document.getElementById("rechargeModalWaiting").style.display = "block";
+}
+
+function backToRechargeOptions(){
+    document.getElementById("rechargeModalOptions").style.display = "block";
+    document.getElementById("rechargeModalWaiting").style.display = "none";
 }
 
 async function rechargeBankCapital(bank){
