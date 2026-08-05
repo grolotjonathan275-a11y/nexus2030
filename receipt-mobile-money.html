@@ -214,11 +214,13 @@ body { background:#EEF2F7; padding:2rem 1rem; display:flex; flex-direction:colum
 <div class="actions">
     <button class="btn btn-refresh" onclick="refreshStatus()">Statut</button>
     <button class="btn btn-print" onclick="window.print()">Imprimer</button>
+    <button class="btn" id="btnBlePrint" style="background:#7C3AED" onclick="printReceiptBLE()">Imprimer Direct</button>
     <button class="btn btn-whatsapp" id="btnWhatsapp" onclick="shareWhatsapp()">WhatsApp</button>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="assets/js/ble-print.js"></script>
 <script>
 const SUPA_URL="https://fnuplvbiwfvauwkpxsoc.supabase.co";
 const SUPA_KEY="sb_publishable_QBqdKkpcjDS3_psUdmc4uA_sMCzLqLo";
@@ -360,6 +362,45 @@ function downloadImageFallback(blob){
     document.body.removeChild(link);
     setTimeout(() => URL.revokeObjectURL(url), 5000);
     alert("Votre navigateur ne supporte pas le partage direct d'image. L'image du recu a ete telechargee -- vous pouvez maintenant l'envoyer manuellement sur WhatsApp depuis vos telechargements.");
+}
+
+let currentReceiptData = null;
+const originalRenderReceipt = renderReceipt;
+renderReceipt = function(t){
+    currentReceiptData = t;
+    originalRenderReceipt(t);
+};
+
+function printReceiptBLE(){
+    const t = currentReceiptData;
+    if(!t){ alert("Donnees du recu non disponibles."); return; }
+    const isMoncash = t.service_type === "moncash";
+    const lines = [
+        {text:"NEXUS", bold:true, big:true, align:"center"},
+        {text:"CASA DE CAMBIO", bold:true, align:"center"},
+        {text:"Services Financiers", align:"center"},
+        {text:"--------------------------------", align:"left"},
+        {text:"Vente " + (isMoncash?"MonCash":"NatCash"), bold:true, align:"center"},
+        {text:"", align:"left"},
+        {text:"Client va recevoir:", align:"left"},
+        {text:fmtA(t.amount_htg) + " HTG", bold:true, big:true, align:"center"},
+        {text:"", align:"left"},
+        {text:"Date: " + new Date(t.created_at).toLocaleString("fr-FR"), align:"left"},
+        {text:"Succursale: " + (t.branch||"-"), align:"left"},
+        {text:"Traite par: " + (t.staff_name||"-"), align:"left"},
+        {text:"", align:"left"},
+        {text:"Client: " + (t.sender_full_name||"-"), align:"left"},
+        {text:"WhatsApp: " + (t.sender_whatsapp||"-"), align:"left"},
+        {text:"Numero: " + (t.mobile_number||"-"), align:"left"},
+        {text:"", align:"left"},
+        {text:"Montant envoye: " + fmtA(t.amount_dop) + " DOP", align:"left"},
+        {text:"Taux: 1 DOP = " + t.rate + " HTG", align:"left"},
+        {text:"Frais (" + t.fee_percent + "%): " + fmtA(t.fee_dop) + " DOP", align:"left"},
+        {text:"Total paye: " + fmtA(t.total_charged_dop) + " DOP", bold:true, align:"left"},
+        {text:"--------------------------------", align:"left"},
+        {text:"Merci Nexus Casa de Cambio", align:"center"}
+    ];
+    nexusPrintBLE(lines, document.getElementById("btnBlePrint"));
 }
 
 document.addEventListener("DOMContentLoaded", () => {
