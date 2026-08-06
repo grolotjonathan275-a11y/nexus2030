@@ -41,6 +41,7 @@
         <a href="#currency-distribution" class="nav-item" onclick="showSection(this,event)"><span>💵</span>Distribution Devises</a>
 <a href="#loans" class="nav-item" onclick="showSection(this,event)"><span>💰</span>Prestamo</a>
         <a href="#bank-distribution" class="nav-item" onclick="showSection(this,event)"><span>🏦</span>Distribution Bancaire</a>
+<a href="#receive-transfers" class="nav-item" onclick="showSection(this,event)"><span>🔄</span>Reception Transferts</a>
         <div class="nav-section">SYSTEME</div>
         <a href="#mm-settings" class="nav-item" onclick="showSection(this,event)"><span>📱</span>Parametres MonCash/NatCash</a>
         <a href="#web-rates" class="nav-item" onclick="showSection(this,event)"><span>💱</span>Taux de Change Site Web</a>
@@ -500,6 +501,57 @@
 </div>
 </section>
 
+<!-- RECEPTION TRANSFERTS -->
+<section class="section" id="section-receive-transfers">
+<h2 class="section-title">🔄 Reception Transferts (Haiti -> RD)</h2>
+
+<div class="card" style="margin-bottom:1.5rem">
+<div class="card-header"><h3>Taux et Frais par Service</h3></div>
+<div style="padding:1.5rem" id="rtSettingsGrid"></div>
+</div>
+
+<div class="card" style="margin-bottom:1.5rem">
+<div class="card-header"><h3>Capital Disponible par Service (Caisse de Retrait)</h3></div>
+<div style="padding:1.5rem;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem" id="rtCapitalGrid"></div>
+</div>
+
+<div class="operation-card">
+<div style="padding:0">
+<div id="rtAllocMsg" style="display:none;padding:0.75rem 1rem;border-radius:8px;margin-bottom:1rem;font-size:0.9rem;"></div>
+<div class="form-grid-2">
+<div class="form-group"><label>Caissier / Agent *</label><select id="rtAllocStaff" style="width:100%;padding:0.75rem;border-radius:10px;border:1.5px solid #E2E8F0;font-family:inherit;"></select></div>
+<div class="form-group"><label>Service *</label>
+<select id="rtAllocService" style="width:100%;padding:0.75rem;border-radius:10px;border:1.5px solid #E2E8F0;font-family:inherit;">
+<option value="moncash">MonCash</option>
+<option value="natcash">NatCash</option>
+<option value="sogebank">Sogebank</option>
+<option value="bnc">BNC</option>
+<option value="unibank">Unibank</option>
+</select>
+</div>
+</div>
+<div class="form-group"><label>Montant (DOP) *</label><input type="number" id="rtAllocAmount" placeholder="0.00" min="0.01"></div>
+<div class="form-group"><label>Notes (optionnel)</label><input type="text" id="rtAllocNotes" placeholder="Ex: Effectif du matin"></div>
+<div class="form-actions"><button class="btn-ceo-action" onclick="allocateReceiveFunds()">➕ Distribuer les Fonds</button></div>
+</div>
+</div>
+
+<div class="card" style="margin-top:1.5rem">
+<div class="card-header"><h3>Balances Validateurs (HTG confirmes en attente de remise)</h3></div>
+<div class="table-wrap"><table class="data-table"><thead><tr><th>Validateur</th><th>Service</th><th>Balance HTG</th></tr></thead><tbody id="validatorWalletsList"><tr><td colspan="3">Chargement...</td></tr></tbody></table></div>
+</div>
+
+<div class="card" style="margin-top:1.5rem">
+<div class="card-header"><h3>Balances Caisses (DOP par Caissier/Agent)</h3></div>
+<div class="table-wrap"><table class="data-table"><thead><tr><th>Caissier/Agent</th><th>MonCash</th><th>NatCash</th><th>Sogebank</th><th>BNC</th><th>Unibank</th></tr></thead><tbody id="receiveWalletsList"><tr><td colspan="6">Chargement...</td></tr></tbody></table></div>
+</div>
+
+<div class="card" style="margin-top:1.5rem">
+<div class="card-header"><h3>Historique des Distributions</h3><span class="badge" id="rtAllocCount">0</span></div>
+<div class="table-wrap"><table class="data-table"><thead><tr><th>Date</th><th>Beneficiaire</th><th>Service</th><th>Montant</th><th>Notes</th></tr></thead><tbody id="rtAllocHistoryList"><tr><td colspan="5">Chargement...</td></tr></tbody></table></div>
+</div>
+</section>
+
 <!-- PARAMETRES MONCASH / NATCASH -->
         <section class="section" id="section-mm-settings">
             <h2 class="section-title">📱 Parametres MonCash / NatCash</h2>
@@ -784,6 +836,7 @@ function showSection(el,e){
     if(id==="mm-settings")loadMoneyServiceSettings();
     if(id==="currency-distribution")loadAllocationFormCeo();
     if(id==="bank-distribution"){ loadBankCapital(); loadAllocationFormBankCeo(); }
+    if(id==="receive-transfers"){ loadRtSettings(); loadRtCapital(); loadAllocationFormRtCeo(); loadValidatorWallets(); loadReceiveWallets(); }
     if(id==="loans"){ loadLoansOverview(); }
     if(id==="web-rates")loadExchangeRates();
     if(id==="promotions")loadPromotions();
@@ -1376,6 +1429,184 @@ async function decideLoan(loanId, decision){
 
     alert("✅ Demande " + (decision === "approved" ? "approuvee" : "rejetee") + "!");
     loadLoansOverview();
+}
+
+// ===== RECEPTION TRANSFERTS =====
+const RT_SERVICE_LABELS = {moncash:"MonCash", natcash:"NatCash", sogebank:"Sogebank", bnc:"BNC", unibank:"Unibank"};
+const RT_SERVICES = ["moncash","natcash","sogebank","bnc","unibank"];
+
+async function loadRtSettings(){
+    const { data } = await supabaseClient.from("receive_transfer_settings").select("*");
+    const map = {};
+    (data||[]).forEach(r => map[r.service_type] = r);
+
+    document.getElementById("rtSettingsGrid").innerHTML = RT_SERVICES.map(svc => {
+        const s = map[svc] || {divisor:2, fee_percent:10};
+        return `
+        <div style="border:1px solid #E2E8F0;border-radius:10px;padding:1rem;margin-bottom:0.75rem">
+            <div style="font-weight:700;margin-bottom:0.5rem">${RT_SERVICE_LABELS[svc]}</div>
+            <div class="form-grid-2">
+                <div class="form-group"><label>Diviseur (HTG -> DOP)</label><input type="number" id="rt_div_${svc}" value="${s.divisor}" step="0.01" min="0.01"></div>
+                <div class="form-group"><label>Frais Nexus (%)</label><input type="number" id="rt_fee_${svc}" value="${s.fee_percent}" step="0.01" min="0"></div>
+            </div>
+            <button class="btn-ceo-action" style="padding:0.5rem 1rem" onclick="saveRtSettings('${svc}')">💾 Enregistrer ${RT_SERVICE_LABELS[svc]}</button>
+        </div>`;
+    }).join("");
+}
+
+async function saveRtSettings(svc){
+    const newDivisor = Number(document.getElementById("rt_div_" + svc).value);
+    const newFee = Number(document.getElementById("rt_fee_" + svc).value);
+    if(!newDivisor || newDivisor <= 0){ alert("Diviseur invalide."); return; }
+    if(newFee < 0){ alert("Frais invalide."); return; }
+
+    const { data: current } = await supabaseClient.from("receive_transfer_settings").select("*").eq("service_type", svc).single();
+
+    await supabaseClient.from("receive_transfer_rate_history").insert({
+        service_type: svc,
+        old_divisor: current?.divisor, old_fee_percent: current?.fee_percent,
+        new_divisor: newDivisor, new_fee_percent: newFee,
+        changed_by_name: "CEO"
+    });
+
+    await supabaseClient.from("receive_transfer_settings").update({
+        divisor: newDivisor, fee_percent: newFee, updated_by_name: "CEO", updated_at: new Date().toISOString()
+    }).eq("service_type", svc);
+
+    alert("✅ Taux " + RT_SERVICE_LABELS[svc] + " mis a jour!");
+    loadRtSettings();
+}
+
+async function loadRtCapital(){
+    const { data } = await supabaseClient.from("receive_company_capital").select("*");
+    const map = {};
+    (data||[]).forEach(r => map[r.service_type] = Number(r.balance_dop));
+
+    document.getElementById("rtCapitalGrid").innerHTML = RT_SERVICES.map(svc => `
+        <div style="border:2px solid #7C3AED;border-radius:12px;padding:1.25rem;text-align:center">
+            <div style="font-weight:700">${RT_SERVICE_LABELS[svc]}</div>
+            <div style="font-size:1.3rem;font-weight:800;margin:0.5rem 0">${fmtA(map[svc]||0)} DOP</div>
+            <div style="display:flex;gap:0.4rem">
+                <input type="number" id="rt_recharge_${svc}" placeholder="Montant" style="flex:1;padding:0.5rem;border-radius:8px;border:1px solid #E2E8F0">
+                <button class="btn-ceo-action" style="padding:0.5rem 0.8rem" onclick="rechargeRtCapital('${svc}')">Recharger</button>
+            </div>
+        </div>`).join("");
+}
+
+async function rechargeRtCapital(svc){
+    const input = document.getElementById("rt_recharge_" + svc);
+    const amount = Number(input.value);
+    if(!amount || amount <= 0){ alert("Entrez un montant valide."); return; }
+
+    const { data: current } = await supabaseClient.from("receive_company_capital").select("*").eq("service_type", svc).single();
+    const newBalance = (current ? Number(current.balance_dop) : 0) + amount;
+
+    await supabaseClient.from("receive_company_capital").update({ balance_dop: newBalance }).eq("service_type", svc);
+
+    input.value = "";
+    alert("✅ Capital " + RT_SERVICE_LABELS[svc] + " recharge! Nouveau solde: " + fmtA(newBalance) + " DOP");
+    loadRtCapital();
+}
+
+async function loadAllocationFormRtCeo(){
+    const { data: staff } = await supabaseClient.from("profiles").select("*").in("role", ["caissier","agent"]).eq("status","active");
+    const sel = document.getElementById("rtAllocStaff");
+    sel.innerHTML = (staff||[]).map(s => `<option value="${s.id}" data-name="${s.full_name}">${s.full_name} (${s.role})</option>`).join("") || "<option value=''>Aucun caissier/agent</option>";
+    loadRtAllocHistory();
+}
+
+function showRtAllocMsg(text, isError){
+    const el = document.getElementById("rtAllocMsg");
+    el.style.display = "block";
+    el.style.background = isError ? "#FEE2E2" : "#DCFCE7";
+    el.style.color = isError ? "#991B1B" : "#166534";
+    el.textContent = text;
+}
+
+async function allocateReceiveFunds(){
+    const staffSel = document.getElementById("rtAllocStaff");
+    const staffId = staffSel.value;
+    const staffName = staffSel.options[staffSel.selectedIndex]?.dataset.name || "";
+    const svc = document.getElementById("rtAllocService").value;
+    const amount = Number(document.getElementById("rtAllocAmount").value);
+    const notes = document.getElementById("rtAllocNotes").value.trim();
+
+    if(!staffId || !svc || !amount || amount <= 0){ showRtAllocMsg("Remplissez tous les champs obligatoires (*).", true); return; }
+
+    const { data: capital } = await supabaseClient.from("receive_company_capital").select("*").eq("service_type", svc).single();
+    const capitalBalance = capital ? Number(capital.balance_dop) : 0;
+
+    if(capitalBalance < amount){
+        showRtAllocMsg("Capital insuffisant pour " + RT_SERVICE_LABELS[svc] + ". Disponible: " + fmtA(capitalBalance) + " DOP.", true);
+        return;
+    }
+
+    await supabaseClient.from("receive_wallet_allocations").insert({
+        staff_id: staffId, staff_name: staffName, service_type: svc, amount: amount,
+        allocated_by_name: "CEO", notes: notes
+    });
+
+    await supabaseClient.from("receive_company_capital").update({ balance_dop: capitalBalance - amount }).eq("service_type", svc);
+
+    const { data: existingWallet } = await supabaseClient.from("receive_wallets").select("*").eq("cashier_id", staffId).eq("service_type", svc).maybeSingle();
+    if(existingWallet){
+        await supabaseClient.from("receive_wallets").update({ balance_dop: Number(existingWallet.balance_dop) + amount, updated_at: new Date().toISOString() }).eq("id", existingWallet.id);
+    } else {
+        await supabaseClient.from("receive_wallets").insert({ cashier_id: staffId, service_type: svc, balance_dop: amount });
+    }
+
+    showRtAllocMsg(`✅ ${fmtA(amount)} DOP donne a ${staffName} pour ${RT_SERVICE_LABELS[svc]}!`, false);
+    document.getElementById("rtAllocAmount").value = "";
+    document.getElementById("rtAllocNotes").value = "";
+    loadRtCapital();
+    loadRtAllocHistory();
+    loadReceiveWallets();
+}
+
+async function loadRtAllocHistory(){
+    const { data, error } = await supabaseClient.from("receive_wallet_allocations").select("*").order("created_at",{ascending:false}).limit(50);
+    const tbody = document.getElementById("rtAllocHistoryList");
+    if(error || !data || !data.length){ tbody.innerHTML = "<tr><td colspan='5'>Aucune distribution.</td></tr>"; document.getElementById("rtAllocCount").textContent = "0"; return; }
+    document.getElementById("rtAllocCount").textContent = data.length;
+    tbody.innerHTML = data.map(a => `
+        <tr><td>${new Date(a.created_at).toLocaleString("fr-FR")}</td><td>${a.staff_name}</td><td>${RT_SERVICE_LABELS[a.service_type]||a.service_type}</td><td>${fmtA(a.amount)} DOP</td><td>${a.notes || "-"}</td></tr>`).join("");
+}
+
+async function loadValidatorWallets(){
+    const { data } = await supabaseClient.from("validator_wallets").select("*").order("validator_name");
+    const tbody = document.getElementById("validatorWalletsList");
+    if(!data || !data.length){ tbody.innerHTML = "<tr><td colspan='3'>Aucune balance.</td></tr>"; return; }
+    tbody.innerHTML = data.map(v => `
+        <tr><td>${v.validator_name||"-"}</td><td>${RT_SERVICE_LABELS[v.service_type]||v.service_type}</td><td style="color:#16A34A;font-weight:700">${fmtA(v.balance_htg)} HTG</td></tr>`).join("");
+}
+
+async function loadReceiveWallets(){
+    const { data: wallets } = await supabaseClient.from("receive_wallets").select("*");
+    const { data: staff } = await supabaseClient.from("profiles").select("id,full_name").in("role",["caissier","agent"]);
+    const staffMap = {};
+    (staff||[]).forEach(s => staffMap[s.id] = s.full_name);
+
+    const byStaff = {};
+    (wallets||[]).forEach(w => {
+        if(!byStaff[w.cashier_id]) byStaff[w.cashier_id] = {};
+        byStaff[w.cashier_id][w.service_type] = Number(w.balance_dop);
+    });
+
+    const tbody = document.getElementById("receiveWalletsList");
+    const ids = Object.keys(byStaff);
+    if(!ids.length){ tbody.innerHTML = "<tr><td colspan='6'>Aucune caisse.</td></tr>"; return; }
+
+    tbody.innerHTML = ids.map(id => {
+        const svcs = byStaff[id];
+        return `<tr>
+            <td>${staffMap[id]||id}</td>
+            <td>${fmtA(svcs.moncash||0)} DOP</td>
+            <td>${fmtA(svcs.natcash||0)} DOP</td>
+            <td>${fmtA(svcs.sogebank||0)} DOP</td>
+            <td>${fmtA(svcs.bnc||0)} DOP</td>
+            <td>${fmtA(svcs.unibank||0)} DOP</td>
+        </tr>`;
+    }).join("");
 }
 
 async function loadMoneyServiceSettings(){
