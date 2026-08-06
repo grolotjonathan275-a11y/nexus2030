@@ -39,6 +39,7 @@
         <a href="#cashiers" class="nav-item" onclick="showSection(this,event)"><span>👤</span>Caissiers</a>
         <div class="nav-section">DEVISES</div>
         <a href="#currency-distribution" class="nav-item" onclick="showSection(this,event)"><span>💵</span>Distribution Devises</a>
+<a href="#loans" class="nav-item" onclick="showSection(this,event)"><span>💰</span>Prestamo</a>
         <a href="#bank-distribution" class="nav-item" onclick="showSection(this,event)"><span>🏦</span>Distribution Bancaire</a>
         <div class="nav-section">SYSTEME</div>
         <a href="#mm-settings" class="nav-item" onclick="showSection(this,event)"><span>📱</span>Parametres MonCash/NatCash</a>
@@ -475,7 +476,31 @@
             </div>
         </section>
 
-        <!-- PARAMETRES MONCASH / NATCASH -->
+        <!-- PRESTAMO -->
+<section class="section" id="section-loans">
+<h2 class="section-title">💰 Gestion des Prestamos</h2>
+<div class="kpi-grid">
+<div class="kpi-card orange"><div class="kpi-icon">⏳</div><div class="kpi-info"><div class="kpi-number" id="loanPendingCount">0</div><div class="kpi-label">En attente</div></div></div>
+<div class="kpi-card blue"><div class="kpi-icon">💵</div><div class="kpi-info"><div class="kpi-number" id="loanActiveCount">0</div><div class="kpi-label">Actifs (decaisses)</div></div></div>
+<div class="kpi-card red"><div class="kpi-icon">🚨</div><div class="kpi-info"><div class="kpi-number" id="loanOverdueCount">0</div><div class="kpi-label">En retard (Mora)</div></div></div>
+<div class="kpi-card green"><div class="kpi-icon">✅</div><div class="kpi-info"><div class="kpi-number" id="loanRepaidCount">0</div><div class="kpi-label">Rembourses</div></div></div>
+</div>
+
+<div class="card" style="margin-top:1.5rem">
+<div class="card-header"><h3>Demandes en Attente</h3></div>
+<div id="loanPendingList" style="padding:1.5rem"></div>
+</div>
+
+<div class="card" style="margin-top:1.5rem">
+<div class="card-header"><h3>Tous les Prets</h3><span class="badge" id="loanAllCount">0</span></div>
+<div class="table-wrap"><table class="data-table">
+<thead><tr><th>Date</th><th>Client</th><th>Montant</th><th>Origine</th><th>Statut</th><th>Echeance</th><th>Mora</th></tr></thead>
+<tbody id="loanAllList"><tr><td colspan="7">Chargement...</td></tr></tbody>
+</table></div>
+</div>
+</section>
+
+<!-- PARAMETRES MONCASH / NATCASH -->
         <section class="section" id="section-mm-settings">
             <h2 class="section-title">📱 Parametres MonCash / NatCash</h2>
             <div class="card">
@@ -759,6 +784,7 @@ function showSection(el,e){
     if(id==="mm-settings")loadMoneyServiceSettings();
     if(id==="currency-distribution")loadAllocationFormCeo();
     if(id==="bank-distribution"){ loadBankCapital(); loadAllocationFormBankCeo(); }
+    if(id==="loans"){ loadLoansOverview(); }
     if(id==="web-rates")loadExchangeRates();
     if(id==="promotions")loadPromotions();
     if(id==="news")loadNews();
@@ -1264,6 +1290,92 @@ async function loadBankAllocationHistory(){
     document.getElementById("bankAllocCount").textContent = data.length;
     tbody.innerHTML = data.map(a => `
         <tr><td>${new Date(a.created_at).toLocaleString("fr-FR")}</td><td>${a.staff_name}</td><td>${BANK_LABELS_CEO[a.bank_name]||a.bank_name}</td><td>${fmtA(a.amount)} DOP</td><td>${a.notes || "-"}</td></tr>`).join("");
+}
+
+// ===== PRESTAMO =====
+
+function calcLoanDetailsCeo(loan){
+    const principal = Number(loan.requested_amount);
+    const interest = principal * 0.10;
+    let dueDate = null, mora = 0, isOverdue = false;
+    if(loan.disbursed_at){
+        dueDate = new Date(loan.disbursed_at);
+        dueDate.setDate(dueDate.getDate() + 15);
+        const graceEnd = new Date(dueDate);
+        graceEnd.setDate(graceEnd.getDate() + 5);
+        if(!loan.repaid_at && new Date() > graceEnd){ isOverdue = true; mora = interest * 0.05; }
+    }
+    return { principal, interest, mora, dueDate, isOverdue };
+}
+
+async function loadLoansOverview(){
+    const { data, error } = await supabaseClient.from("loan_requests").select("*").order("created_at",{ascending:false});
+    if(error || !data) return;
+
+    const pending = data.filter(l => l.status === "pending");
+    const disbursed = data.filter(l => l.status === "disbursed");
+    const overdue = disbursed.filter(l => calcLoanDetailsCeo(l).isOverdue);
+    const repaid = data.filter(l => l.status === "repaid");
+
+    document.getElementById("loanPendingCount").textContent = pending.length;
+    document.getElementById("loanActiveCount").textContent = disbursed.length;
+    document.getElementById("loanOverdueCount").textContent = overdue.length;
+    document.getElementById("loanRepaidCount").textContent = repaid.length;
+
+    document.getElementById("loanPendingList").innerHTML = pending.map(l => `
+        <div style="border:1px solid #E2E8F0;border-radius:10px;padding:1rem;margin-bottom:0.75rem">
+            <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;margin-bottom:0.5rem">
+                <strong>${l.client_name}</strong>
+                <strong>${fmtA(l.requested_amount)} ${l.currency}</strong>
+            </div>
+            <div style="font-size:0.85rem;color:#64748B;margin-bottom:0.75rem">
+                Compte: ${l.account_no} | Origine: ${l.requested_via === "client" ? "En ligne" : "Succursale (" + (l.branch_pickup||"-") + ")"} | Raison: ${l.reason || "-"}
+            </div>
+            <div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:center">
+                <select id="branch_${l.id}" style="padding:0.4rem;border-radius:6px;border:1px solid #CBD5E1">
+                    <option value="Santo Domingo">Santo Domingo</option>
+                    <option value="Bavaro">Bavaro</option>
+                </select>
+                <button class="btn-ceo-action" style="padding:0.4rem 0.8rem;background:#10B981" onclick="decideLoan('${l.id}','approved')">✅ Approuver</button>
+                <button class="btn-ceo-action" style="padding:0.4rem 0.8rem;background:#EF4444" onclick="decideLoan('${l.id}','rejected')">❌ Rejeter</button>
+            </div>
+        </div>`).join("") || "<p style='color:#64748B'>Aucune demande en attente.</p>";
+
+    const statusLabels = {pending:"⏳ En attente", approved:"✅ A decaisser", rejected:"❌ Rejete", disbursed:"💵 Decaisse", repaid:"✅ Rembourse"};
+    document.getElementById("loanAllCount").textContent = data.length;
+    document.getElementById("loanAllList").innerHTML = data.map(l => {
+        const d = calcLoanDetailsCeo(l);
+        let statusText = statusLabels[l.status] || l.status;
+        if(l.status === "disbursed" && d.isOverdue) statusText = "🚨 En retard";
+        return `<tr>
+            <td>${new Date(l.created_at).toLocaleDateString("fr-FR")}</td>
+            <td>${l.client_name}</td>
+            <td>${fmtA(l.requested_amount)} ${l.currency}</td>
+            <td>${l.requested_via === "client" ? "En ligne" : "Succursale"}</td>
+            <td>${statusText}</td>
+            <td>${d.dueDate ? d.dueDate.toLocaleDateString("fr-FR") : "-"}</td>
+            <td>${d.mora > 0 ? fmtA(d.mora) + " " + l.currency : "-"}</td>
+        </tr>`;
+    }).join("") || "<tr><td colspan='7'>Aucun pret</td></tr>";
+}
+
+async function decideLoan(loanId, decision){
+    const branchSel = document.getElementById("branch_" + loanId);
+    const branch = branchSel ? branchSel.value : "Santo Domingo";
+    const label = decision === "approved" ? "approuver" : "rejeter";
+    if(!confirm("Confirmer: " + label + " cette demande de pret?")) return;
+
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    await supabaseClient.from("loan_requests").update({
+        status: decision,
+        decided_by: session.user.id,
+        decided_by_name: "CEO",
+        decided_at: new Date().toISOString(),
+        branch_pickup: decision === "approved" ? branch : null
+    }).eq("id", loanId);
+
+    alert("✅ Demande " + (decision === "approved" ? "approuvee" : "rejetee") + "!");
+    loadLoansOverview();
 }
 
 async function loadMoneyServiceSettings(){
