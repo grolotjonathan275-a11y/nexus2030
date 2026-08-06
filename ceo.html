@@ -43,6 +43,7 @@
         <a href="#bank-distribution" class="nav-item" onclick="showSection(this,event)"><span>🏦</span>Distribution Bancaire</a>
 <a href="#receive-transfers" class="nav-item" onclick="showSection(this,event)"><span>🔄</span>Reception Transferts</a>
 <a href="rapports.html" class="nav-item"><span>📊</span>Rapports</a>
+<a href="#system-rates" class="nav-item" onclick="showSection(this,event)"><span>⚙️</span>Taux Systeme</a>
         <div class="nav-section">SYSTEME</div>
         <a href="#mm-settings" class="nav-item" onclick="showSection(this,event)"><span>📱</span>Parametres MonCash/NatCash</a>
         <a href="#web-rates" class="nav-item" onclick="showSection(this,event)"><span>💱</span>Taux de Change Site Web</a>
@@ -553,6 +554,19 @@
 </div>
 </section>
 
+<!-- TAUX SYSTEME -->
+<section class="section" id="section-system-rates">
+<h2 class="section-title">⚙️ Taux et Frais du Systeme</h2>
+<div class="card">
+<div class="card-header"><h3>Configuration Globale (applique a tout le systeme)</h3></div>
+<div style="padding:1.5rem" id="sysRatesGrid"></div>
+</div>
+<div class="card" style="margin-top:1.5rem">
+<div class="card-header"><h3>Historique des Modifications</h3><span class="badge" id="sysRatesHistCount">0</span></div>
+<div class="table-wrap"><table class="data-table"><thead><tr><th>Date</th><th>Parametre</th><th>Ancienne Valeur</th><th>Nouvelle Valeur</th><th>Modifie par</th></tr></thead><tbody id="sysRatesHistList"><tr><td colspan="5">Chargement...</td></tr></tbody></table></div>
+</div>
+</section>
+
 <!-- PARAMETRES MONCASH / NATCASH -->
         <section class="section" id="section-mm-settings">
             <h2 class="section-title">📱 Parametres MonCash / NatCash</h2>
@@ -838,6 +852,7 @@ function showSection(el,e){
     if(id==="currency-distribution")loadAllocationFormCeo();
     if(id==="bank-distribution"){ loadBankCapital(); loadAllocationFormBankCeo(); }
     if(id==="receive-transfers"){ loadRtSettings(); loadRtCapital(); loadAllocationFormRtCeo(); loadValidatorWallets(); loadReceiveWallets(); }
+    if(id==="system-rates"){ loadSystemRates(); loadSystemRatesHistory(); }
     if(id==="loans"){ loadLoansOverview(); }
     if(id==="web-rates")loadExchangeRates();
     if(id==="promotions")loadPromotions();
@@ -1608,6 +1623,64 @@ async function loadReceiveWallets(){
             <td>${fmtA(svcs.unibank||0)} DOP</td>
         </tr>`;
     }).join("");
+}
+
+// ===== TAUX SYSTEME =====
+const SYS_RATE_META = {
+    withdrawal_fee_percent: {label:"Frais Nexus sur Retrait", desc:"Applique sur tous les retraits de comptes epargne (individuel, epargne, entreprise).", suffix:"%"},
+    loan_interest_percent: {label:"Interet sur Prestamo", desc:"Interet applique sur le capital emprunte, du a l'echeance (15 jours).", suffix:"%"},
+    loan_mora_percent: {label:"Mora (penalite de retard)", desc:"Penalite calculee sur le montant de l'interet (pas sur le capital), apres le delai de grace de 5 jours.", suffix:"%"}
+};
+
+async function loadSystemRates(){
+    const { data } = await supabaseClient.from("system_rates").select("*");
+    const map = {};
+    (data||[]).forEach(r => map[r.rate_key] = r);
+
+    document.getElementById("sysRatesGrid").innerHTML = Object.keys(SYS_RATE_META).map(key => {
+        const meta = SYS_RATE_META[key];
+        const r = map[key] || {rate_value:0};
+        return `
+        <div style="border:1px solid #E2E8F0;border-radius:10px;padding:1rem;margin-bottom:0.75rem">
+            <div style="font-weight:700;margin-bottom:0.25rem">${meta.label}</div>
+            <div style="font-size:0.8rem;color:#64748B;margin-bottom:0.6rem">${meta.desc}</div>
+            <div style="display:flex;gap:0.5rem;align-items:center">
+                <input type="number" id="sysrate_${key}" value="${r.rate_value}" step="0.01" min="0" style="width:120px;padding:0.6rem;border-radius:8px;border:1.5px solid #E2E8F0">
+                <span>${meta.suffix}</span>
+                <button class="btn-ceo-action" style="padding:0.6rem 1.2rem" onclick="saveSystemRate('${key}')">💾 Enregistrer</button>
+            </div>
+        </div>`;
+    }).join("");
+}
+
+async function saveSystemRate(key){
+    const newValue = Number(document.getElementById("sysrate_" + key).value);
+    if(newValue < 0 || isNaN(newValue)){ alert("Valeur invalide."); return; }
+
+    const { data: current } = await supabaseClient.from("system_rates").select("*").eq("rate_key", key).single();
+
+    if(!confirm("Confirmer le changement de '" + SYS_RATE_META[key].label + "' de " + (current?.rate_value||0) + "% a " + newValue + "%? Ce changement s'applique immediatement a tout le systeme.")) return;
+
+    await supabaseClient.from("system_rates_history").insert({
+        rate_key: key, old_value: current?.rate_value, new_value: newValue, changed_by_name: "CEO"
+    });
+
+    await supabaseClient.from("system_rates").update({
+        rate_value: newValue, updated_by_name: "CEO", updated_at: new Date().toISOString()
+    }).eq("rate_key", key);
+
+    alert("✅ " + SYS_RATE_META[key].label + " mis a jour: " + newValue + "%");
+    loadSystemRates();
+    loadSystemRatesHistory();
+}
+
+async function loadSystemRatesHistory(){
+    const { data } = await supabaseClient.from("system_rates_history").select("*").order("changed_at",{ascending:false}).limit(50);
+    const tbody = document.getElementById("sysRatesHistList");
+    if(!data || !data.length){ tbody.innerHTML = "<tr><td colspan='5'>Aucune modification.</td></tr>"; document.getElementById("sysRatesHistCount").textContent = "0"; return; }
+    document.getElementById("sysRatesHistCount").textContent = data.length;
+    tbody.innerHTML = data.map(h => `
+        <tr><td>${new Date(h.changed_at).toLocaleString("fr-FR")}</td><td>${SYS_RATE_META[h.rate_key]?.label||h.rate_key}</td><td>${h.old_value}%</td><td><strong>${h.new_value}%</strong></td><td>${h.changed_by_name}</td></tr>`).join("");
 }
 
 async function loadMoneyServiceSettings(){
