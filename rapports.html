@@ -70,6 +70,7 @@ td{padding:0.75rem;border-top:1px solid #F1F5F9;white-space:nowrap}
 </select>
 </div>
 <div class="form-group"><label>Date</label><input type="date" id="detDate"></div>
+<div class="form-group" id="detStaffGroup" style="display:none"><label>Personnel</label><select id="detStaff"><option value="">Tous</option></select></div>
 <div class="form-group"><button class="btn btn-primary" onclick="loadDetailedReport()">🔍 Rechercher</button></div>
 <div class="form-group"><button class="btn btn-pdf" onclick="printDetailedReport()">🖨️ Telecharger / Imprimer PDF</button></div>
 </div>
@@ -114,6 +115,15 @@ function switchTab(name){
     document.querySelectorAll(".tab-content").forEach(c=>c.classList.remove("active"));
     event.target.classList.add("active");
     document.getElementById("tab-"+name).classList.add("active");
+}
+
+async function loadStaffFilter(){
+    if(!isPrivileged()) return;
+    document.getElementById("detStaffGroup").style.display = "flex";
+    const { data } = await supabaseClient.from("profiles").select("id,full_name,role").in("role",["caissier","agent","validateur"]).order("full_name");
+    const sel = document.getElementById("detStaff");
+    const roleLabels = {caissier:"Caissier", agent:"Agent", validateur:"Validateur"};
+    sel.innerHTML = '<option value="">Tous</option>' + (data||[]).map(s => `<option value="${s.id}">${s.full_name} (${roleLabels[s.role]||s.role})</option>`).join("");
 }
 
 function isPrivileged(){
@@ -240,13 +250,15 @@ const SERVICES = {
     }
 };
 
-async function fetchServiceData(svcKey, dateStr){
+async function fetchServiceData(svcKey, dateStr, staffIdOverride){
     const svc = SERVICES[svcKey];
     const { start, end } = dayRange(dateStr);
     let q = supabaseClient.from(svc.table).select("*").gte("created_at", start).lte("created_at", end).order("created_at",{ascending:true});
     q = svc.extraFilter(q);
     if(!isPrivileged()){
         q = q.eq(svc.staffCol, currentUser.id);
+    } else if(staffIdOverride){
+        q = q.eq(svc.staffCol, staffIdOverride);
     }
     const { data, error } = await q;
     return { data: data || [], error };
@@ -294,7 +306,8 @@ async function loadDetailedReport(){
     document.getElementById("detTitle").textContent = svc.label + " - " + new Date(dateStr).toLocaleDateString("fr-FR");
     document.getElementById("detBody").innerHTML = "<tr><td style='padding:1.5rem;text-align:center'>Chargement...</td></tr>";
 
-    const { data, error } = await fetchServiceData(svcKey, dateStr);
+    const staffFilter = isPrivileged() ? document.getElementById("detStaff").value : null;
+    const { data, error } = await fetchServiceData(svcKey, dateStr, staffFilter);
     if(error){ document.getElementById("detBody").innerHTML = "<tr><td style='padding:1.5rem;color:red'>Erreur: "+error.message+"</td></tr>"; return; }
 
     lastDetailedData = data;
@@ -337,7 +350,8 @@ async function loadGeneralReport(){
 
     for(const svcKey of Object.keys(SERVICES)){
         const svc = SERVICES[svcKey];
-        const { data, error } = await fetchServiceData(svcKey, dateStr);
+        const staffFilter = isPrivileged() ? document.getElementById("detStaff").value : null;
+    const { data, error } = await fetchServiceData(svcKey, dateStr, staffFilter);
         const rows = data || [];
         grandTotalTxns += rows.length;
 
@@ -376,6 +390,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     const today = new Date().toISOString().split("T")[0];
     document.getElementById("detDate").value = today;
     document.getElementById("genDate").value = today;
+
+    loadStaffFilter();
 });
 </script>
 </body>
