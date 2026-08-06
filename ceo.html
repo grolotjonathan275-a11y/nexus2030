@@ -385,7 +385,7 @@
                 <div class="card-header"><h3>Wallets Caissiers</h3></div>
                 <div class="table-wrap">
                     <table class="data-table">
-                        <thead><tr><th>Caissier</th><th>Succursale</th><th>HTG</th><th>DOP</th><th>USD</th><th>Limite/Jour</th><th>Total Jour</th><th>Action</th></tr></thead>
+                        <thead><tr><th>Caissier</th><th>Succursale</th><th>HTG</th><th>DOP</th><th>USD</th><th>Profit HTG</th><th>Profit DOP</th><th>Profit USD</th><th>Limite/Jour</th><th>Total Jour</th><th>Action</th></tr></thead>
                         <tbody id="cashiersList"><tr><td colspan="8">Chargement...</td></tr></tbody>
                     </table>
                 </div>
@@ -844,10 +844,16 @@ async function loadOverview(){
             <td>${fmtA(w.balance_htg)} HTG</td>
             <td>${fmtA(w.balance_dop)} DOP</td>
             <td>${fmtA(w.balance_usd)} USD</td>
+            <td style="color:#16A34A;font-weight:700">${fmtA(w.profit_htg||0)} HTG</td>
+            <td style="color:#16A34A;font-weight:700">${fmtA(w.profit_dop||0)} DOP</td>
+            <td style="color:#16A34A;font-weight:700">${fmtA(w.profit_usd||0)} USD</td>
             <td>${fmtA(w.daily_limit)} HTG</td>
             <td>${fmtA(w.daily_total)} HTG</td>
-            <td><button class="btn-sm" onclick="resetDaily('${w.cashier_id}')">Reset Jour</button></td>
-        </tr>`).join("")||"<tr><td colspan='8'>Aucun caissier</td></tr>";
+            <td>
+                <button class="btn-sm" onclick="resetDaily('${w.cashier_id}')">Reset Jour</button>
+                <button class="btn-sm" style="background:#16A34A;margin-left:0.3rem" onclick="resetProfit('${w.cashier_id}')">Collecter Profit</button>
+            </td>
+        </tr>`).join("")||"<tr><td colspan='11'>Aucun caissier</td></tr>";
 
     loadStats();
     loadAllTxns();
@@ -1037,6 +1043,13 @@ async function rechargeCashier(){
     const newBal=Number(data[0][field]||0)+amount;
     await sf("cashier_wallets","PATCH",{[field]:newBal},`?cashier_id=eq.${id}`);
     alert(`✅ Wallet recharge! Nouveau solde: ${fmtA(newBal)}`);
+    loadOverview();
+}
+
+async function resetProfit(cashierId){
+    if(!confirm("Confirmer que vous avez collecte physiquement ce profit? Cette action remet les 3 compteurs de profit a zero."))return;
+    await sf("cashier_wallets","PATCH",{profit_htg:0,profit_dop:0,profit_usd:0},`?cashier_id=eq.${cashierId}`);
+    alert("✅ Profit collecte et remis a zero!");
     loadOverview();
 }
 
