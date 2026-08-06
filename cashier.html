@@ -1272,21 +1272,21 @@ async function executeRetrait() {
     const currency = document.getElementById("retraitCurrency").value;
     const idDoc = document.getElementById("retraitId").value;
     const notes = document.getElementById("retraitNotes").value;
-
     if (!amount || amount <= 0) return alert("Entrez un montant valide");
     if (!idDoc) return alert("Piece d'identite obligatoire pour un retrait");
     if (amount > Number(acc.balance)) return alert("Solde insuffisant! Solde: " + fmtAmount(acc.balance) + " " + acc.currency);
-
+    const feeAmount = amount * 0.05;
+    const netAmount = amount - feeAmount;
     const balanceBefore = Number(acc.balance);
     const balanceAfter = balanceBefore - amount;
-
     await supaFetch("savings_accounts", "PATCH", {balance: balanceAfter}, `?account_no=eq.${acc.account_no}`);
-
     await supaFetch("transactions", "POST", {
         account_no: acc.account_no,
         client_name: acc.client_name,
         transaction_type: "retrait",
         amount: amount,
+        fee_amount: feeAmount,
+        net_amount: netAmount,
         balance_before: balanceBefore,
         balance_after: balanceAfter,
         currency: currency,
@@ -1296,30 +1296,31 @@ async function executeRetrait() {
         notes: notes + " | ID: " + idDoc,
         status: "completed"
     });
-
     const walletField = "balance_" + currency.toLowerCase();
+    const profitField = "profit_" + currency.toLowerCase();
     const walletData = await supaFetch("cashier_wallets", "GET", null, `?cashier_id=eq.${CASHIER_ID}`);
     if (walletData && walletData[0]) {
-        const newBal = Number(walletData[0][walletField]) - amount;
+        const newBal = Number(walletData[0][walletField]) - netAmount;
+        const newProfit = Number(walletData[0][profitField] || 0) + feeAmount;
         const newDaily = Number(walletData[0].daily_total) + amount;
         await supaFetch("cashier_wallets", "PATCH",
-            {[walletField]: newBal, daily_total: newDaily},
+            {[walletField]: newBal, [profitField]: newProfit, daily_total: newDaily},
             `?cashier_id=eq.${CASHIER_ID}`
         );
     }
-
     const p = new URLSearchParams({
         client_name: acc.client_name,
         account_no: acc.account_no,
         amount: amount,
+        fee_amount: feeAmount,
+        net_amount: netAmount,
         currency: currency,
         balance_before: balanceBefore,
         balance_after: balanceAfter,
         type: "retrait"
     });
     window.open("receipt-withdrawal.html?" + p.toString(), "_blank");
-
-    alert("Retrait effectue avec succes!");
+    alert("Retrait effectue! Client recoit: " + fmtAmount(netAmount) + " " + currency + " (Frais Nexus 5%: " + fmtAmount(feeAmount) + " " + currency + ")");
     resetForm("retrait");
     loadDashboard();
 }

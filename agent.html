@@ -1180,13 +1180,21 @@ async function executeRetrait(){
     if(!amt||amt<=0)return alert("Entrez un montant valide.");
     if(!idDoc)return alert("Piece d'identite obligatoire.");
     if(amt>Number(c.balance))return alert("Solde insuffisant! Solde: "+fmtA(c.balance)+" "+c.currency);
+    const feeAmount=amt*0.05;
+    const netAmount=amt-feeAmount;
     const balBefore=Number(c.balance);
     const balAfter=balBefore-amt;
     await sf("savings_accounts","PATCH",{balance:balAfter},`?account_no=eq.${c.account_no}`);
-    await sf("transactions","POST",{account_no:c.account_no,client_name:c.client_name,transaction_type:"retrait",amount:amt,balance_before:balBefore,balance_after:balAfter,currency:curr,cashier_id:AGENT_ID,cashier_name:AGENT_NAME,branch:AGENT_BRANCH,notes:"ID: "+idDoc,status:"completed"});
-    const p=new URLSearchParams({client_name:c.client_name,account_no:c.account_no,amount:amt,currency:curr,balance_before:balBefore,balance_after:balAfter});
+    await sf("transactions","POST",{account_no:c.account_no,client_name:c.client_name,transaction_type:"retrait",amount:amt,fee_amount:feeAmount,net_amount:netAmount,balance_before:balBefore,balance_after:balAfter,currency:curr,cashier_id:AGENT_ID,cashier_name:AGENT_NAME,branch:AGENT_BRANCH,notes:"ID: "+idDoc,status:"completed"});
+    const profitField="profit_"+curr.toLowerCase();
+    const walletData=await sf("cashier_wallets","GET",null,`?cashier_id=eq.${AGENT_ID}`);
+    if(walletData&&walletData[0]){
+        const newProfit=Number(walletData[0][profitField]||0)+feeAmount;
+        await sf("cashier_wallets","PATCH",{[profitField]:newProfit},`?cashier_id=eq.${AGENT_ID}`);
+    }
+    const p=new URLSearchParams({client_name:c.client_name,account_no:c.account_no,amount:amt,fee_amount:feeAmount,net_amount:netAmount,currency:curr,balance_before:balBefore,balance_after:balAfter});
     window.open("receipt-withdrawal.html?"+p.toString(),"_blank");
-    alert("✅ Retrait effectue!");
+    alert("✅ Retrait effectue! Client recoit: "+fmtA(netAmount)+" "+curr+" (Frais Nexus 5%: "+fmtA(feeAmount)+" "+curr+")");
     resetForm("retrait");
     loadAll();
 }
