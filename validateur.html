@@ -33,6 +33,7 @@
         <div class="nav-section">VALIDATION</div>
         <a href="#pending" class="nav-item" onclick="showSection(this,event)"><span>⏳</span>Transactions en Attente</a>
         <a href="#history" class="nav-item" onclick="showSection(this,event)"><span>📋</span>Historique</a>
+<a href="#receive" class="nav-item" onclick="showSection(this,event)"><span>🔄</span>Reception Transferts</a>
         <div class="nav-section">COMPTE</div>
         <a href="#profile" class="nav-item" onclick="showSection(this,event)"><span>👤</span>Mon Profil</a>
         <div class="nav-section">SYSTEME</div>
@@ -105,7 +106,12 @@
         </section>
 
         <!-- MON PROFIL -->
-        <section class="section" id="section-profile">
+        <section class="section" id="section-receive">
+<h2 class="section-title">🔄 Reception Transferts en Attente</h2>
+<div id="receivePendingList"></div>
+</section>
+
+<section class="section" id="section-profile">
             <div class="card">
                 <div class="card-header"><h3>👤 Mon Profil</h3></div>
                 <div style="padding:1.5rem;display:flex;align-items:center;gap:1.25rem">
@@ -164,6 +170,7 @@ function showSection(el,e){
     document.getElementById("section-"+id).classList.add("active");
     document.getElementById("pageTitle").textContent=el.textContent.trim();
     if(id==="pending")loadPending();
+    if(id==="receive")loadReceivePending();
     if(id==="history")loadHistory();
 }
 
@@ -214,6 +221,115 @@ async function loadOverview(){
             <td>${fmtA(t.amount_dop)} DOP</td>
             <td>${elapsedTime(t.created_at)}</td>
         </tr>`).join("")||"<tr><td colspan='6'>Aucune transaction en attente</td></tr>";
+}
+
+// ===== RECEPTION TRANSFERTS - VALIDATION & NEGOCIATION =====
+const RT_LABELS_V = {moncash:"MonCash", natcash:"NatCash", sogebank:"Sogebank", bnc:"BNC", unibank:"Unibank"};
+
+async function loadReceivePending(){
+    const { data, error } = await supabaseClient
+        .from("receive_transfer_transactions")
+        .select("*")
+        .in("status", ["pending_validation"])
+        .in("negotiation_status", ["none","pending_validator_response"])
+        .order("created_at",{ascending:true});
+
+    const container = document.getElementById("receivePendingList");
+    if(error){ container.innerHTML = "<p style='color:#DC2626'>Erreur: "+error.message+"</p>"; return; }
+    if(!data || data.length===0){
+        container.innerHTML = "<div class='card'><p style='padding:2rem;text-align:center;color:#64748B'>✅ Aucune demande en attente.</p></div>";
+        return;
+    }
+
+    for(const t of data){
+        const { data: negos } = await supabaseClient.from("receive_transfer_negotiations").select("*").eq("transaction_id", t.id).order("created_at",{ascending:true});
+        t._negos = negos || [];
+    }
+
+    container.innerHTML = data.map(t => renderReceiveCard(t)).join("");
+}
+
+function renderReceiveCard(t){
+    const negos = t._negos || [];
+    const lastNego = negos.length ? negos[negos.length-1] : null;
+    const currentAmount = lastNego ? Number(lastNego.proposed_amount_htg) : Number(t.amount_htg);
+
+    let historyHtml = "";
+    if(negos.length){
+        historyHtml = "<div style='background:#F8FAFC;border-radius:8px;padding:0.75rem;margin:0.75rem 0;font-size:0.8rem'>"
+            + "<strong>Historique de negociation:</strong>"
+            + negos.map(n => `<div style="margin-top:0.3rem">• <strong>${n.proposed_by_name||n.proposed_by}</strong>: ${fmtA(n.proposed_amount_htg)} HTG ${n.note?("("+n.note+")"):""}</div>`).join("")
+            + "</div>";
+    }
+
+    return `
+    <div class="card" style="margin-bottom:1rem;border-left:4px solid #7C3AED">
+        <div style="padding:1.25rem">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+                <div style="font-size:1.1rem;font-weight:700">🔄 ${RT_LABELS_V[t.service_type]||t.service_type} — ${fmtA(currentAmount)} HTG</div>
+                <div style="font-size:0.85rem;color:#64748B">${fmtT(t.created_at)}, ${fmt(t.created_at)}</div>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:0.75rem;font-size:0.9rem;margin-bottom:0.75rem">
+                <div><span style="color:#64748B">Soumis par:</span> <strong>${t.staff_name||"-"}</strong></div>
+                <div><span style="color:#64748B">Succursale:</span> <strong>${t.branch||"-"}</strong></div>
+                <div><span style="color:#64748B">Client (RD):</span> <strong>${t.client_name}</strong></div>
+                <div><span style="color:#64748B">Telephone:</span> <strong>${t.client_phone||"-"}</strong></div>
+            </div>
+            <img src="${t.receipt_photo}" style="max-width:250px;border-radius:8px;border:1px solid #E2E8F0;display:block;margin-bottom:0.5rem;cursor:pointer" onclick="window.open('${t.receipt_photo}','_blank')">
+            ${historyHtml}
+            <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-top:0.75rem">
+                <button class="btn-approve" style="background:#10B981" onclick="confirmReceiveAmount('${t.id}', ${currentAmount})">✅ Confirmer ${fmtA(currentAmount)} HTG</button>
+                <button class="btn-approve" style="background:#F59E0B" onclick="proposeReceiveAmountValidator('${t.id}')">✏️ Proposer un autre montant</button>
+                <button class="btn-approve" style="background:#DC2626" onclick="rejectReceiveTransaction('${t.id}')">❌ Rejeter</button>
+            </div>
+        </div>
+    </div>`;
+}
+
+async function confirmReceiveAmount(id, amount){
+    if(!confirm("Confirmer ce montant: "+fmtA(amount)+" HTG? Le caissier/agent devra accepter pour finaliser la livraison."))return;
+    await supabaseClient.from("receive_transfer_negotiations").insert({
+        transaction_id: id, proposed_by: "validateur", proposed_by_id: currentValidatorId, proposed_by_name: currentValidatorName,
+        proposed_amount_htg: amount, note: "Confirme par le validateur"
+    });
+    await supabaseClient.from("receive_transfer_transactions").update({ negotiation_status: "pending_cashier_response" }).eq("id", id);
+    alert("✅ Montant confirme. En attente de l'acceptation du caissier/agent.");
+    loadReceivePending();
+}
+
+async function proposeReceiveAmountValidator(id){
+    const newAmount = prompt("Entrez le montant HTG confirme (verifie sur le compte):");
+    if(!newAmount || isNaN(Number(newAmount)) || Number(newAmount) <= 0) return;
+    const note = prompt("Note (optionnel):") || "";
+
+    await supabaseClient.from("receive_transfer_negotiations").insert({
+        transaction_id: id, proposed_by: "validateur", proposed_by_id: currentValidatorId, proposed_by_name: currentValidatorName,
+        proposed_amount_htg: Number(newAmount), note: note
+    });
+    await supabaseClient.from("receive_transfer_transactions").update({ negotiation_status: "pending_cashier_response" }).eq("id", id);
+
+    alert("✅ Contre-proposition envoyee. En attente de la reponse du caissier/agent.");
+    loadReceivePending();
+}
+
+async function rejectReceiveTransaction(id){
+    if(!confirm("Confirmer le rejet de cette transaction? La caisse du caissier/agent sera recreditee."))return;
+    const { data: txData } = await supabaseClient.from("receive_transfer_transactions").select("*").eq("id", id).single();
+    if(txData){
+        const { data: wallet } = await supabaseClient.from("receive_wallets").select("*").eq("cashier_id", txData.created_by).eq("service_type", txData.service_type).maybeSingle();
+        if(wallet){
+            await supabaseClient.from("receive_wallets").update({ balance_dop: Number(wallet.balance_dop) + Number(txData.amount_dop_net), updated_at: new Date().toISOString() }).eq("id", wallet.id);
+        }
+    }
+    await supabaseClient.from("receive_transfer_negotiations").insert({
+        transaction_id: id, proposed_by: "validateur", proposed_by_id: currentValidatorId, proposed_by_name: currentValidatorName,
+        proposed_amount_htg: 0, note: "Transaction rejetee"
+    });
+    await supabaseClient.from("receive_transfer_transactions").update({
+        status: "rejected", negotiation_status: "agreed", validated_by: currentValidatorId, validated_by_name: currentValidatorName, validated_at: new Date().toISOString()
+    }).eq("id", id);
+    alert("✅ Transaction rejetee. La caisse a ete recreditee.");
+    loadReceivePending();
 }
 
 async function loadPending(){
@@ -370,6 +486,8 @@ function showAvatarMsg(text, isError){
     el.textContent = text;
 }
 
+let currentValidatorName="";
+
 document.addEventListener("DOMContentLoaded",async ()=>{
     const { data: { session } } = await supabaseClient.auth.getSession();
     if(!session){
@@ -385,6 +503,7 @@ document.addEventListener("DOMContentLoaded",async ()=>{
         return;
     }
     currentValidatorId=profile.id;
+    currentValidatorName=profile.full_name;
     document.getElementById("validName").textContent=profile.full_name;
     document.getElementById("profFullName").textContent=profile.full_name;
     if(profile.avatar_url) applyAvatar(profile.avatar_url);
