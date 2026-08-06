@@ -594,8 +594,8 @@ async function loadLoansOverviewAdmin(){
                     <option value="Santo Domingo">Santo Domingo</option>
                     <option value="Bavaro">Bavaro</option>
                 </select>
-                <button class="btn-approve" style="padding:0.4rem 0.8rem;background:#10B981" onclick="decideLoanAdmin(''${l.id}'',''approved'')">✅ Approuver</button>
-                <button class="btn-approve" style="padding:0.4rem 0.8rem;background:#EF4444" onclick="decideLoanAdmin(''${l.id}'',''rejected'')">❌ Rejeter</button>
+                <button class="btn-approve" style="padding:0.4rem 0.8rem;background:#10B981" onclick="decideLoanAdmin('${l.id}','approved')">✅ Approuver</button>
+                <button class="btn-approve" style="padding:0.4rem 0.8rem;background:#EF4444" onclick="decideLoanAdmin('${l.id}','rejected')">❌ Rejeter</button>
             </div>
         </div>`).join("") || "<p style=''color:#64748B''>Aucune demande en attente.</p>";
 
