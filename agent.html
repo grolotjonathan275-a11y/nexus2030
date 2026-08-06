@@ -37,6 +37,7 @@
         <a href="#retrait" class="nav-item" onclick="showSection(this,event)"><span>💸</span>Retrait Client</a>
         <a href="#transfer" class="nav-item" onclick="showSection(this,event)"><span>🔄</span>Transferts</a>
         <a href="#change" class="nav-item" onclick="showSection(this,event)"><span>💱</span>Change Devises</a>
+<a href="#loan" class="nav-item" onclick="showSection(this,event)"><span>💰</span>Prestamo</a>
         <a href="#banking" class="nav-item" onclick="showSection(this,event)"><span>🏦</span>Depots Bancaires</a>
         <div class="nav-section">CAISSE</div>
         <a href="#wallet" class="nav-item" onclick="showSection(this,event)"><span>👛</span>Ma Caisse</a>
@@ -608,7 +609,46 @@
             </div>
         </section>
 
-        <!-- MA CAISSE -->
+        <!-- PRESTAMO -->
+<section class="section" id="section-loan">
+<h2 class="section-title">💰 Demandes de Pret</h2>
+<div class="op-card" style="margin-bottom:1.5rem">
+<div class="op-form">
+<div id="loanFormMsg" style="display:none;padding:0.75rem 1rem;border-radius:8px;margin-bottom:1rem;font-size:0.9rem;"></div>
+<div class="form-group">
+<label>Numero de Compte Client *</label>
+<div class="input-row">
+<input type="text" id="loanAccountNo" placeholder="NEXUS-2026-000000">
+<button class="btn-search" onclick="searchForLoan()">🔍 Chercher</button>
+</div>
+</div>
+<div id="loanClientCard" class="client-info-card" style="display:none">
+<div class="cic-avatar">👤</div>
+<div class="cic-info">
+<div class="cic-name" id="loanClientName">-</div>
+<div class="cic-meta" id="loanClientMeta">-</div>
+</div>
+</div>
+<div class="form-group"><label>Montant Demande *</label><input type="number" id="loanAmount" placeholder="0.00" min="1"></div>
+<div class="form-group"><label>Raison</label><input type="text" id="loanReason" placeholder="Raison de la demande..."></div>
+<div class="form-actions">
+<button class="btn-action green" onclick="submitInPersonLoan()">📤 Soumettre la Demande</button>
+</div>
+</div>
+</div>
+
+<div class="card">
+<div class="card-header"><h3>Demandes de ma Succursale</h3><span class="badge" id="loanBranchCount">0</span></div>
+<div class="table-wrap">
+<table class="data-table">
+<thead><tr><th>Date</th><th>Client</th><th>Montant</th><th>Statut</th><th>Action</th></tr></thead>
+<tbody id="loanBranchList"><tr><td colspan="5">Chargement...</td></tr></tbody>
+</table>
+</div>
+</div>
+</section>
+
+<!-- MA CAISSE -->
         <section class="section" id="section-wallet">
             <h2 class="section-title">👛 Ma Caisse</h2>
             <div class="wallet-full-card">
@@ -865,6 +905,7 @@ function showSection(el,e){
     document.getElementById("section-"+id).classList.add("active");
     document.getElementById("pageTitle").textContent=el.textContent.trim();
     if(id === "banking"){ loadBankWallets(); loadMyBankTransactions(); }
+    if(id === "loan"){ loadBranchLoans(); }
 }
 
 function goTo(id){
@@ -874,6 +915,7 @@ function goTo(id){
     const nav=document.querySelector('[href="#'+id+'"]');
     if(nav)nav.classList.add("active");
     if(id === "banking"){ loadBankWallets(); loadMyBankTransactions(); }
+    if(id === "loan"){ loadBranchLoans(); }
 }
 
 function toggleSidebar(){document.getElementById("sidebar").classList.toggle("open");document.getElementById("sidebarOverlay").classList.toggle("show");}
@@ -1061,6 +1103,118 @@ async function loadMyBankTransactions(){
             <td>${fmtA(t.amount)} DOP</td>
             <td>${statusLabels[t.status]||t.status}</td>
         </tr>`).join("") || "<tr><td colspan='5'>Aucun depot</td></tr>";
+}
+
+// ===== PRESTAMO =====
+let loanFoundAccount = null;
+
+async function searchForLoan(){
+    const accountNo = document.getElementById("loanAccountNo").value.trim();
+    if(!accountNo) return alert("Entrez un numero de compte");
+    const data = await sf("savings_accounts", "GET", null, `?account_no=eq.${accountNo}`);
+    if(!data || data.length === 0){ alert("Compte non trouve."); return; }
+    const acc = data[0];
+    loanFoundAccount = acc;
+    document.getElementById("loanClientCard").style.display = "flex";
+    document.getElementById("loanClientName").textContent = acc.client_name;
+    document.getElementById("loanClientMeta").textContent = acc.account_type + " | " + acc.currency;
+}
+
+async function submitInPersonLoan(){
+    if(!loanFoundAccount){ alert("Recherchez d'abord le compte client."); return; }
+    const amount = Number(document.getElementById("loanAmount").value);
+    const reason = document.getElementById("loanReason").value.trim();
+    if(!amount || amount <= 0){ alert("Entrez un montant valide."); return; }
+
+    const { error } = await supabaseClient.from("loan_requests").insert({
+        account_no: loanFoundAccount.account_no,
+        client_name: loanFoundAccount.client_name,
+        requested_amount: amount,
+        currency: loanFoundAccount.currency || "HTG",
+        reason: reason,
+        status: "pending",
+        requested_via: "branch",
+        branch_pickup: AGENT_BRANCH
+    });
+
+    if(error){ alert("Erreur: " + error.message); return; }
+
+    alert("✅ Demande de pret soumise! Elle sera traitee par le CEO/Super Admin.");
+    document.getElementById("loanAccountNo").value = "";
+    document.getElementById("loanAmount").value = "";
+    document.getElementById("loanReason").value = "";
+    document.getElementById("loanClientCard").style.display = "none";
+    loanFoundAccount = null;
+    loadBranchLoans();
+}
+
+async function loadBranchLoans(){
+    const { data, error } = await supabaseClient.from("loan_requests").select("*").order("created_at",{ascending:false}).limit(50);
+    if(error || !data){ document.getElementById("loanBranchList").innerHTML = "<tr><td colspan='5'>Erreur</td></tr>"; return; }
+
+    document.getElementById("loanBranchCount").textContent = data.length;
+    const statusLabels = {pending:"⏳ En attente", approved:"✅ A decaisser", rejected:"❌ Rejete", disbursed:"💵 Decaisse", repaid:"✅ Rembourse"};
+
+    document.getElementById("loanBranchList").innerHTML = data.map(loan => `
+        <tr>
+            <td>${new Date(loan.created_at).toLocaleDateString("fr-FR")}</td>
+            <td>${loan.client_name}</td>
+            <td>${fmtA(loan.requested_amount)} ${loan.currency}</td>
+            <td>${statusLabels[loan.status]||loan.status}</td>
+            <td>${loan.status === "approved" ? `<button class="btn-xs" style="background:#10B981;color:#fff;border:none;padding:0.35rem 0.7rem;border-radius:6px;cursor:pointer" onclick="disburseLoan('${loan.id}')">Decaisser</button>` : (loan.status === "disbursed" ? `<button class="btn-xs" style="background:#0EA5E9;color:#fff;border:none;padding:0.35rem 0.7rem;border-radius:6px;cursor:pointer" onclick="repayLoan('${loan.id}')">Rembourser</button>` : "-")}</td>
+        </tr>`).join("") || "<tr><td colspan='5'>Aucune demande</td></tr>";
+}
+
+async function disburseLoan(loanId){
+    if(!confirm("Confirmer avoir remis le montant en especes au client?")) return;
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    await supabaseClient.from("loan_requests").update({
+        status: "disbursed",
+        disbursed_by: session.user.id,
+        disbursed_by_name: AGENT_NAME,
+        disbursed_at: new Date().toISOString()
+    }).eq("id", loanId);
+    alert("✅ Pret decaisse avec succes!");
+    loadBranchLoans();
+}
+
+async function repayLoan(loanId){
+    const { data } = await supabaseClient.from("loan_requests").select("*").eq("id", loanId).single();
+    if(!data) return;
+
+    const principal = Number(data.requested_amount);
+    const interest = principal * 0.10;
+    let mora = 0;
+
+    if(data.disbursed_at){
+        const dueDate = new Date(data.disbursed_at);
+        dueDate.setDate(dueDate.getDate() + 15);
+        const graceEnd = new Date(dueDate);
+        graceEnd.setDate(graceEnd.getDate() + 5);
+        if(new Date() > graceEnd) mora = interest * 0.05;
+    }
+
+    const totalOwed = principal + interest + mora;
+
+    if(!confirm("Montant total a percevoir: " + fmtA(totalOwed) + " " + data.currency + " (Capital: " + fmtA(principal) + " + Interet 10%: " + fmtA(interest) + (mora > 0 ? " + Mora: " + fmtA(mora) : "") + "). Confirmer la reception?")) return;
+
+    await supabaseClient.from("loan_requests").update({
+        status: "repaid",
+        interest_amount: interest,
+        mora_amount: mora,
+        total_owed: totalOwed,
+        repaid_at: new Date().toISOString()
+    }).eq("id", loanId);
+
+    const profitField = "profit_" + data.currency.toLowerCase();
+    const walletData = await sf("cashier_wallets", "GET", null, `?cashier_id=eq.${AGENT_ID}`);
+    if(walletData && walletData[0]){
+        const newProfit = Number(walletData[0][profitField] || 0) + interest + mora;
+        await sf("cashier_wallets", "PATCH", {[profitField]: newProfit}, `?cashier_id=eq.${AGENT_ID}`);
+    }
+
+    alert("✅ Pret rembourse avec succes!");
+    loadBranchLoans();
 }
 
 async function searchForDepot(){
