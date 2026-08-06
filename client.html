@@ -773,7 +773,7 @@ async function submitLoanRequest(){
     const reason = document.getElementById("loanReason").value.trim();
     if(!amount || amount <= 0){ showLoanMsg("Entrez un montant valide.", true); return; }
 
-    const { error } = await supaFetch("loan_requests", "POST", {
+    const loanResult = await supaFetch("loan_requests", "POST", {
         account_no: currentClient.account_no,
         client_name: currentClient.client_name,
         requested_amount: amount,
@@ -782,7 +782,10 @@ async function submitLoanRequest(){
         status: "pending",
         requested_via: "client"
     });
-
+    if(!loanResult || !loanResult.ok){
+        showLoanMsg("Erreur lors de la soumission de la demande.", true);
+        return;
+    }
     showLoanMsg("✅ Votre demande de pret a ete soumise! Vous recevrez une notification une fois qu'elle sera traitee.", false);
     document.getElementById("loanAmount").value = "";
     document.getElementById("loanReason").value = "";
@@ -812,8 +815,8 @@ function calcLoanDetails(loan){
 
 async function loadLoanData(){
     if(!currentClient) return;
-    const { data, error } = await supaFetch("loan_requests", "GET", null, `?account_no=eq.${currentClient.account_no}&order=created_at.desc`);
-    if(error || !data){ document.getElementById("loanList").innerHTML = "<tr><td colspan='5'>Erreur</td></tr>"; return; }
+    const data = await supaFetch("loan_requests", "GET", null, `?account_no=eq.${currentClient.account_no}&order=created_at.desc`);
+    if(!Array.isArray(data)){ document.getElementById("loanList").innerHTML = "<tr><td colspan='5'>Erreur: " + JSON.stringify(data) + "</td></tr>"; return; }
 
     document.getElementById("loanCount").textContent = data.length;
 
