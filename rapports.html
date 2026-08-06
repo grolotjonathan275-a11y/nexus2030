@@ -88,6 +88,7 @@ td{padding:0.75rem;border-top:1px solid #F1F5F9;white-space:nowrap}
 <div class="card">
 <div class="filters">
 <div class="form-group"><label>Date</label><input type="date" id="genDate"></div>
+<div class="form-group" id="genStaffGroup" style="display:none"><label>Personnel</label><select id="genStaff"><option value="">Tous</option></select></div>
 <div class="form-group"><button class="btn btn-primary" onclick="loadGeneralReport()">🔍 Generer le Rapport</button></div>
 <div class="form-group"><button class="btn btn-pdf" onclick="window.print()">🖨️ Telecharger / Imprimer PDF</button></div>
 </div>
@@ -120,10 +121,12 @@ function switchTab(name){
 async function loadStaffFilter(){
     if(!isPrivileged()) return;
     document.getElementById("detStaffGroup").style.display = "flex";
+    document.getElementById("genStaffGroup").style.display = "flex";
     const { data } = await supabaseClient.from("profiles").select("id,full_name,role").in("role",["caissier","agent","validateur"]).order("full_name");
-    const sel = document.getElementById("detStaff");
     const roleLabels = {caissier:"Caissier", agent:"Agent", validateur:"Validateur"};
-    sel.innerHTML = '<option value="">Tous</option>' + (data||[]).map(s => `<option value="${s.id}">${s.full_name} (${roleLabels[s.role]||s.role})</option>`).join("");
+    const optionsHtml = '<option value="">Tous</option>' + (data||[]).map(s => `<option value="${s.id}">${s.full_name} (${roleLabels[s.role]||s.role})</option>`).join("");
+    document.getElementById("detStaff").innerHTML = optionsHtml;
+    document.getElementById("genStaff").innerHTML = optionsHtml;
 }
 
 function isPrivileged(){
@@ -267,6 +270,7 @@ async function fetchServiceData(svcKey, dateStr, staffIdOverride){
 let lastDetailedData = null;
 let lastDetailedSvcKey = null;
 let lastDetailedDate = null;
+let lastDetailedStaffLabel = "Tous";
 
 function printDetailedReport(){
     if(!lastDetailedData || !lastDetailedData.length){
@@ -283,7 +287,7 @@ function printDetailedReport(){
             <h1 style="font-size:1.4rem">NEXUS CASA DE CAMBIO</h1>
             <p style="font-size:0.9rem">Rapport Detaille - ${svc.label}</p>
             <p style="font-size:0.9rem;font-weight:700">${new Date(lastDetailedDate).toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long",year:"numeric"})}</p>
-            <p style="font-size:0.75rem;color:#666">Genere par: ${currentUser.name} (${currentUser.role})</p>
+            <p style="font-size:0.75rem;color:#666">Genere par: ${currentUser.name} (${currentUser.role})</p><p style="font-size:0.75rem;color:#666">Personnel filtre: ${lastDetailedStaffLabel}</p>
         </div>
         <div style="margin-bottom:1.25rem">
             <h3 style="font-size:0.95rem;background:#F1F5F9;padding:0.5rem;border-radius:4px">${svc.label} (${lastDetailedData.length} transaction(s) - Total: ${fmtA(total)})</h3>
@@ -313,6 +317,7 @@ async function loadDetailedReport(){
     lastDetailedData = data;
     lastDetailedSvcKey = svcKey;
     lastDetailedDate = dateStr;
+    lastDetailedStaffLabel = isPrivileged() && staffFilter ? document.getElementById("detStaff").options[document.getElementById("detStaff").selectedIndex].text : "Tous";
 
     document.getElementById("detCount").textContent = data.length + " transaction(s)";
     document.getElementById("detHead").innerHTML = "<tr>" + svc.cols.map(c=>`<th>${c.h}</th>`).join("") + "</tr>";
@@ -333,6 +338,8 @@ async function loadDetailedReport(){
 async function loadGeneralReport(){
     const dateStr = document.getElementById("genDate").value;
     if(!dateStr){ alert("Selectionnez une date."); return; }
+    const staffFilter = isPrivileged() ? document.getElementById("genStaff").value : null;
+    const staffLabel = staffFilter ? document.getElementById("genStaff").options[document.getElementById("genStaff").selectedIndex].text : "Tous";
 
     const resultsDiv = document.getElementById("genResults");
     resultsDiv.innerHTML = "<p style='padding:1rem;color:#64748B'>Chargement de tous les services...</p>";
@@ -342,7 +349,7 @@ async function loadGeneralReport(){
             <h1 style="font-size:1.4rem">NEXUS CASA DE CAMBIO</h1>
             <p style="font-size:0.9rem">Rapport General d'Activite</p>
             <p style="font-size:0.9rem;font-weight:700">${new Date(dateStr).toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long",year:"numeric"})}</p>
-            <p style="font-size:0.75rem;color:#666">Genere par: ${currentUser.name} (${currentUser.role})</p>
+            <p style="font-size:0.75rem;color:#666">Genere par: ${currentUser.name} (${currentUser.role})</p><p style="font-size:0.75rem;color:#666">Personnel filtre: ${staffLabel}</p>
         </div>`;
 
     let screenHtml = "";
