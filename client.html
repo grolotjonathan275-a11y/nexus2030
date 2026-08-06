@@ -178,6 +178,7 @@
             <a href="#accounts" class="nav-item" onclick="clientSection(this,event)"><span>💳</span>Mes Comptes</a>
             <a href="#transactions" class="nav-item" onclick="clientSection(this,event)"><span>📋</span>Transactions</a>
             <a href="#transfers" class="nav-item" onclick="clientSection(this,event)"><span>💸</span>Transferts</a>
+<a href="#loan" class="nav-item" onclick="clientSection(this,event)"><span>💰</span>Demande de Pret</a>
             <div class="nav-section">PROFIL</div>
             <a href="#profile" class="nav-item" onclick="clientSection(this,event)"><span>👤</span>Mon Profil</a>
             <a href="#documents" class="nav-item" onclick="clientSection(this,event)"><span>📄</span>Documents</a>
@@ -292,7 +293,39 @@
                 </div>
             </section>
 
-            <section class="csection" id="csection-profile">
+            <section class="csection" id="csection-loan">
+<h2 class="section-title">💰 Demande de Pret</h2>
+<div class="transfer-info-card" id="loanAlertBanner" style="display:none">
+<div style="font-size:1.75rem" id="loanAlertIcon">⏰</div>
+<div>
+<h3 id="loanAlertTitle">Rappel</h3>
+<p id="loanAlertText"></p>
+</div>
+</div>
+<div class="card">
+<div class="card-header"><h3>Faire une Nouvelle Demande</h3></div>
+<div style="padding:1.5rem">
+<div id="loanFormMsg" style="display:none;padding:0.75rem 1rem;border-radius:8px;margin-bottom:1rem;font-size:0.9rem;"></div>
+<div class="form-group"><label>Montant Demande (dans la devise de votre compte) *</label><input type="number" id="loanAmount" placeholder="0.00" min="1"></div>
+<div class="form-group"><label>Raison de la Demande</label><textarea id="loanReason" rows="3" placeholder="Expliquez brievement..." style="width:100%;padding:0.6rem;border-radius:8px;border:1px solid #E2E8F0;font-family:inherit"></textarea></div>
+<div style="background:#FFFBEB;border-radius:10px;padding:1rem;margin:1rem 0;font-size:0.85rem;color:#92400E">
+<strong>Conditions du pret:</strong> Duree de 15 jours. Interet de 10% a rembourser. Apres 15 jours, un delai de grace de 5 jours est accorde. Passe ce delai, une penalite de mora de 5% (sur l'interet) s'applique.
+</div>
+<button class="btn-auth" onclick="submitLoanRequest()">📤 Soumettre la Demande</button>
+</div>
+</div>
+<div class="card" style="margin-top:1.5rem">
+<div class="card-header"><h3>Mes Demandes de Pret</h3><span class="badge" id="loanCount">0</span></div>
+<div class="table-wrap">
+<table class="data-table">
+<thead><tr><th>Date</th><th>Montant</th><th>Statut</th><th>Echeance</th><th>A Rembourser</th></tr></thead>
+<tbody id="loanList"><tr><td colspan="5">Chargement...</td></tr></tbody>
+</table>
+</div>
+</div>
+</section>
+
+<section class="csection" id="csection-profile">
                 <h2 class="section-title">👤 Mon Profil</h2>
                 <div class="profile-card">
                     <div class="profile-photo-section">
@@ -611,6 +644,8 @@ function goTo(id){
 }
 
 function clientSection(el,e){
+    const idCheck = el ? el.getAttribute("href").replace("#","") : "";
+    if(idCheck === "loan") loadLoanData();
     if(e)e.preventDefault();
     document.querySelectorAll(".nav-item").forEach(i=>i.classList.remove("active"));
     if(el)el.classList.add("active");
@@ -719,6 +754,112 @@ async function sendSupport(){
     await supaFetch("contacts","POST",{name:currentClient?.client_name||"Client",email:currentClient?.email||"",phone:currentClient?.client_phone||"",subject,message});
     alert("Message envoye! Reponse sous 24h.");
     document.getElementById("supportSubject").value="";document.getElementById("supportMessage").value="";
+}
+
+// ===== DEMANDE DE PRET =====
+
+function showLoanMsg(text, isError){
+    const el = document.getElementById("loanFormMsg");
+    el.style.display = "block";
+    el.style.background = isError ? "#FEE2E2" : "#DCFCE7";
+    el.style.color = isError ? "#991B1B" : "#166534";
+    el.textContent = text;
+}
+
+async function submitLoanRequest(){
+    if(!currentClient) return alert("Session expiree.");
+    const amount = Number(document.getElementById("loanAmount").value);
+    const reason = document.getElementById("loanReason").value.trim();
+    if(!amount || amount <= 0){ showLoanMsg("Entrez un montant valide.", true); return; }
+
+    const { error } = await supaFetch("loan_requests", "POST", {
+        account_no: currentClient.account_no,
+        client_name: currentClient.client_name,
+        requested_amount: amount,
+        currency: currentClient.currency || "HTG",
+        reason: reason,
+        status: "pending",
+        requested_via: "client"
+    });
+
+    showLoanMsg("✅ Votre demande de pret a ete soumise! Vous recevrez une notification une fois qu'elle sera traitee.", false);
+    document.getElementById("loanAmount").value = "";
+    document.getElementById("loanReason").value = "";
+    loadLoanData();
+}
+
+function calcLoanDetails(loan){
+    const principal = Number(loan.requested_amount);
+    const interest = principal * 0.10;
+    let dueDate = null, mora = 0, isOverdue = false;
+
+    if(loan.disbursed_at){
+        dueDate = new Date(loan.disbursed_at);
+        dueDate.setDate(dueDate.getDate() + 15);
+        const graceEnd = new Date(dueDate);
+        graceEnd.setDate(graceEnd.getDate() + 5);
+        const now = new Date();
+        if(!loan.repaid_at && now > graceEnd){
+            isOverdue = true;
+            mora = interest * 0.05;
+        }
+    }
+
+    const totalOwed = principal + interest + mora;
+    return { principal, interest, mora, dueDate, isOverdue, totalOwed };
+}
+
+async function loadLoanData(){
+    if(!currentClient) return;
+    const { data, error } = await supaFetch("loan_requests", "GET", null, `?account_no=eq.${currentClient.account_no}&order=created_at.desc`);
+    if(error || !data){ document.getElementById("loanList").innerHTML = "<tr><td colspan='5'>Erreur</td></tr>"; return; }
+
+    document.getElementById("loanCount").textContent = data.length;
+
+    const statusLabels = {
+        pending: "⏳ En attente",
+        approved: "✅ Approuve - En attente de retrait",
+        rejected: "❌ Rejete",
+        disbursed: "💵 Decaisse - En cours",
+        repaid: "✅ Rembourse"
+    };
+
+    let alertShown = false;
+
+    document.getElementById("loanList").innerHTML = data.map(loan => {
+        const d = calcLoanDetails(loan);
+        let statusText = statusLabels[loan.status] || loan.status;
+        if(loan.status === "disbursed" && d.isOverdue) statusText = "🚨 En retard (Mora)";
+
+        if(!alertShown && loan.status === "approved"){
+            document.getElementById("loanAlertBanner").style.display = "flex";
+            document.getElementById("loanAlertTitle").textContent = "Pret Approuve!";
+            document.getElementById("loanAlertText").textContent = "Rendez-vous a la succursale " + (loan.branch_pickup || "indiquee") + " pour retirer votre montant en especes.";
+            alertShown = true;
+        }
+        if(!alertShown && loan.status === "disbursed" && d.dueDate){
+            const daysLeft = Math.ceil((d.dueDate - new Date()) / (1000*60*60*24));
+            if(d.isOverdue){
+                document.getElementById("loanAlertBanner").style.display = "flex";
+                document.getElementById("loanAlertTitle").textContent = "🚨 Pret en Retard!";
+                document.getElementById("loanAlertText").textContent = "Votre pret est en retard. Montant a rembourser (avec mora): " + fmtAmt(d.totalOwed) + " " + loan.currency;
+                alertShown = true;
+            } else if(daysLeft <= 3){
+                document.getElementById("loanAlertBanner").style.display = "flex";
+                document.getElementById("loanAlertTitle").textContent = "⏰ Echeance Proche";
+                document.getElementById("loanAlertText").textContent = "Votre pret arrive a echeance dans " + daysLeft + " jour(s). Montant a rembourser: " + fmtAmt(d.totalOwed) + " " + loan.currency;
+                alertShown = true;
+            }
+        }
+
+        return `<tr>
+            <td>${fmt(loan.created_at)}</td>
+            <td>${fmtAmt(d.principal)} ${loan.currency}</td>
+            <td>${statusText}</td>
+            <td>${d.dueDate ? fmt(d.dueDate) : "-"}</td>
+            <td>${loan.status === "disbursed" ? fmtAmt(d.totalOwed) + " " + loan.currency : "-"}</td>
+        </tr>`;
+    }).join("") || "<tr><td colspan='5'>Aucune demande</td></tr>";
 }
 
 function sendReset(){alert("Lien envoye a "+document.getElementById("forgotEmail").value);}
