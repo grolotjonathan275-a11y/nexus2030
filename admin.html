@@ -24,6 +24,7 @@
 <a href="#accounts" class="nav-item" onclick="showSection(this,event)"><span>📖</span>Comptes Epargne</a>
 <a href="#branches" class="nav-item" onclick="showSection(this,event)"><span>🏦</span>Succursales</a>
 <a href="#employees" class="nav-item" onclick="showSection(this,event)"><span>👤</span>Employes</a>
+<a href="#cashiers-wallets" class="nav-item" onclick="showSection(this,event)"><span>👛</span>Caissiers</a>
 <div class="nav-section">RAPPORTS</div>
 <a href="#contacts" class="nav-item" onclick="showSection(this,event)"><span>✉️</span>Messages</a>
 <a href="#reports" class="nav-item" onclick="showSection(this,event)"><span>📈</span>Rapports</a>
@@ -112,6 +113,17 @@
 <div id="employeeDirectory" style="padding:1.5rem"></div>
 </div>
 </section>
+<section class="section" id="section-cashiers-wallets">
+<h2 class="section-title">👛 Wallets Caissiers</h2>
+<div class="card">
+<div class="card-header"><h3>Balances et Profits</h3></div>
+<div class="table-wrap"><table class="data-table">
+<thead><tr><th>Caissier</th><th>Succursale</th><th>HTG</th><th>DOP</th><th>USD</th><th>Profit HTG</th><th>Profit DOP</th><th>Profit USD</th><th>Total Jour</th><th>Action</th></tr></thead>
+<tbody id="adminCashiersList"><tr><td colspan="10">Chargement...</td></tr></tbody>
+</table></div>
+</div>
+</section>
+
 <section class="section" id="section-transactions">
 <div class="card">
 <div class="card-header"><h3>💸 Toutes les Transactions</h3></div>
@@ -514,6 +526,34 @@ async function fetchData(table) {
 
 function fmt(d) { return d ? new Date(d).toLocaleDateString("fr-FR") : "-"; }
 
+async function loadAdminCashiersList(){
+    const wallets = await fetchData("cashier_wallets");
+    document.getElementById("adminCashiersList").innerHTML = wallets.map(w => `
+        <tr>
+            <td>${w.cashier_name||w.cashier_id}</td>
+            <td>${w.branch||"-"}</td>
+            <td>${Number(w.balance_htg||0).toLocaleString("fr-FR",{minimumFractionDigits:2})} HTG</td>
+            <td>${Number(w.balance_dop||0).toLocaleString("fr-FR",{minimumFractionDigits:2})} DOP</td>
+            <td>${Number(w.balance_usd||0).toLocaleString("fr-FR",{minimumFractionDigits:2})} USD</td>
+            <td style="color:#16A34A;font-weight:700">${Number(w.profit_htg||0).toLocaleString("fr-FR",{minimumFractionDigits:2})} HTG</td>
+            <td style="color:#16A34A;font-weight:700">${Number(w.profit_dop||0).toLocaleString("fr-FR",{minimumFractionDigits:2})} DOP</td>
+            <td style="color:#16A34A;font-weight:700">${Number(w.profit_usd||0).toLocaleString("fr-FR",{minimumFractionDigits:2})} USD</td>
+            <td>${Number(w.daily_total||0).toLocaleString("fr-FR",{minimumFractionDigits:2})} HTG</td>
+            <td><button class="btn-approve" style="background:#16A34A;padding:0.35rem 0.7rem;font-size:0.8rem" onclick="resetAdminProfit(''${w.cashier_id}'')">Collecter Profit</button></td>
+        </tr>`).join("") || "<tr><td colspan=''10''>Aucun caissier</td></tr>";
+}
+
+async function resetAdminProfit(cashierId){
+    if(!confirm("Confirmer que vous avez collecte physiquement ce profit? Cette action remet les 3 compteurs de profit a zero."))return;
+    await fetch(`${SUPA_URL}/rest/v1/cashier_wallets?cashier_id=eq.${cashierId}`, {
+        method: "PATCH",
+        headers: {"apikey": SUPA_KEY, "Authorization": `Bearer ${SUPA_KEY}`, "Content-Type": "application/json", "Prefer": "return=minimal"},
+        body: JSON.stringify({profit_htg: 0, profit_dop: 0, profit_usd: 0})
+    });
+    alert("✅ Profit collecte et remis a zero!");
+    loadAdminCashiersList();
+}
+
 function showSection(el, e) {
     if (e) e.preventDefault();
     document.querySelectorAll(".nav-item").forEach(i => i.classList.remove("active"));
@@ -535,6 +575,7 @@ function showSection(el, e) {
     if (id === "branches") loadBranches();
     if (id === "employees") loadEmployeeDirectory();
     if (id === "transactions") loadGlobalTransactions();
+(id === "cashiers-wallets") loadAdminCashiersList();
 }
 
 function showSectionByName(e, id) {
