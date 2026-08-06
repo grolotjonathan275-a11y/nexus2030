@@ -38,6 +38,7 @@
         <a href="#transfer" class="nav-item" onclick="showSection(this,event)"><span>🔄</span>Transferts</a>
         <a href="#change" class="nav-item" onclick="showSection(this,event)"><span>💱</span>Change Devises</a>
 <a href="#loan" class="nav-item" onclick="showSection(this,event)"><span>💰</span>Prestamo</a>
+<a href="#receive" class="nav-item" onclick="showSection(this,event)"><span>🔄</span>Reception Transferts</a>
         <a href="#banking" class="nav-item" onclick="showSection(this,event)"><span>🏦</span>Depots Bancaires</a>
         <div class="nav-section">CAISSE</div>
         <a href="#wallet" class="nav-item" onclick="showSection(this,event)"><span>👛</span>Ma Caisse</a>
@@ -648,6 +649,63 @@
 </div>
 </section>
 
+<!-- RECEPTION TRANSFERTS -->
+<section class="section" id="section-receive">
+<h2 class="section-title">🔄 Reception Transferts (Haiti -> RD)</h2>
+
+<div class="card" style="margin-bottom:1.5rem">
+<div class="card-header"><h3>Mes Caisses Disponibles</h3></div>
+<div style="padding:1.5rem;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1rem">
+<div style="text-align:center"><div style="font-size:0.75rem;color:#64748B">MonCash</div><div style="font-weight:800" id="rwBalMoncash">0.00</div></div>
+<div style="text-align:center"><div style="font-size:0.75rem;color:#64748B">NatCash</div><div style="font-weight:800" id="rwBalNatcash">0.00</div></div>
+<div style="text-align:center"><div style="font-size:0.75rem;color:#64748B">Sogebank</div><div style="font-weight:800" id="rwBalSogebank">0.00</div></div>
+<div style="text-align:center"><div style="font-size:0.75rem;color:#64748B">BNC</div><div style="font-weight:800" id="rwBalBnc">0.00</div></div>
+<div style="text-align:center"><div style="font-size:0.75rem;color:#64748B">Unibank</div><div style="font-weight:800" id="rwBalUnibank">0.00</div></div>
+</div>
+</div>
+
+<div class="op-card" style="margin-bottom:1.5rem">
+<div class="op-card-header" style="background:#7C3AED">
+<div class="op-icon">🔄</div>
+<div><h2>Nouvelle Demande de Reception</h2><p>Client haitien envoie de l'argent pour retrait en pesos</p></div>
+</div>
+<div class="op-form">
+<div id="rtFormMsg" style="display:none;padding:0.75rem 1rem;border-radius:8px;margin-bottom:1rem;font-size:0.9rem;"></div>
+<div class="form-group"><label>Nom du Client (RD) *</label><input type="text" id="rtClientName" placeholder="Nom complet"></div>
+<div class="form-group"><label>Telephone Client</label><input type="text" id="rtClientPhone" placeholder="809-000-0000"></div>
+<div class="form-group"><label>Service *</label>
+<select id="rtService" onchange="updateRtCalculation()">
+<option value="moncash">MonCash</option>
+<option value="natcash">NatCash</option>
+<option value="sogebank">Sogebank</option>
+<option value="bnc">BNC</option>
+<option value="unibank">Unibank</option>
+</select>
+</div>
+<div class="form-group"><label>Montant Recu en Haiti (HTG) *</label><input type="number" id="rtAmountHtg" placeholder="0.00" min="1" oninput="updateRtCalculation()"></div>
+
+<div id="rtCalcBox" style="background:#F5F3FF;border:1px solid #DDD6FE;border-radius:10px;padding:1rem;margin:1rem 0;display:none">
+<div style="display:flex;justify-content:space-between;font-size:0.85rem;margin-bottom:0.35rem"><span>Montant brut (avant frais)</span><strong id="rtCalcGross">-</strong></div>
+<div style="display:flex;justify-content:space-between;font-size:0.85rem;margin-bottom:0.35rem;color:#7C3AED"><span>Frais Nexus (<span id="rtCalcFeePct">10</span>%)</span><strong id="rtCalcFee">-</strong></div>
+<div style="display:flex;justify-content:space-between;font-size:1rem;border-top:1px solid #DDD6FE;padding-top:0.5rem;margin-top:0.5rem"><span>A remettre au client</span><strong id="rtCalcNet">-</strong></div>
+</div>
+
+<div class="form-group"><label>Photo du Recu de Depot (Haiti) *</label><input type="file" id="rtReceiptPhoto" accept="image/*"></div>
+<div class="form-actions"><button class="btn-action" style="background:#7C3AED" onclick="submitReceiveRequest()">📤 Soumettre la Demande</button></div>
+</div>
+</div>
+
+<div class="card">
+<div class="card-header"><h3>Mes Demandes de Reception</h3><span class="badge" id="rtTxnCount">0</span></div>
+<div class="table-wrap">
+<table class="data-table">
+<thead><tr><th>Heure</th><th>Service</th><th>Client</th><th>HTG</th><th>A Remettre</th><th>Statut</th></tr></thead>
+<tbody id="rtTxnList"><tr><td colspan="6">Chargement...</td></tr></tbody>
+</table>
+</div>
+</div>
+</section>
+
 <!-- MA CAISSE -->
         <section class="section" id="section-wallet">
             <h2 class="section-title">👛 Ma Caisse</h2>
@@ -906,6 +964,7 @@ function showSection(el,e){
     document.getElementById("pageTitle").textContent=el.textContent.trim();
     if(id === "banking"){ loadBankWallets(); loadMyBankTransactions(); }
     if(id === "loan"){ loadBranchLoans(); }
+    if(id === "receive"){ loadRwBalances(); loadRtSettingsCache(); loadRtTransactions(); }
 }
 
 function goTo(id){
@@ -916,6 +975,7 @@ function goTo(id){
     if(nav)nav.classList.add("active");
     if(id === "banking"){ loadBankWallets(); loadMyBankTransactions(); }
     if(id === "loan"){ loadBranchLoans(); }
+    if(id === "receive"){ loadRwBalances(); loadRtSettingsCache(); loadRtTransactions(); }
 }
 
 function toggleSidebar(){document.getElementById("sidebar").classList.toggle("open");document.getElementById("sidebarOverlay").classList.toggle("show");}
@@ -1215,6 +1275,148 @@ async function repayLoan(loanId){
 
     alert("✅ Pret rembourse avec succes!");
     loadBranchLoans();
+}
+
+// ===== RECEPTION TRANSFERTS =====
+const RT_SERVICE_LABELS_AG = {moncash:"MonCash", natcash:"NatCash", sogebank:"Sogebank", bnc:"BNC", unibank:"Unibank"};
+let rtSettingsCacheAg = {};
+
+function rtFileToBase64Ag(file){
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+}
+
+async function loadRwBalances(){
+    const data = await sf("receive_wallets", "GET", null, `?cashier_id=eq.${AGENT_ID}`);
+    const map = {};
+    (data||[]).forEach(w => map[w.service_type] = Number(w.balance_dop));
+    document.getElementById("rwBalMoncash").textContent = fmtA(map.moncash||0);
+    document.getElementById("rwBalNatcash").textContent = fmtA(map.natcash||0);
+    document.getElementById("rwBalSogebank").textContent = fmtA(map.sogebank||0);
+    document.getElementById("rwBalBnc").textContent = fmtA(map.bnc||0);
+    document.getElementById("rwBalUnibank").textContent = fmtA(map.unibank||0);
+}
+
+async function loadRtSettingsCache(){
+    const data = await sf("receive_transfer_settings", "GET", null, "?select=*");
+    (data||[]).forEach(s => rtSettingsCacheAg[s.service_type] = s);
+    updateRtCalculation();
+}
+
+function updateRtCalculation(){
+    const svc = document.getElementById("rtService").value;
+    const htg = Number(document.getElementById("rtAmountHtg").value);
+    const box = document.getElementById("rtCalcBox");
+
+    if(!htg || htg <= 0 || !rtSettingsCacheAg[svc]){
+        box.style.display = "none";
+        return;
+    }
+
+    const s = rtSettingsCacheAg[svc];
+    const gross = htg / Number(s.divisor);
+    const fee = gross * (Number(s.fee_percent) / 100);
+    const net = gross - fee;
+
+    document.getElementById("rtCalcGross").textContent = fmtA(gross) + " DOP";
+    document.getElementById("rtCalcFeePct").textContent = s.fee_percent;
+    document.getElementById("rtCalcFee").textContent = fmtA(fee) + " DOP";
+    document.getElementById("rtCalcNet").textContent = fmtA(net) + " DOP";
+    box.style.display = "block";
+}
+
+function showRtFormMsg(text, isError){
+    const el = document.getElementById("rtFormMsg");
+    el.style.display = "block";
+    el.style.background = isError ? "#FEE2E2" : "#DCFCE7";
+    el.style.color = isError ? "#991B1B" : "#166534";
+    el.textContent = text;
+}
+
+async function submitReceiveRequest(){
+    const clientName = document.getElementById("rtClientName").value.trim();
+    const clientPhone = document.getElementById("rtClientPhone").value.trim();
+    const svc = document.getElementById("rtService").value;
+    const htg = Number(document.getElementById("rtAmountHtg").value);
+    const photoFile = document.getElementById("rtReceiptPhoto").files[0];
+
+    if(!clientName){ showRtFormMsg("Entrez le nom du client.", true); return; }
+    if(!htg || htg <= 0){ showRtFormMsg("Entrez un montant HTG valide.", true); return; }
+    if(!photoFile){ showRtFormMsg("Photo du recu obligatoire.", true); return; }
+    if(photoFile.size > 5*1024*1024){ showRtFormMsg("Photo trop volumineuse (max 5 Mo).", true); return; }
+
+    const s = rtSettingsCacheAg[svc];
+    if(!s){ showRtFormMsg("Taux non disponible, rafraichissez la page.", true); return; }
+
+    const gross = htg / Number(s.divisor);
+    const fee = gross * (Number(s.fee_percent) / 100);
+    const net = gross - fee;
+
+    const walletData = await sf("receive_wallets", "GET", null, `?cashier_id=eq.${AGENT_ID}&service_type=eq.${svc}`);
+    const wallet = walletData && walletData[0];
+    const walletBalance = wallet ? Number(wallet.balance_dop) : 0;
+
+    if(walletBalance < net){
+        showRtFormMsg("Caisse " + RT_SERVICE_LABELS_AG[svc] + " insuffisante. Disponible: " + fmtA(walletBalance) + " DOP, requis: " + fmtA(net) + " DOP.", true);
+        return;
+    }
+
+    const photoBase64 = await rtFileToBase64Ag(photoFile);
+
+    const result = await sf("receive_transfer_transactions", "POST", {
+        service_type: svc,
+        client_name: clientName,
+        client_phone: clientPhone,
+        amount_htg: htg,
+        divisor_used: s.divisor,
+        fee_percent_used: s.fee_percent,
+        amount_dop_gross: gross,
+        fee_dop: fee,
+        amount_dop_net: net,
+        receipt_photo: photoBase64,
+        status: "pending_validation",
+        created_by: AGENT_ID,
+        staff_name: AGENT_NAME,
+        branch: AGENT_BRANCH
+    });
+
+    if(!result || !result.ok){ showRtFormMsg("Erreur lors de la soumission.", true); return; }
+
+    if(wallet){
+        await sf("receive_wallets", "PATCH", { balance_dop: walletBalance - net, updated_at: new Date().toISOString() }, `?id=eq.${wallet.id}`);
+    }
+
+    showRtFormMsg("✅ Demande soumise! " + fmtA(net) + " DOP remis au client depuis la caisse " + RT_SERVICE_LABELS_AG[svc] + ".", false);
+    document.getElementById("rtClientName").value = "";
+    document.getElementById("rtClientPhone").value = "";
+    document.getElementById("rtAmountHtg").value = "";
+    document.getElementById("rtReceiptPhoto").value = "";
+    document.getElementById("rtCalcBox").style.display = "none";
+
+    loadRwBalances();
+    loadRtTransactions();
+}
+
+async function loadRtTransactions(){
+    const data = await sf("receive_transfer_transactions", "GET", null, `?created_by=eq.${AGENT_ID}&order=created_at.desc&limit=30`);
+    if(!Array.isArray(data)){ document.getElementById("rtTxnList").innerHTML = "<tr><td colspan='6'>Erreur de chargement</td></tr>"; return; }
+
+    document.getElementById("rtTxnCount").textContent = data.length;
+    const statusLabels = {pending_validation:"⏳ En attente", approved:"✅ Approuve", rejected:"❌ Rejete"};
+
+    document.getElementById("rtTxnList").innerHTML = data.map(t => `
+        <tr>
+            <td>${new Date(t.created_at).toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"})}</td>
+            <td>${RT_SERVICE_LABELS_AG[t.service_type]||t.service_type}</td>
+            <td>${t.client_name}</td>
+            <td>${fmtA(t.amount_htg)} HTG</td>
+            <td>${fmtA(t.amount_dop_net)} DOP</td>
+            <td>${statusLabels[t.status]||t.status}</td>
+        </tr>`).join("") || "<tr><td colspan='6'>Aucune demande</td></tr>";
 }
 
 async function searchForDepot(){
