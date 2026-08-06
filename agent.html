@@ -1569,6 +1569,8 @@ async function correctMobileNumberAgent(id, oldNumber){
     const newNumber = prompt("Numero actuel: " + oldNumber + "\n\nEntrez le NOUVEAU numero du client:");
     if(!newNumber || !newNumber.trim()) return;
 
+    const { data: txData } = await supabaseClient.from("mobile_money_transactions").select("*").eq("id", id).single();
+
     const { error } = await supabaseClient.from("mobile_money_transactions").update({
         previous_mobile_number: oldNumber,
         mobile_number: newNumber.trim(),
@@ -1577,7 +1579,20 @@ async function correctMobileNumberAgent(id, oldNumber){
 
     if(error){ alert("Erreur: " + error.message); return; }
 
-    alert("✅ Numero corrige! La transaction est de nouveau en attente de validation.");
+    alert("✅ Numero corrige! La transaction est de nouveau en cours de validation avec le nouveau numero.");
+
+    if(txData){
+        const p = new URLSearchParams({
+            service_type: txData.service_type,
+            client: txData.sender_full_name,
+            amount: txData.amount_dop,
+            staff: AGENT_NAME,
+            old_number: oldNumber,
+            new_number: newNumber.trim()
+        });
+        window.open("receipt-number-correction.html?" + p.toString(), "_blank");
+    }
+
     loadMyMoneyTransactions();
 }
 
