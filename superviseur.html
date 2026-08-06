@@ -39,7 +39,8 @@
         <a href="#team" class="nav-item" onclick="showSection(this,event)"><span>👥</span>Mon Equipe</a>
         <div class="nav-section">DEVISES</div>
         <a href="#currency-distribution" class="nav-item" onclick="showSection(this,event)"><span>💵</span>Distribution Devises</a>
-        <div class="nav-section">RAPPORTS</div>
+        <a href="#bank-overview" class="nav-item" onclick="showSection(this,event)"><span>🏦</span>Depots Bancaires</a>
+<div class="nav-section">RAPPORTS</div>
         <a href="#reports" class="nav-item" onclick="showSection(this,event)"><span>📈</span>Rapports</a>
         <div class="nav-section">COMPTE</div>
         <a href="#profile" class="nav-item" onclick="showSection(this,event)"><span>👤</span>Mon Profil</a>
@@ -162,7 +163,20 @@
             <div id="teamList"></div>
         </section>
 
-        <!-- RAPPORTS -->
+        <!-- DEPOTS BANCAIRES (LECTURE SEULE) -->
+<section class="section" id="section-bank-overview">
+<h2 class="section-title">🏦 Depots Bancaires (Subagent)</h2>
+<div class="kyc-info-banner"><span>ℹ️</span><span>Vue d''ensemble de tous les depots bancaires Banreservas/Popular/BHD. Ces transactions sont validees exclusivement par la Gestion Depot Banking.</span></div>
+<div class="card">
+<div class="card-header"><h3>Tous les Depots</h3><span class="badge" id="bankOvCount">0</span></div>
+<div class="table-wrap"><table class="data-table">
+<thead><tr><th>Date</th><th>Banque</th><th>Titulaire</th><th>N. Compte</th><th>Montant DOP</th><th>Soumis par</th><th>Succursale</th><th>Statut</th></tr></thead>
+<tbody id="bankOvList"><tr><td colspan="8">Chargement...</td></tr></tbody>
+</table></div>
+</div>
+</section>
+
+<!-- RAPPORTS -->
         <section class="section" id="section-reports">
             <h2 class="section-title">📈 Rapports</h2>
             <div class="docs-actions">
@@ -264,6 +278,7 @@ function showSection(el,e){
     if(id==="kyc")loadKyc();
     if(id==="team")loadTeam();
     if(id==="currency-distribution")loadAllocationFormSup();
+if(id==="bank-overview")loadBankOverviewSup();
 }
 
 function goSec(id){
@@ -494,6 +509,26 @@ async function loadAllocationHistorySup(){
 }
 
 let currentSupervisorId=null;
+
+const BANK_LABELS_SUP = {banreservas:"Banreservas", popular:"Banco Popular", bhd:"BHD"};
+
+async function loadBankOverviewSup(){
+    const { data, error } = await supabaseClient.from("bank_deposit_transactions").select("*").order("created_at",{ascending:false}).limit(100);
+    if(error || !data){ document.getElementById("bankOvList").innerHTML="<tr><td colspan=''8''>Erreur de chargement</td></tr>"; return; }
+    document.getElementById("bankOvCount").textContent = data.length;
+    const statusLabels = {pending_validation:"⏳ En attente", approved:"✅ Approuve", rejected:"❌ Rejete"};
+    document.getElementById("bankOvList").innerHTML = data.map(t => `
+        <tr>
+            <td>${fmt(t.created_at)}</td>
+            <td>${BANK_LABELS_SUP[t.bank_name]||t.bank_name}</td>
+            <td>${t.account_holder_name}</td>
+            <td>${t.account_number}</td>
+            <td>${Number(t.amount).toLocaleString("fr-FR",{minimumFractionDigits:2})} DOP</td>
+            <td>${t.staff_name||"-"}</td>
+            <td>${t.branch||"-"}</td>
+            <td>${statusLabels[t.status]||t.status}</td>
+        </tr>`).join("") || "<tr><td colspan=''8''>Aucun depot</td></tr>";
+}
 
 async function loadTeam(){
     const container=document.getElementById("teamList");
