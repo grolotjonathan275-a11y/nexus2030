@@ -1,0 +1,196 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Recu Transfert Recu - Nexus Casa de Cambio</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; font-family:Arial,sans-serif; }
+body { background:#EEF2F7; padding:2rem 1rem; display:flex; flex-direction:column; align-items:center; }
+.receipt { background:#fff; width:100%; max-width:420px; border-radius:16px; box-shadow:0 10px 30px rgba(0,0,0,0.08); overflow:hidden; }
+.r-header { padding:1.5rem; text-align:center; color:#fff; background:linear-gradient(135deg,#7C3AED,#6D28D9); }
+.r-logo { font-size:1.2rem; font-weight:800; }
+.r-op { font-size:1.05rem; font-weight:700; margin-top:0.4rem; background:rgba(255,255,255,0.2); display:inline-block; padding:3px 14px; border-radius:999px; }
+.r-body { padding:1.5rem; }
+.r-total-big { text-align:center; padding:1rem 0 1.25rem; border-bottom:1px dashed #E2E8F0; margin-bottom:1rem; }
+.r-total-big .label { font-size:0.8rem; color:#64748B; margin-bottom:0.25rem; }
+.r-total-big .value { font-size:1.9rem; font-weight:800; color:#0F172A; }
+.r-section-title { font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px; color:#94A3B8; margin:1.1rem 0 0.4rem; font-weight:700; }
+.r-row { display:flex; justify-content:space-between; padding:0.5rem 0; font-size:0.88rem; border-bottom:1px solid #F1F5F9; }
+.r-row span:first-child { color:#64748B; }
+.r-row strong { color:#0F172A; font-weight:600; text-align:right; }
+.r-note { background:#F5F3FF; border:1px solid #DDD6FE; border-radius:10px; padding:0.85rem; margin-top:1.1rem; font-size:0.8rem; color:#5B21B6; line-height:1.5; }
+.r-footer { text-align:center; padding:1rem 1.5rem 1.5rem; font-size:0.7rem; color:#94A3B8; }
+.print-header-text { display:none; }
+.print-full-logo { display:none; }
+.actions { display:flex; gap:0.6rem; max-width:420px; width:100%; margin-top:1rem; }
+.btn { flex:1; padding:0.85rem; border:none; border-radius:10px; font-weight:600; font-size:0.9rem; cursor:pointer; color:#fff; }
+.btn-print { background:#0F172A; }
+.btn-ble { background:#7C3AED; }
+.btn-whatsapp { background:#25D366; }
+.btn:disabled { opacity:0.6; cursor:wait; }
+@media print {
+    @page { size: 58mm auto; margin: 0; }
+    html, body { width:58mm; background:#fff !important; padding:0 !important; margin:0 !important; display:block !important; }
+    .actions { display:none !important; }
+    .receipt { width:58mm !important; box-shadow:none !important; border-radius:0 !important; margin:0 !important; }
+    .r-header { background:#fff !important; color:#000 !important; padding:0.3rem 0 0.5rem !important; border-bottom:2px solid #000; }
+    .r-logo { display:none !important; }
+    .print-header-text { display:block !important; color:#000 !important; font-size:1rem !important; font-weight:900 !important; }
+    .print-header-text .sub-line { display:block; font-size:0.62rem; font-weight:700; letter-spacing:1px; margin-top:2px; }
+    .print-full-logo { display:block !important; width:30mm; height:auto; margin:0 auto 4px; }
+    .r-op { background:#fff !important; color:#000 !important; border:1px solid #000 !important; font-size:0.65rem !important; padding:1px 8px !important; }
+    .r-body { padding:0.4rem 0.3rem !important; }
+    .r-total-big { padding:0.4rem 0 0.5rem !important; border-bottom:1px dashed #000 !important; }
+    .r-total-big .label { color:#000 !important; font-size:0.65rem !important; }
+    .r-total-big .value { color:#000 !important; font-size:1.2rem !important; }
+    .r-section-title { color:#000 !important; font-size:0.6rem !important; margin:0.5rem 0 0.2rem !important; border-bottom:1px solid #000; padding-bottom:2px; }
+    .r-row { padding:0.2rem 0 !important; font-size:0.68rem !important; border-bottom:1px dotted #000 !important; }
+    .r-row span:first-child, .r-row strong { color:#000 !important; }
+    .r-note { background:#fff !important; border:1px dashed #000 !important; color:#000 !important; font-size:0.58rem !important; padding:0.35rem !important; }
+    .r-footer { color:#000 !important; font-size:0.5rem !important; padding:0.4rem 0.3rem !important; }
+}
+</style>
+</head>
+<body>
+
+<div class="receipt" id="receipt">
+    <div class="print-header-text"><img src="assets/img/logo-print.jpeg" class="print-full-logo" alt="Nexus Casa de Cambio"></div>
+    <div class="r-header">
+        <div class="r-logo">NEXUS CASA DE CAMBIO</div>
+        <div class="r-op" id="rService">-</div>
+    </div>
+    <div class="r-body">
+        <div class="r-total-big">
+            <div class="label">Montant Remis au Client</div>
+            <div class="value" id="rNet">-- DOP</div>
+        </div>
+
+        <div class="r-section-title">Details</div>
+        <div class="r-row"><span>Client</span><strong id="rClient">-</strong></div>
+        <div class="r-row"><span>Telephone</span><strong id="rClientPhone">-</strong></div>
+        <div class="r-row"><span>Montant confirme (Haiti)</span><strong id="rFinalHtg">-</strong></div>
+        <div class="r-row"><span>Montant brut (DOP)</span><strong id="rGross">-</strong></div>
+        <div class="r-row"><span>Frais Nexus</span><strong id="rFee">-</strong></div>
+
+        <div class="r-section-title">Traitement</div>
+        <div class="r-row"><span>Date & Heure</span><strong id="rDate">-</strong></div>
+        <div class="r-row"><span>Succursale</span><strong id="rBranch">-</strong></div>
+        <div class="r-row"><span>Traite par</span><strong id="rStaff">-</strong></div>
+        <div class="r-row"><span>Confirme par Validateur</span><strong id="rValidator">-</strong></div>
+
+        <div class="r-note">
+            Transaction finalisee et payee en pesos dominicains (DOP).
+        </div>
+    </div>
+    <div class="r-footer">
+        Recu genere electroniquement par Nexus Casa de Cambio.
+    </div>
+</div>
+
+<div class="actions">
+    <button class="btn btn-print" onclick="window.print()">Imprimer</button>
+    <button class="btn btn-ble" id="btnBlePrint" onclick="printReceiptBLE()">Imprimer Direct</button>
+    <button class="btn btn-whatsapp" id="btnWhatsapp" onclick="shareWhatsapp()">WhatsApp</button>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="assets/js/ble-print.js"></script>
+<script>
+const params = new URLSearchParams(window.location.search);
+const RT_LABELS = {moncash:"MonCash", natcash:"NatCash", sogebank:"Sogebank", bnc:"BNC", unibank:"Unibank"};
+
+function fmtA(n){return Number(n||0).toLocaleString("fr-FR",{minimumFractionDigits:2});}
+
+const data = {
+    service_type: params.get("service_type"),
+    client: params.get("client"),
+    client_phone: params.get("client_phone"),
+    final_htg: Number(params.get("final_htg")||0),
+    gross: Number(params.get("gross")||0),
+    fee: Number(params.get("fee")||0),
+    net: Number(params.get("net")||0),
+    staff: params.get("staff"),
+    validator: params.get("validator"),
+    branch: params.get("branch")
+};
+
+document.getElementById("rService").textContent = "Reception " + (RT_LABELS[data.service_type]||data.service_type);
+document.getElementById("rNet").textContent = fmtA(data.net) + " DOP";
+document.getElementById("rClient").textContent = data.client || "-";
+document.getElementById("rClientPhone").textContent = data.client_phone || "-";
+document.getElementById("rFinalHtg").textContent = fmtA(data.final_htg) + " HTG";
+document.getElementById("rGross").textContent = fmtA(data.gross) + " DOP";
+document.getElementById("rFee").textContent = fmtA(data.fee) + " DOP";
+document.getElementById("rDate").textContent = new Date().toLocaleString("fr-FR");
+document.getElementById("rBranch").textContent = data.branch || "-";
+document.getElementById("rStaff").textContent = data.staff || "-";
+document.getElementById("rValidator").textContent = data.validator || "-";
+
+function printReceiptBLE(){
+    const lines = [
+        {text:"NEXUS", bold:true, big:true, align:"center"},
+        {text:"CASA DE CAMBIO", bold:true, align:"center"},
+        {text:"Services Financiers", align:"center"},
+        {text:"--------------------------------", align:"left"},
+        {text:"Reception " + (RT_LABELS[data.service_type]||data.service_type), bold:true, align:"center"},
+        {text:"", align:"left"},
+        {text:"Montant remis au client:", align:"left"},
+        {text:fmtA(data.net) + " DOP", bold:true, big:true, align:"center"},
+        {text:"", align:"left"},
+        {text:"Client: " + (data.client||"-"), align:"left"},
+        {text:"Telephone: " + (data.client_phone||"-"), align:"left"},
+        {text:"Montant confirme: " + fmtA(data.final_htg) + " HTG", align:"left"},
+        {text:"Montant brut: " + fmtA(data.gross) + " DOP", align:"left"},
+        {text:"Frais Nexus: " + fmtA(data.fee) + " DOP", align:"left"},
+        {text:"", align:"left"},
+        {text:"Date: " + new Date().toLocaleString("fr-FR"), align:"left"},
+        {text:"Succursale: " + (data.branch||"-"), align:"left"},
+        {text:"Traite par: " + (data.staff||"-"), align:"left"},
+        {text:"Valide par: " + (data.validator||"-"), align:"left"},
+        {text:"--------------------------------", align:"left"},
+        {text:"Merci Nexus Casa de Cambio", align:"center"}
+    ];
+    nexusPrintBLE(lines, document.getElementById("btnBlePrint"));
+}
+
+async function shareWhatsapp(){
+    const receiptEl = document.getElementById("receipt");
+    const btn = document.getElementById("btnWhatsapp");
+    const originalHtml = btn.innerHTML;
+    btn.innerHTML = "Preparation...";
+    btn.disabled = true;
+    try {
+        const canvas = await html2canvas(receiptEl, { scale: 2, backgroundColor: "#ffffff", useCORS: true });
+        const blob = await new Promise(resolve => canvas.toBlob(resolve, "image/png"));
+        if(!blob){ alert("Erreur lors de la generation de l'image."); return; }
+        const file = new File([blob], "recu-reception.png", { type: "image/png" });
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            try {
+                await navigator.share({ files: [file], title: "Recu Reception Nexus", text: "Voici votre recu." });
+            } catch (shareErr) {
+                if (shareErr.name !== "AbortError") downloadImageFallback(blob);
+            }
+        } else {
+            downloadImageFallback(blob);
+        }
+    } catch (err) {
+        alert("Erreur: " + err.message);
+    } finally {
+        btn.innerHTML = originalHtml;
+        btn.disabled = false;
+    }
+}
+
+function downloadImageFallback(blob){
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url; link.download = "recu-reception.png";
+    document.body.appendChild(link); link.click(); document.body.removeChild(link);
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+    alert("Image telechargee -- vous pouvez l'envoyer manuellement sur WhatsApp.");
+}
+</script>
+
+</body>
+</html>

@@ -555,6 +555,11 @@
 </div>
 </div>
 
+<div id="rtNegoSection" style="display:none;margin-bottom:1.5rem">
+<h3 style="margin-bottom:0.75rem">🤝 Negociations en Attente de ma Reponse</h3>
+<div id="rtNegoList"></div>
+</div>
+
 <div class="card">
 <div class="card-header"><h3>Mes Demandes de Reception</h3><span class="badge" id="rtTxnCount">0</span></div>
 <div class="table-wrap">
@@ -812,7 +817,7 @@ function showSection(el, e) {
     document.getElementById("pageTitle").textContent = el.textContent.trim();
     if(id === "change"){ loadExchangeRatesCashier(); loadMyCurrencyWallets(); loadChangeHistory(); }
     if(id === "loan"){ loadBranchLoans(); }
-    if(id === "receive"){ loadRwBalances(); loadRtSettingsCache(); loadRtTransactions(); }
+    if(id === "receive"){ loadRwBalances(); loadRtSettingsCache(); loadRtTransactions(); loadRtNegotiations(); }
     if(id === "banking"){ loadBankWallets(); loadMyBankTransactions(); }
 }
 
@@ -1529,6 +1534,126 @@ async function submitReceiveRequest(){
 
     loadRwBalances();
     loadRtTransactions();
+}
+
+// ===== NEGOCIATION RECEPTION =====
+async function loadRtNegotiations(){
+    const data = await supaFetch("receive_transfer_transactions", "GET", null, `?created_by=eq.${CASHIER_ID}&negotiation_status=eq.pending_cashier_response&status=eq.pending_validation`);
+    const section = document.getElementById("rtNegoSection");
+    const list = document.getElementById("rtNegoList");
+
+    if(!Array.isArray(data) || data.length === 0){
+        section.style.display = "none";
+        return;
+    }
+
+    section.style.display = "block";
+
+    let html = "";
+    for(const t of data){
+        const negos = await supaFetch("receive_transfer_negotiations", "GET", null, `?transaction_id=eq.${t.id}&order=created_at.asc`);
+        const lastNego = Array.isArray(negos) && negos.length ? negos[negos.length-1] : null;
+        const proposedAmount = lastNego ? Number(lastNego.proposed_amount_htg) : Number(t.amount_htg);
+
+        let historyHtml = "";
+        if(Array.isArray(negos) && negos.length){
+            historyHtml = "<div style='background:#F8FAFC;border-radius:8px;padding:0.6rem;margin:0.5rem 0;font-size:0.78rem'>"
+                + negos.map(n => `<div>• <strong>${n.proposed_by_name||n.proposed_by}</strong>: ${fmtAmount(n.proposed_amount_htg)} HTG ${n.note?("("+n.note+")"):""}</div>`).join("")
+                + "</div>";
+        }
+
+        html += `<div class="card" style="margin-bottom:0.75rem;border-left:4px solid #F59E0B">
+            <div style="padding:1rem">
+                <div style="font-weight:700;margin-bottom:0.3rem">${RT_SERVICE_LABELS_C[t.service_type]||t.service_type} — Client: ${t.client_name}</div>
+                <div style="font-size:0.85rem;color:#64748B">Vous aviez soumis: ${fmtAmount(t.amount_htg)} HTG</div>
+                <div style="font-size:0.95rem;font-weight:700;color:#F59E0B;margin-top:0.3rem">Le validateur propose: ${fmtAmount(proposedAmount)} HTG</div>
+                ${historyHtml}
+                <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-top:0.5rem">
+                    <button class="btn-confirm" style="background:#10B981;padding:0.5rem 1rem" onclick="acceptRtNegotiation('${t.id}', ${proposedAmount})">✅ J'accepte ce montant</button>
+                    <button class="btn-confirm" style="background:#F59E0B;padding:0.5rem 1rem" onclick="counterProposeRtAmount('${t.id}')">✏️ Proposer un autre montant</button>
+                </div>
+            </div>
+        </div>`;
+    }
+    list.innerHTML = html;
+}
+
+async function acceptRtNegotiation(id, finalAmountHtg){
+    if(!confirm("Confirmer l'acceptation de " + fmtAmount(finalAmountHtg) + " HTG? Cette action finalise la transaction."))return;
+
+    const txArr = await supaFetch("receive_transfer_transactions", "GET", null, `?id=eq.${id}`);
+    const tx = txArr && txArr[0];
+    if(!tx){ alert("Transaction introuvable."); return; }
+
+    const finalGross = finalAmountHtg / Number(tx.divisor_used);
+    const finalFee = finalGross * (Number(tx.fee_percent_used) / 100);
+    const finalNet = finalGross - finalFee;
+    const originalNet = Number(tx.amount_dop_net);
+    const diff = finalNet - originalNet;
+
+    const walletData = await supaFetch("receive_wallets", "GET", null, `?cashier_id=eq.${CASHIER_ID}&service_type=eq.${tx.service_type}`);
+    const wallet = walletData && walletData[0];
+    if(wallet){
+        await supaFetch("receive_wallets", "PATCH", { balance_dop: Number(wallet.balance_dop) - diff, updated_at: new Date().toISOString() }, `?id=eq.${wallet.id}`);
+    }
+
+    const walletDataProfit = await supaFetch("cashier_wallets", "GET", null, `?cashier_id=eq.${CASHIER_ID}`);
+    if(walletDataProfit && walletDataProfit[0]){
+        const newProfit = Number(walletDataProfit[0].profit_receive_dop || 0) + finalFee;
+        await supaFetch("cashier_wallets", "PATCH", { profit_receive_dop: newProfit }, `?cashier_id=eq.${CASHIER_ID}`);
+    }
+
+    const negosArr = await supaFetch("receive_transfer_negotiations", "GET", null, `?transaction_id=eq.${id}&order=created_at.desc&limit=1`);
+    const lastValidatorId = negosArr && negosArr[0] ? negosArr[0].proposed_by_id : null;
+    const lastValidatorName = negosArr && negosArr[0] ? negosArr[0].proposed_by_name : "-";
+
+    const walletVArr = await supaFetch("validator_wallets", "GET", null, `?validator_id=eq.${lastValidatorId}&service_type=eq.${tx.service_type}`);
+    const walletV = walletVArr && walletVArr[0];
+    if(walletV){
+        await supaFetch("validator_wallets", "PATCH", { balance_htg: Number(walletV.balance_htg) + finalAmountHtg, updated_at: new Date().toISOString() }, `?id=eq.${walletV.id}`);
+    } else if(lastValidatorId){
+        await supaFetch("validator_wallets", "POST", { validator_id: lastValidatorId, validator_name: lastValidatorName, service_type: tx.service_type, balance_htg: finalAmountHtg });
+    }
+
+    await supaFetch("receive_transfer_negotiations", "POST", {
+        transaction_id: id, proposed_by: "caissier", proposed_by_id: CASHIER_ID, proposed_by_name: CASHIER_NAME,
+        proposed_amount_htg: finalAmountHtg, note: "Accepte par le caissier/agent"
+    });
+
+    await supaFetch("receive_transfer_transactions", "PATCH", {
+        status: "approved", negotiation_status: "agreed",
+        final_amount_htg: finalAmountHtg,
+        amount_dop_gross: finalGross, fee_dop: finalFee, amount_dop_net: finalNet,
+        validated_by_name: lastValidatorName, validated_at: new Date().toISOString(), paid_at: new Date().toISOString()
+    }, `?id=eq.${id}`);
+
+    const p = new URLSearchParams({
+        service_type: tx.service_type, client: tx.client_name, client_phone: tx.client_phone||"",
+        original_htg: tx.amount_htg, final_htg: finalAmountHtg,
+        gross: finalGross, fee: finalFee, net: finalNet,
+        staff: CASHIER_NAME, validator: lastValidatorName, branch: CASHIER_BRANCH
+    });
+    window.open("receipt-receive-transfer.html?" + p.toString(), "_blank");
+
+    alert("✅ Transaction finalisee!");
+    loadRwBalances();
+    loadRtNegotiations();
+    loadRtTransactions();
+}
+
+async function counterProposeRtAmount(id){
+    const newAmount = prompt("Entrez le montant HTG que vous proposez:");
+    if(!newAmount || isNaN(Number(newAmount)) || Number(newAmount) <= 0) return;
+    const note = prompt("Note (optionnel):") || "";
+
+    await supaFetch("receive_transfer_negotiations", "POST", {
+        transaction_id: id, proposed_by: "caissier", proposed_by_id: CASHIER_ID, proposed_by_name: CASHIER_NAME,
+        proposed_amount_htg: Number(newAmount), note: note
+    });
+    await supaFetch("receive_transfer_transactions", "PATCH", { negotiation_status: "pending_validator_response" }, `?id=eq.${id}`);
+
+    alert("✅ Contre-proposition envoyee. En attente de la reponse du validateur.");
+    loadRtNegotiations();
 }
 
 async function loadRtTransactions(){
