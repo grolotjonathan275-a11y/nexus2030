@@ -305,6 +305,10 @@
                             <label>Montant a Envoyer (Pesos DOP) *</label>
                             <input type="number" id="msAmountDop" placeholder="0.00" min="1" oninput="calcMoneyService()">
                         </div>
+                        <div class="form-group" style="display:flex;align-items:center;gap:0.5rem;background:#FFFBEB;padding:0.75rem;border-radius:8px">
+                            <input type="checkbox" id="msFeeDeducted" onchange="calcMoneyService()">
+                            <label for="msFeeDeducted" style="margin:0">Le client ne paie pas les frais a part -- les deduire du montant envoye</label>
+                        </div>
                         <div id="msFeeBox" style="display:none;background:#F8FAFC;border-radius:10px;padding:1rem;margin:1rem 0">
                             <div style="display:flex;justify-content:space-between;padding:0.35rem 0"><span>Montant envoye:</span><strong id="msShowAmount">-</strong></div>
                             <div style="display:flex;justify-content:space-between;padding:0.35rem 0"><span>Taux applique:</span><strong id="msShowRate">-</strong></div>
@@ -1889,16 +1893,29 @@ function calcMoneyService(){
     if(!amt||amt<=0)return;
     const rate=currentMoneyService==="moncash"?Number(msSettings.moncash_rate):Number(msSettings.natcash_rate);
     const feePct=Number(msSettings.fee_percent);
-    const amountHtg=amt*rate;
-    const feeDop=amt*(feePct/100);
-    const total=amt+feeDop;
+    const feeDeducted=document.getElementById("msFeeDeducted").checked;
     document.getElementById("msFeeBox").style.display="block";
-    document.getElementById("msShowAmount").textContent=fmtAmount(amt)+" DOP";
-    document.getElementById("msShowRate").textContent="1 DOP = "+rate+" HTG";
-    document.getElementById("msShowHtg").textContent=fmtAmount(amountHtg)+" HTG";
-    document.getElementById("msFeeLabel").textContent=`Frais service (${feePct}%):`;
-    document.getElementById("msShowFee").textContent=fmtAmount(feeDop)+" DOP";
-    document.getElementById("msShowTotal").textContent=fmtAmount(total)+" DOP";
+    if(feeDeducted){
+        const feeDop=amt*(feePct/100);
+        const netDop=amt-feeDop;
+        const amountHtg=netDop*rate;
+        document.getElementById("msShowAmount").textContent=fmtAmount(amt)+" DOP";
+        document.getElementById("msShowRate").textContent="1 DOP = "+rate+" HTG";
+        document.getElementById("msFeeLabel").textContent=`Frais deduits (${feePct}%):`;
+        document.getElementById("msShowFee").textContent="-"+fmtAmount(feeDop)+" DOP";
+        document.getElementById("msShowHtg").textContent=fmtAmount(amountHtg)+" HTG";
+        document.getElementById("msShowTotal").textContent=fmtAmount(amt)+" DOP (rien de plus a payer)";
+    } else {
+        const amountHtg=amt*rate;
+        const feeDop=amt*(feePct/100);
+        const total=amt+feeDop;
+        document.getElementById("msShowAmount").textContent=fmtAmount(amt)+" DOP";
+        document.getElementById("msShowRate").textContent="1 DOP = "+rate+" HTG";
+        document.getElementById("msShowHtg").textContent=fmtAmount(amountHtg)+" HTG";
+        document.getElementById("msFeeLabel").textContent=`Frais service (${feePct}%):`;
+        document.getElementById("msShowFee").textContent=fmtAmount(feeDop)+" DOP";
+        document.getElementById("msShowTotal").textContent=fmtAmount(total)+" DOP";
+    }
 }
 
 async function submitMoneyService(){
