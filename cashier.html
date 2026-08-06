@@ -1656,9 +1656,25 @@ async function loadMyMoneyTransactions(){
             <td>${t.sender_full_name}</td>
             <td>${fmtAmount(t.amount_dop)} DOP</td>
             <td><span class="status-badge">${statusLabels[t.status]||t.status}</span></td>
-            <td>${canCancel?`<button class="btn-cancel" style="padding:0.3rem 0.6rem;font-size:0.8rem" onclick="cancelMoneyTransaction('${t.id}')">Annuler</button>`:"-"}</td>
+            <td>${canCancel?`<button class="btn-cancel" style="padding:0.3rem 0.6rem;font-size:0.8rem" onclick="cancelMoneyTransaction('${t.id}')">Annuler</button>`:(t.status==="wrong_number"?`<button class="btn-cancel" style="background:#F59E0B;padding:0.3rem 0.6rem;font-size:0.8rem" onclick="correctMobileNumber('${t.id}','${t.mobile_number}')">Corriger Numero</button>`:"-")}</td>
         </tr>`;
     }).join("")||"<tr><td colspan='6'>Aucune transaction</td></tr>";
+}
+
+async function correctMobileNumber(id, oldNumber){
+    const newNumber = prompt("Numero actuel: " + oldNumber + "\n\nEntrez le NOUVEAU numero du client:");
+    if(!newNumber || !newNumber.trim()) return;
+
+    const { error } = await supabaseClient.from("mobile_money_transactions").update({
+        previous_mobile_number: oldNumber,
+        mobile_number: newNumber.trim(),
+        status: "pending_validation"
+    }).eq("id", id);
+
+    if(error){ alert("Erreur: " + error.message); return; }
+
+    alert("✅ Numero corrige! La transaction est de nouveau en attente de validation.");
+    loadMyMoneyTransactions();
 }
 
 async function cancelMoneyTransaction(id){
