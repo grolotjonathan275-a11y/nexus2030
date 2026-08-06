@@ -1299,6 +1299,14 @@ async function loadMyBankTransactions(){
 
 // ===== PRESTAMO =====
 let loanFoundAccount = null;
+let systemRatesCache = { withdrawal_fee_percent: 5, loan_interest_percent: 10, loan_mora_percent: 5 };
+
+async function loadSystemRatesCache(){
+    const data = await supaFetch("system_rates", "GET", null, "?select=*");
+    if(Array.isArray(data)){
+        data.forEach(r => systemRatesCache[r.rate_key] = Number(r.rate_value));
+    }
+}
 
 async function searchForLoan(){
     const accountNo = document.getElementById("loanAccountNo").value.trim();
@@ -1379,7 +1387,7 @@ async function repayLoan(loanId){
     if(!data) return;
 
     const principal = Number(data.requested_amount);
-    const interest = principal * 0.10;
+    const interest = principal * (systemRatesCache.loan_interest_percent / 100);
     let mora = 0;
 
     if(data.disbursed_at){
@@ -1387,7 +1395,7 @@ async function repayLoan(loanId){
         dueDate.setDate(dueDate.getDate() + 15);
         const graceEnd = new Date(dueDate);
         graceEnd.setDate(graceEnd.getDate() + 5);
-        if(new Date() > graceEnd) mora = interest * 0.05;
+        if(new Date() > graceEnd) mora = interest * (systemRatesCache.loan_mora_percent / 100);
     }
 
     const totalOwed = principal + interest + mora;
@@ -1760,7 +1768,7 @@ async function executeRetrait() {
     if (!amount || amount <= 0) return alert("Entrez un montant valide");
     if (!idDoc) return alert("Piece d'identite obligatoire pour un retrait");
     if (amount > Number(acc.balance)) return alert("Solde insuffisant! Solde: " + fmtAmount(acc.balance) + " " + acc.currency);
-    const feeAmount = amount * 0.05;
+    const feeAmount = amount * (systemRatesCache.withdrawal_fee_percent / 100);
     const netAmount = amount - feeAmount;
     const balanceBefore = Number(acc.balance);
     const balanceAfter = balanceBefore - amount;
@@ -2140,6 +2148,7 @@ async function createClientAccount(){
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
+    await loadSystemRatesCache();
     const { data: { session } } = await supabaseClient.auth.getSession();
     if(!session){
         localStorage.clear();
