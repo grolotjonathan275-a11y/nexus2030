@@ -25,6 +25,7 @@
 <a href="#branches" class="nav-item" onclick="showSection(this,event)"><span>🏦</span>Succursales</a>
 <a href="#employees" class="nav-item" onclick="showSection(this,event)"><span>👤</span>Employes</a>
 <a href="#cashiers-wallets" class="nav-item" onclick="showSection(this,event)"><span>👛</span>Caissiers</a>
+<a href="#loans" class="nav-item" onclick="showSection(this,event)"><span>💰</span>Prestamo</a>
 <div class="nav-section">RAPPORTS</div>
 <a href="#contacts" class="nav-item" onclick="showSection(this,event)"><span>✉️</span>Messages</a>
 <a href="#reports" class="nav-item" onclick="showSection(this,event)"><span>📈</span>Rapports</a>
@@ -120,6 +121,29 @@
 <div class="table-wrap"><table class="data-table">
 <thead><tr><th>Caissier</th><th>Succursale</th><th>HTG</th><th>DOP</th><th>USD</th><th>Profit HTG</th><th>Profit DOP</th><th>Profit USD</th><th>Total Jour</th><th>Action</th></tr></thead>
 <tbody id="adminCashiersList"><tr><td colspan="10">Chargement...</td></tr></tbody>
+</table></div>
+</div>
+</section>
+
+<section class="section" id="section-loans">
+<h2 class="section-title">💰 Gestion des Prestamos</h2>
+<div class="stats-grid">
+<div class="stat-card orange"><div class="stat-icon">⏳</div><div class="stat-info"><div class="stat-number" id="loanPendingCount">0</div><div class="stat-label">En attente</div></div></div>
+<div class="stat-card blue"><div class="stat-icon">💵</div><div class="stat-info"><div class="stat-number" id="loanActiveCount">0</div><div class="stat-label">Actifs</div></div></div>
+<div class="stat-card orange"><div class="stat-icon">🚨</div><div class="stat-info"><div class="stat-number" id="loanOverdueCount">0</div><div class="stat-label">En retard</div></div></div>
+<div class="stat-card green"><div class="stat-icon">✅</div><div class="stat-info"><div class="stat-number" id="loanRepaidCount">0</div><div class="stat-label">Rembourses</div></div></div>
+</div>
+
+<div class="card" style="margin-top:1.5rem">
+<div class="card-header"><h3>Demandes en Attente</h3></div>
+<div id="loanPendingList" style="padding:1.5rem"></div>
+</div>
+
+<div class="card" style="margin-top:1.5rem">
+<div class="card-header"><h3>Tous les Prets</h3><span class="badge" id="loanAllCount">0</span></div>
+<div class="table-wrap"><table class="data-table">
+<thead><tr><th>Date</th><th>Client</th><th>Montant</th><th>Origine</th><th>Statut</th><th>Echeance</th><th>Mora</th></tr></thead>
+<tbody id="loanAllList"><tr><td colspan="7">Chargement...</td></tr></tbody>
 </table></div>
 </div>
 </section>
@@ -526,6 +550,94 @@ async function fetchData(table) {
 
 function fmt(d) { return d ? new Date(d).toLocaleDateString("fr-FR") : "-"; }
 
+// ===== PRESTAMO =====
+
+function calcLoanDetailsAdmin(loan){
+    const principal = Number(loan.requested_amount);
+    const interest = principal * 0.10;
+    let dueDate = null, mora = 0, isOverdue = false;
+    if(loan.disbursed_at){
+        dueDate = new Date(loan.disbursed_at);
+        dueDate.setDate(dueDate.getDate() + 15);
+        const graceEnd = new Date(dueDate);
+        graceEnd.setDate(graceEnd.getDate() + 5);
+        if(!loan.repaid_at && new Date() > graceEnd){ isOverdue = true; mora = interest * 0.05; }
+    }
+    return { principal, interest, mora, dueDate, isOverdue };
+}
+
+async function loadLoansOverviewAdmin(){
+    const data = await fetchData("loan_requests");
+    if(!data) return;
+
+    const pending = data.filter(l => l.status === "pending");
+    const disbursed = data.filter(l => l.status === "disbursed");
+    const overdue = disbursed.filter(l => calcLoanDetailsAdmin(l).isOverdue);
+    const repaid = data.filter(l => l.status === "repaid");
+
+    document.getElementById("loanPendingCount").textContent = pending.length;
+    document.getElementById("loanActiveCount").textContent = disbursed.length;
+    document.getElementById("loanOverdueCount").textContent = overdue.length;
+    document.getElementById("loanRepaidCount").textContent = repaid.length;
+
+    document.getElementById("loanPendingList").innerHTML = pending.map(l => `
+        <div style="border:1px solid #E2E8F0;border-radius:10px;padding:1rem;margin-bottom:0.75rem">
+            <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;margin-bottom:0.5rem">
+                <strong>${l.client_name}</strong>
+                <strong>${Number(l.requested_amount).toLocaleString("fr-FR",{minimumFractionDigits:2})} ${l.currency}</strong>
+            </div>
+            <div style="font-size:0.85rem;color:#64748B;margin-bottom:0.75rem">
+                Compte: ${l.account_no} | Origine: ${l.requested_via === "client" ? "En ligne" : "Succursale (" + (l.branch_pickup||"-") + ")"} | Raison: ${l.reason || "-"}
+            </div>
+            <div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:center">
+                <select id="branch_${l.id}" style="padding:0.4rem;border-radius:6px;border:1px solid #CBD5E1">
+                    <option value="Santo Domingo">Santo Domingo</option>
+                    <option value="Bavaro">Bavaro</option>
+                </select>
+                <button class="btn-approve" style="padding:0.4rem 0.8rem;background:#10B981" onclick="decideLoanAdmin(''${l.id}'',''approved'')">✅ Approuver</button>
+                <button class="btn-approve" style="padding:0.4rem 0.8rem;background:#EF4444" onclick="decideLoanAdmin(''${l.id}'',''rejected'')">❌ Rejeter</button>
+            </div>
+        </div>`).join("") || "<p style=''color:#64748B''>Aucune demande en attente.</p>";
+
+    const statusLabels = {pending:"⏳ En attente", approved:"✅ A decaisser", rejected:"❌ Rejete", disbursed:"💵 Decaisse", repaid:"✅ Rembourse"};
+    document.getElementById("loanAllCount").textContent = data.length;
+    document.getElementById("loanAllList").innerHTML = data.map(l => {
+        const d = calcLoanDetailsAdmin(l);
+        let statusText = statusLabels[l.status] || l.status;
+        if(l.status === "disbursed" && d.isOverdue) statusText = "🚨 En retard";
+        return `<tr>
+            <td>${new Date(l.created_at).toLocaleDateString("fr-FR")}</td>
+            <td>${l.client_name}</td>
+            <td>${Number(l.requested_amount).toLocaleString("fr-FR",{minimumFractionDigits:2})} ${l.currency}</td>
+            <td>${l.requested_via === "client" ? "En ligne" : "Succursale"}</td>
+            <td>${statusText}</td>
+            <td>${d.dueDate ? d.dueDate.toLocaleDateString("fr-FR") : "-"}</td>
+            <td>${d.mora > 0 ? Number(d.mora).toLocaleString("fr-FR",{minimumFractionDigits:2}) + " " + l.currency : "-"}</td>
+        </tr>`;
+    }).join("") || "<tr><td colspan=''7''>Aucun pret</td></tr>";
+}
+
+async function decideLoanAdmin(loanId, decision){
+    const branchSel = document.getElementById("branch_" + loanId);
+    const branch = branchSel ? branchSel.value : "Santo Domingo";
+    const label = decision === "approved" ? "approuver" : "rejeter";
+    if(!confirm("Confirmer: " + label + " cette demande de pret?")) return;
+
+    await fetch(`${SUPA_URL}/rest/v1/loan_requests?id=eq.${loanId}`, {
+        method: "PATCH",
+        headers: {"apikey": SUPA_KEY, "Authorization": `Bearer ${SUPA_KEY}`, "Content-Type": "application/json", "Prefer": "return=minimal"},
+        body: JSON.stringify({
+            status: decision,
+            decided_by_name: "Super Admin",
+            decided_at: new Date().toISOString(),
+            branch_pickup: decision === "approved" ? branch : null
+        })
+    });
+
+    alert("✅ Demande " + (decision === "approved" ? "approuvee" : "rejetee") + "!");
+    loadLoansOverviewAdmin();
+}
+
 async function loadAdminCashiersList(){
     const wallets = await fetchData("cashier_wallets");
     document.getElementById("adminCashiersList").innerHTML = wallets.map(w => `
@@ -576,6 +688,7 @@ function showSection(el, e) {
     if (id === "employees") loadEmployeeDirectory();
     if (id === "transactions") loadGlobalTransactions();
 (id === "cashiers-wallets") loadAdminCashiersList();
+    if (id === "loans") loadLoansOverviewAdmin();
 }
 
 function showSectionByName(e, id) {
