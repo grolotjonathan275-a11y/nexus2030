@@ -152,6 +152,8 @@ const clientName = p.get("client_name") || "-";
 const accountNo = p.get("account_no") || "-";
 const currency = p.get("currency") || "HTG";
 const amount = Number(p.get("amount")||0);
+const feeAmount = Number(p.get("fee_amount")||0);
+const netAmount = Number(p.get("net_amount")||amount);
 const balBefore = Number(p.get("balance_before")||0);
 const balAfter = Number(p.get("balance_after")||0);
 
@@ -167,6 +169,9 @@ document.getElementById("amountValue").textContent = fmtA(amount) + " " + curren
 document.getElementById("balBefore").textContent = fmtA(balBefore) + " " + currency;
 document.getElementById("balOp").textContent = "-" + fmtA(amount) + " " + currency;
 document.getElementById("balAfter").textContent = fmtA(balAfter) + " " + currency;
+if(feeAmount > 0){
+    document.getElementById("amountValue").insertAdjacentHTML("afterend", "<div style=\"text-align:center;font-size:0.72rem;color:#666;margin-top:4px\">Frais Nexus (5%): -" + fmtA(feeAmount) + " " + currency + " | Remis au client: " + fmtA(netAmount) + " " + currency + "</div>");
+}
 
 function printReceiptBLE(){
     const lines = [
