@@ -46,6 +46,7 @@
 <a href="#receive-transfers" class="nav-item" onclick="showSection(this,event)"><span>🔄</span>Reception Transferts</a>
 <a href="rapports.html" class="nav-item"><span>📊</span>Rapports</a>
 <a href="#system-rates" class="nav-item" onclick="showSection(this,event)"><span>⚙️</span>Taux Systeme</a>
+<a href="#wisecard-admin" class="nav-item" onclick="showSection(this,event)"><span>💳</span>Carte Debit Wise</a>
         <div class="nav-section">SYSTEME</div>
         <a href="#mm-settings" class="nav-item" onclick="showSection(this,event)"><span>📱</span>Parametres MonCash/NatCash</a>
         <a href="#web-rates" class="nav-item" onclick="showSection(this,event)"><span>💱</span>Taux de Change Site Web</a>
@@ -571,6 +572,47 @@
 <div class="card" style="margin-top:1.5rem">
 <div class="card-header"><h3>Historique des Modifications</h3><span class="badge" id="sysRatesHistCount">0</span></div>
 <div class="table-wrap"><table class="data-table"><thead><tr><th>Date</th><th>Parametre</th><th>Ancienne Valeur</th><th>Nouvelle Valeur</th><th>Modifie par</th></tr></thead><tbody id="sysRatesHistList"><tr><td colspan="5">Chargement...</td></tr></tbody></table></div>
+</div>
+</section>
+
+<!-- CARTE DEBIT WISE (ADMIN) -->
+<section class="section" id="section-wisecard-admin">
+<h2 class="section-title" style="color:#163300">💳 Gestion des Cartes Debit Wise</h2>
+
+<div class="kpi-grid">
+<div class="kpi-card orange"><div class="kpi-icon">⏳</div><div class="kpi-info"><div class="kpi-number" id="wiseAdminPending">0</div><div class="kpi-label">En attente</div></div></div>
+<div class="kpi-card green"><div class="kpi-icon">✅</div><div class="kpi-info"><div class="kpi-number" id="wiseAdminApproved">0</div><div class="kpi-label">Approuvees (total)</div></div></div>
+<div class="kpi-card red"><div class="kpi-icon">❌</div><div class="kpi-info"><div class="kpi-number" id="wiseAdminRejected">0</div><div class="kpi-label">Rejetees (total)</div></div></div>
+<div class="kpi-card purple"><div class="kpi-icon">💰</div><div class="kpi-info"><div class="kpi-number" id="wiseAdminWalletTotal">0</div><div class="kpi-label">Total a Collecter (DOP)</div></div></div>
+</div>
+
+<div class="card" style="margin-top:1.5rem">
+<div class="card-header"><h3>Demandes en Attente</h3></div>
+<div id="wiseAdminPendingList" style="padding:1.5rem"></div>
+</div>
+
+<div class="card" style="margin-top:1.5rem">
+<div class="card-header"><h3>Wallets Carte Debit (Caissiers/Agents)</h3></div>
+<div class="table-wrap"><table class="data-table">
+<thead><tr><th>Caissier/Agent</th><th>Montant a Remettre</th><th>Action</th></tr></thead>
+<tbody id="wiseAdminWalletsList"><tr><td colspan="3">Chargement...</td></tr></tbody>
+</table></div>
+</div>
+
+<div class="card" style="margin-top:1.5rem">
+<div class="card-header"><h3>Historique des Collectes</h3><span class="badge" id="wiseCollectCount">0</span></div>
+<div class="table-wrap"><table class="data-table">
+<thead><tr><th>Date</th><th>Caissier/Agent</th><th>Montant</th><th>Collecte par</th></tr></thead>
+<tbody id="wiseCollectHistoryList"><tr><td colspan="4">Chargement...</td></tr></tbody>
+</table></div>
+</div>
+
+<div class="card" style="margin-top:1.5rem">
+<div class="card-header"><h3>Toutes les Demandes</h3><span class="badge" id="wiseAllCount">0</span></div>
+<div class="table-wrap"><table class="data-table">
+<thead><tr><th>Date</th><th>Client</th><th>Document</th><th>Compte Wise Existant</th><th>Origine</th><th>Statut</th></tr></thead>
+<tbody id="wiseAllList"><tr><td colspan="6">Chargement...</td></tr></tbody>
+</table></div>
 </div>
 </section>
 
