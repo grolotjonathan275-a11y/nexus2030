@@ -903,6 +903,7 @@ function showSection(el,e){
     if(id==="bank-distribution"){ loadBankCapital(); loadAllocationFormBankCeo(); }
     if(id==="receive-transfers"){ loadRtSettings(); loadRtCapital(); loadAllocationFormRtCeo(); loadValidatorWallets(); loadReceiveWallets(); }
     if(id==="system-rates"){ loadSystemRates(); loadSystemRatesHistory(); }
+    if(id==="wisecard-admin"){ loadWiseAdminOverview(); }
     if(id==="loans"){ loadLoansOverview(); }
     if(id==="web-rates")loadExchangeRates();
     if(id==="promotions")loadPromotions();
@@ -1831,6 +1832,114 @@ async function loadSystemRatesHistory(){
     document.getElementById("sysRatesHistCount").textContent = data.length;
     tbody.innerHTML = data.map(h => `
         <tr><td>${new Date(h.changed_at).toLocaleString("fr-FR")}</td><td>${SYS_RATE_META[h.rate_key]?.label||h.rate_key}</td><td>${h.old_value}%</td><td><strong>${h.new_value}%</strong></td><td>${h.changed_by_name}</td></tr>`).join("");
+}
+
+// ===== CARTE DEBIT WISE (ADMIN) =====
+const WISE_DOC_LABELS = {passeport:"Passeport", cedula:"Cedula", kat_demalog:"Kat Demalog", permis:"Permis"};
+
+async function loadWiseAdminOverview(){
+    const { data } = await supabaseClient.from("wise_card_requests").select("*").order("created_at",{ascending:false});
+    if(!data) return;
+
+    const pending = data.filter(r => r.status === "pending");
+    const approved = data.filter(r => r.status === "approved");
+    const rejected = data.filter(r => r.status === "rejected");
+
+    document.getElementById("wiseAdminPending").textContent = pending.length;
+    document.getElementById("wiseAdminApproved").textContent = approved.length;
+    document.getElementById("wiseAdminRejected").textContent = rejected.length;
+
+    document.getElementById("wiseAdminPendingList").innerHTML = pending.map(r => `
+        <div style="border:1px solid #E2E8F0;border-radius:10px;padding:1rem;margin-bottom:0.75rem">
+            <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;margin-bottom:0.5rem">
+                <strong>${r.client_first_name} ${r.client_last_name}</strong>
+                <span style="color:#64748B;font-size:0.85rem">${new Date(r.created_at).toLocaleString("fr-FR")}</span>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:0.5rem;font-size:0.85rem;margin-bottom:0.75rem">
+                <div><span style="color:#64748B">Document:</span> <strong>${WISE_DOC_LABELS[r.document_type]||r.document_type}</strong></div>
+                <div><span style="color:#64748B">Expiration:</span> <strong>${r.document_expiry||"-"}</strong></div>
+                <div><span style="color:#64748B">Compte Wise existant:</span> <strong>${r.has_wise_account?"Oui":"Non"}</strong></div>
+                ${r.has_wise_account ? `<div><span style="color:#64748B">Age du compte:</span> <strong>${r.wise_account_age||"-"}</strong></div>
+                <div><span style="color:#64748B">Statut du compte:</span> <strong>${r.wise_account_status||"-"}</strong></div>
+                <div><span style="color:#64748B">Tel. enregistre Wise:</span> <strong>${r.wise_registered_phone||"-"}</strong></div>
+                <div><span style="color:#64748B">Email enregistre Wise:</span> <strong>${r.wise_registered_email||"-"}</strong></div>` : ""}
+                <div><span style="color:#64748B">Tel. (nouveau):</span> <strong>${r.phone_not_registered||"-"}</strong></div>
+                <div><span style="color:#64748B">Email (nouveau):</span> <strong>${r.email_not_registered||"-"}</strong></div>
+                <div><span style="color:#64748B">Soumis par:</span> <strong>${r.staff_name||"-"}</strong></div>
+                <div><span style="color:#64748B">Succursale:</span> <strong>${r.branch||"-"}</strong></div>
+            </div>
+            <div style="display:flex;gap:0.5rem">
+                <button class="btn-ceo-action" style="background:#163300;color:#9FE870" onclick="decideWiseRequest('${r.id}','approved')">✅ Approuver</button>
+                <button class="btn-ceo-action" style="background:#DC2626" onclick="decideWiseRequest('${r.id}','rejected')">❌ Rejeter</button>
+            </div>
+        </div>`).join("") || "<p style='color:#64748B'>Aucune demande en attente.</p>";
+
+    document.getElementById("wiseAllCount").textContent = data.length;
+    const statusLabels = {pending:"⏳ En attente", approved:"✅ Approuve", rejected:"❌ Rejete"};
+    document.getElementById("wiseAllList").innerHTML = data.map(r => `
+        <tr>
+            <td>${new Date(r.created_at).toLocaleDateString("fr-FR")}</td>
+            <td>${r.client_first_name} ${r.client_last_name}</td>
+            <td>${WISE_DOC_LABELS[r.document_type]||r.document_type}</td>
+            <td>${r.has_wise_account?"Oui":"Non"}</td>
+            <td>${r.staff_name||"-"}</td>
+            <td>${statusLabels[r.status]||r.status}</td>
+        </tr>`).join("") || "<tr><td colspan='6'>Aucune demande</td></tr>";
+
+    loadWiseAdminWallets();
+    loadWiseCollectHistory();
+}
+
+async function decideWiseRequest(id, decision){
+    const label = decision === "approved" ? "approuver" : "rejeter";
+    if(!confirm("Confirmer: " + label + " cette demande de carte Wise?")) return;
+
+    await supabaseClient.from("wise_card_requests").update({
+        status: decision, decided_by_name: "CEO", decided_at: new Date().toISOString()
+    }).eq("id", id);
+
+    alert("✅ Demande " + (decision === "approved" ? "approuvee" : "rejetee") + "!");
+    loadWiseAdminOverview();
+}
+
+async function loadWiseAdminWallets(){
+    const { data } = await supabaseClient.from("wise_card_wallets").select("*").order("balance_dop",{ascending:false});
+    const tbody = document.getElementById("wiseAdminWalletsList");
+    if(!data || !data.length){ tbody.innerHTML = "<tr><td colspan='3'>Aucun wallet.</td></tr>"; document.getElementById("wiseAdminWalletTotal").textContent = "0"; return; }
+
+    const total = data.reduce((s,w) => s + Number(w.balance_dop||0), 0);
+    document.getElementById("wiseAdminWalletTotal").textContent = fmtA(total);
+
+    tbody.innerHTML = data.map(w => `
+        <tr>
+            <td>${w.staff_name||"-"}</td>
+            <td><strong>${fmtA(w.balance_dop)} DOP</strong></td>
+            <td>${Number(w.balance_dop) > 0 ? `<button class="btn-ceo-action" style="padding:0.4rem 0.8rem;background:#16A34A" onclick="collectWiseWallet('${w.staff_id}','${w.staff_name}',${w.balance_dop})">💰 Collecter</button>` : "-"}</td>
+        </tr>`).join("");
+}
+
+async function collectWiseWallet(staffId, staffName, amount){
+    if(!confirm("Confirmer avoir recu " + fmtA(amount) + " DOP de " + staffName + " (Carte Debit Wise)?")) return;
+
+    await supabaseClient.from("wise_card_collections").insert({
+        staff_id: staffId, staff_name: staffName, amount_collected: amount,
+        collected_by_name: "CEO", collected_by_role: "ceo"
+    });
+
+    await supabaseClient.from("wise_card_wallets").update({ balance_dop: 0, updated_at: new Date().toISOString() }).eq("staff_id", staffId);
+
+    alert("✅ Montant collecte et wallet remis a zero!");
+    loadWiseAdminWallets();
+    loadWiseCollectHistory();
+}
+
+async function loadWiseCollectHistory(){
+    const { data } = await supabaseClient.from("wise_card_collections").select("*").order("created_at",{ascending:false}).limit(50);
+    const tbody = document.getElementById("wiseCollectHistoryList");
+    if(!data || !data.length){ tbody.innerHTML = "<tr><td colspan='4'>Aucune collecte.</td></tr>"; document.getElementById("wiseCollectCount").textContent = "0"; return; }
+    document.getElementById("wiseCollectCount").textContent = data.length;
+    tbody.innerHTML = data.map(c => `
+        <tr><td>${new Date(c.created_at).toLocaleString("fr-FR")}</td><td>${c.staff_name}</td><td>${fmtA(c.amount_collected)} DOP</td><td>${c.collected_by_name} (${c.collected_by_role})</td></tr>`).join("");
 }
 
 async function loadMoneyServiceSettings(){
