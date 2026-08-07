@@ -375,8 +375,8 @@ async function loadPending(){
                     <div><span style="color:#64748B">Numero ${isMoncash?"MonCash":"NatCash"}:</span> <strong>${t.mobile_number}</strong></div>
                     <div><span style="color:#64748B">Taux:</span> <strong>1 DOP = ${t.rate} HTG</strong></div>
                     <div><span style="color:#64748B">Montant HTG:</span> <strong>${fmtA(t.amount_htg)} HTG</strong></div>
-                    <div><span style="color:#64748B">Frais (${t.fee_percent}%):</span> <strong>${fmtA(t.fee_dop)} DOP</strong></div>
-                    <div><span style="color:#64748B">Total charge:</span> <strong>${fmtA(t.total_charged_dop)} DOP</strong></div>
+                    <div><span style="color:#64748B">${t.fee_mode==="deducted"?"Frais deduits":"Frais"} (${t.fee_percent}%):</span> <strong>${t.fee_mode==="deducted"?"-":""}${fmtA(t.fee_dop)} DOP</strong></div>
+                    <div><span style="color:#64748B">${t.fee_mode==="deducted"?"Rien a payer en plus":"Total charge"}:</span> <strong>${t.fee_mode==="deducted"?fmtA(t.amount_dop)+" DOP":fmtA(t.total_charged_dop)+" DOP"}</strong></div>
                     <div><span style="color:#64748B">Heure:</span> <strong>${fmtT(t.created_at)}, ${fmt(t.created_at)}</strong></div>
                 </div>
                 <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
@@ -437,8 +437,8 @@ async function loadHistory(){
             <td>${t.profiles?.full_name||"-"}</td>
             <td>${t.sender_full_name}</td>
             <td>${fmtA(t.amount_dop)} DOP</td>
-            <td>${fmtA(t.fee_dop)} DOP</td>
-            <td><strong>${fmtA(t.total_charged_dop)} DOP</strong></td>
+            <td>${t.fee_mode==="deducted"?"-":""}${fmtA(t.fee_dop)} DOP${t.fee_mode==="deducted"?" (deduits)":""}</td>
+            <td><strong>${t.fee_mode==="deducted"?fmtA(t.amount_dop)+" DOP":fmtA(t.total_charged_dop)+" DOP"}</strong></td>
             <td><span class="status-sm">${statusLabels[t.status]||t.status}</span></td>
         </tr>`).join("")||"<tr><td colspan='9'>Aucune transaction traitee</td></tr>";
 }
