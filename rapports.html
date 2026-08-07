@@ -200,6 +200,7 @@ const SERVICES = {
             {h:"Client", v:t=>t.sender_full_name},
             {h:"Numero", v:t=>t.mobile_number},
             {h:"HTG", v:t=>fmtA(t.amount_htg)},
+            {h:"Mode Frais", v:t=>t.fee_mode==="deducted"?"Deduits":"Separes"},
             {h:"Total DOP", v:t=>fmtA(t.total_charged_dop)},
             {h:"Statut", v:t=>t.status}
         ],
