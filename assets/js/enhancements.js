@@ -140,6 +140,17 @@
         topbarRight.insertBefore(badge, topbarRight.firstChild);
     }
 
+    // ===== GLOBAL ALERT OVERRIDE (transforme tous les alert() en toast) =====
+    const nexusOriginalAlert = window.alert;
+    window.alert = function(message){
+        const msg = String(message);
+        let type = "info";
+        if(/erreur|error/i.test(msg)) type = "error";
+        else if(/succes|reussi|effectue|approuve|confirme|cree|ajoute|envoye|soumis/i.test(msg)) type = "success";
+        else if(/attention|avertissement|insuffisant/i.test(msg)) type = "warning";
+        window.nexusToast(msg, type);
+    };
+
     // ===== INIT =====
     document.addEventListener("DOMContentLoaded", () => {
         setupSidebarCollapse();
