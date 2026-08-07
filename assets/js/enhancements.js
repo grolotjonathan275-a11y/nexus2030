@@ -151,6 +151,68 @@
         window.nexusToast(msg, type);
     };
 
+    // ===== SOUND ENGINE (Web Audio API - aucun fichier externe) =====
+    let nexusAudioCtx = null;
+    function getAudioCtx(){
+        if(!nexusAudioCtx){
+            const AC = window.AudioContext || window.webkitAudioContext;
+            nexusAudioCtx = new AC();
+        }
+        if(nexusAudioCtx.state === "suspended") nexusAudioCtx.resume();
+        return nexusAudioCtx;
+    }
+
+    function playTone(freq, duration, type, delay, volume){
+        try{
+            const ctx = getAudioCtx();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = type || "sine";
+            osc.frequency.value = freq;
+            const startTime = ctx.currentTime + (delay || 0);
+            gain.gain.setValueAtTime(0, startTime);
+            gain.gain.linearRampToValueAtTime(volume || 0.15, startTime + 0.02);
+            gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(startTime);
+            osc.stop(startTime + duration + 0.05);
+        }catch(e){}
+    }
+
+    const NEXUS_SOUNDS = {
+        success: () => { playTone(660,0.12,"sine",0,0.15); playTone(880,0.16,"sine",0.1,0.15); },
+        error: () => { playTone(300,0.18,"sawtooth",0,0.12); playTone(220,0.22,"sawtooth",0.12,0.12); },
+        warning: () => { playTone(500,0.14,"triangle",0,0.13); playTone(400,0.14,"triangle",0.15,0.13); },
+        notification: () => { playTone(740,0.1,"sine",0,0.12); },
+        ding: () => { playTone(988,0.25,"sine",0,0.14); },
+        alarm: () => { playTone(880,0.18,"square",0,0.18); playTone(660,0.18,"square",0.2,0.18); },
+        approved: () => { playTone(523,0.1,"sine",0,0.15); playTone(659,0.1,"sine",0.1,0.15); playTone(784,0.2,"sine",0.2,0.15); },
+        rejected: () => { playTone(392,0.2,"sawtooth",0,0.13); playTone(311,0.25,"sawtooth",0.15,0.13); },
+        wrongnumber: () => { playTone(600,0.1,"triangle",0,0.14); playTone(600,0.1,"triangle",0.15,0.14); playTone(600,0.1,"triangle",0.3,0.14); }
+    };
+
+    window.nexusPlaySound = function(type){
+        const fn = NEXUS_SOUNDS[type] || NEXUS_SOUNDS.notification;
+        fn();
+    };
+
+    let nexusAlarmInterval = null;
+    window.nexusStartAlarmLoop = function(){
+        if(nexusAlarmInterval) return;
+        window.nexusPlaySound("alarm");
+        nexusAlarmInterval = setInterval(() => window.nexusPlaySound("alarm"), 1800);
+    };
+    window.nexusStopAlarmLoop = function(){
+        if(nexusAlarmInterval){ clearInterval(nexusAlarmInterval); nexusAlarmInterval = null; }
+    };
+
+    // Debloque le contexte audio au premier clic (requis par les navigateurs)
+    document.addEventListener("click", function unlockAudio(){
+        try{ getAudioCtx(); }catch(e){}
+        document.removeEventListener("click", unlockAudio);
+    }, { once:true });
+
     // ===== INIT =====
     document.addEventListener("DOMContentLoaded", () => {
         setupSidebarCollapse();
