@@ -116,6 +116,11 @@
                 </div>
             </div>
 
+            <div class="card" style="margin-bottom:1.5rem">
+            <div class="card-header"><h3>📊 Mes Transactions (7 derniers jours)</h3></div>
+            <div style="padding:1.25rem;height:260px"><canvas id="nexusVolumeChartAgent"></canvas></div>
+            </div>
+
             <!-- WALLET RAPIDE -->
             <div class="wallet-quick-card">
                 <div class="wqc-header">
@@ -933,6 +938,7 @@
 </main>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 const SUPA_URL="https://fnuplvbiwfvauwkpxsoc.supabase.co";
