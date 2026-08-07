@@ -1978,6 +1978,8 @@ async function submitMoneyService(){
         fee_percent: feePct,
         fee_dop: feeDop,
         total_charged_dop: total,
+        fee_mode: feeDeducted ? "deducted" : "separate",
+        net_amount_dop: netAmountDop,
         branch: CASHIER_BRANCH,
         staff_name: CASHIER_NAME,
         created_at: data.created_at,
