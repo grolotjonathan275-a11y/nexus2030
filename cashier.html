@@ -1819,7 +1819,7 @@ async function executeRetrait() {
         type: "retrait"
     });
     window.open("receipt-withdrawal.html?" + p.toString(), "_blank");
-    alert("Retrait effectue! Client recoit: " + fmtAmount(netAmount) + " " + currency + " (Frais Nexus 5%: " + fmtAmount(feeAmount) + " " + currency + ")");
+    nexusToast("Retrait effectue! Client recoit: " + fmtAmount(netAmount) + " " + currency + " (Frais Nexus 5%: " + fmtAmount(feeAmount) + " " + currency + ")", "success");
     resetForm("retrait");
     loadDashboard();
 }
