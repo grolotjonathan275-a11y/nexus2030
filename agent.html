@@ -391,6 +391,10 @@
                         <label>Montant a Envoyer (Pesos DOP) *</label>
                         <input type="number" id="msAmountDop" placeholder="0.00" min="1" oninput="calcMoneyService()">
                     </div>
+                    <div class="form-group" style="display:flex;align-items:center;gap:0.5rem;background:#FFFBEB;padding:0.75rem;border-radius:8px">
+                        <input type="checkbox" id="msFeeDeducted" onchange="calcMoneyService()">
+                        <label for="msFeeDeducted" style="margin:0">Le client ne paie pas les frais a part -- les deduire du montant envoye</label>
+                    </div>
                     <div class="fee-box" id="msFeeBox" style="display:none">
                         <div class="fee-row"><span>Montant envoye:</span><strong id="msShowAmount">-</strong></div>
                         <div class="fee-row"><span>Taux applique:</span><strong id="msShowRate">-</strong></div>
