@@ -911,6 +911,7 @@ function showSection(el, e) {
     if(id === "change"){ loadExchangeRatesCashier(); loadMyCurrencyWallets(); loadChangeHistory(); }
     if(id === "loan"){ loadBranchLoans(); }
     if(id === "receive"){ loadRwBalances(); loadRtSettingsCache(); loadRtTransactions(); loadRtNegotiations(); }
+    if(id === "wisecard"){ loadWiseWallet(); loadWiseTransactions(); }
     if(id === "banking"){ loadBankWallets(); loadMyBankTransactions(); }
 }
 
@@ -1773,6 +1774,113 @@ async function loadRtTransactions(){
             <td>${fmtAmount(t.amount_dop_net)} DOP</td>
             <td>${statusLabels[t.status]||t.status}</td>
         </tr>`).join("") || "<tr><td colspan='6'>Aucune demande</td></tr>";
+}
+
+// ===== CARTE DEBIT WISE =====
+function toggleWiseAccountFields(){
+    const val = document.getElementById("wiseHasAccount").value;
+    document.getElementById("wiseExistingAccountFields").style.display = (val === "yes") ? "block" : "none";
+}
+
+function showWiseFormMsg(text, isError){
+    const el = document.getElementById("wiseFormMsg");
+    el.style.display = "block";
+    el.style.background = isError ? "#FEE2E2" : "#DCFCE7";
+    el.style.color = isError ? "#991B1B" : "#166534";
+    el.textContent = text;
+}
+
+function resetWiseForm(){
+    document.getElementById("wiseHasAccount").value = "";
+    document.getElementById("wiseAccountAge").value = "";
+    document.getElementById("wiseAccountStatus").value = "fonctionnel";
+    document.getElementById("wiseRegisteredPhone").value = "";
+    document.getElementById("wiseRegisteredEmail").value = "";
+    document.getElementById("wiseLastName").value = "";
+    document.getElementById("wiseFirstName").value = "";
+    document.getElementById("wiseDocType").value = "passeport";
+    document.getElementById("wiseDocExpiry").value = "";
+    document.getElementById("wisePhoneNew").value = "";
+    document.getElementById("wiseEmailNew").value = "";
+    document.getElementById("wiseFeeConfirm").checked = false;
+    document.getElementById("wiseExistingAccountFields").style.display = "none";
+    document.getElementById("wiseFormMsg").style.display = "none";
+}
+
+async function submitWiseCardRequest(){
+    const hasAccount = document.getElementById("wiseHasAccount").value;
+    const lastName = document.getElementById("wiseLastName").value.trim();
+    const firstName = document.getElementById("wiseFirstName").value.trim();
+    const docType = document.getElementById("wiseDocType").value;
+    const docExpiry = document.getElementById("wiseDocExpiry").value;
+    const phoneNew = document.getElementById("wisePhoneNew").value.trim();
+    const emailNew = document.getElementById("wiseEmailNew").value.trim();
+    const feeConfirmed = document.getElementById("wiseFeeConfirm").checked;
+
+    if(!hasAccount){ showWiseFormMsg("Indiquez si le client possede deja un compte Wise.", true); return; }
+    if(!lastName || !firstName || !docType || !docExpiry || !phoneNew || !emailNew){
+        showWiseFormMsg("Remplissez tous les champs obligatoires (*).", true);
+        return;
+    }
+    if(!feeConfirmed){ showWiseFormMsg("Confirmez avoir recu les 2,500 DOP en especes.", true); return; }
+
+    const payload = {
+        client_first_name: firstName,
+        client_last_name: lastName,
+        document_type: docType,
+        document_expiry: docExpiry,
+        phone_not_registered: phoneNew,
+        email_not_registered: emailNew,
+        has_wise_account: hasAccount === "yes",
+        wise_account_age: hasAccount === "yes" ? document.getElementById("wiseAccountAge").value.trim() : null,
+        wise_account_status: hasAccount === "yes" ? document.getElementById("wiseAccountStatus").value : null,
+        wise_registered_phone: hasAccount === "yes" ? document.getElementById("wiseRegisteredPhone").value.trim() : null,
+        wise_registered_email: hasAccount === "yes" ? document.getElementById("wiseRegisteredEmail").value.trim() : null,
+        fee_confirmed: true,
+        status: "pending",
+        created_by: CASHIER_ID,
+        staff_name: CASHIER_NAME,
+        branch: CASHIER_BRANCH
+    };
+
+    const result = await supaFetch("wise_card_requests", "POST", payload);
+    if(!result || !result.ok){ showWiseFormMsg("Erreur lors de la soumission.", true); return; }
+
+    const walletData = await supaFetch("wise_card_wallets", "GET", null, `?staff_id=eq.${CASHIER_ID}`);
+    const wallet = walletData && walletData[0];
+    if(wallet){
+        await supaFetch("wise_card_wallets", "PATCH", { balance_dop: Number(wallet.balance_dop) + 2500, updated_at: new Date().toISOString() }, `?id=eq.${wallet.id}`);
+    } else {
+        await supaFetch("wise_card_wallets", "POST", { staff_id: CASHIER_ID, staff_name: CASHIER_NAME, balance_dop: 2500 });
+    }
+
+    showWiseFormMsg("✅ Demande soumise! 2,500 DOP ajoutes a votre wallet Carte Debit.", false);
+    resetWiseForm();
+    loadWiseWallet();
+    loadWiseTransactions();
+}
+
+async function loadWiseWallet(){
+    const data = await supaFetch("wise_card_wallets", "GET", null, `?staff_id=eq.${CASHIER_ID}`);
+    const balance = (data && data[0]) ? Number(data[0].balance_dop) : 0;
+    document.getElementById("wiseWalletBalance").textContent = fmtAmount(balance) + " DOP";
+}
+
+async function loadWiseTransactions(){
+    const data = await supaFetch("wise_card_requests", "GET", null, `?created_by=eq.${CASHIER_ID}&order=created_at.desc&limit=30`);
+    if(!Array.isArray(data)){ document.getElementById("wiseTxnList").innerHTML = "<tr><td colspan='4'>Erreur de chargement</td></tr>"; return; }
+
+    document.getElementById("wiseTxnCount").textContent = data.length;
+    const statusLabels = {pending:"⏳ En attente", approved:"✅ Approuve", rejected:"❌ Rejete"};
+    const docLabels = {passeport:"Passeport", cedula:"Cedula", kat_demalog:"Kat Demalog", permis:"Permis"};
+
+    document.getElementById("wiseTxnList").innerHTML = data.map(t => `
+        <tr>
+            <td>${new Date(t.created_at).toLocaleDateString("fr-FR")}</td>
+            <td>${t.client_first_name} ${t.client_last_name}</td>
+            <td>${docLabels[t.document_type]||t.document_type}</td>
+            <td>${statusLabels[t.status]||t.status}</td>
+        </tr>`).join("") || "<tr><td colspan='4'>Aucune demande</td></tr>";
 }
 
 async function searchAccount(type) {
