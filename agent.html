@@ -1171,6 +1171,65 @@ async function loadStats(){
 }
 
 
+let nexusDonutChartInstanceAgent = null;
+
+async function loadDonutChartAgent(){
+    const canvas = document.getElementById("nexusDonutChartAgent");
+    if(!canvas || typeof Chart === "undefined") return;
+
+    const todayStart = new Date();
+    todayStart.setHours(0,0,0,0);
+    const fromIso = todayStart.toISOString();
+
+    const services = [
+        { key:"Depots", table:"transactions", col:"cashier_id", filter: r => r.transaction_type === "depot", color:"#10B981" },
+        { key:"Retraits", table:"transactions", col:"cashier_id", filter: r => r.transaction_type === "retrait", color:"#DC2626" },
+        { key:"Change Devises", table:"exchange_transactions", col:"cashier_id", filter: () => true, color:"#F59E0B" },
+        { key:"MonCash/NatCash", table:"mobile_money_transactions", col:"created_by", filter: () => true, color:"#7C3AED" },
+        { key:"Depots Bancaires", table:"bank_deposit_transactions", col:"created_by", filter: () => true, color:"#0EA5E9" },
+        { key:"Reception Transferts", table:"receive_transfer_transactions", col:"created_by", filter: () => true, color:"#14B8A6" }
+    ];
+
+    const counts = [];
+    const labels = [];
+    const colors = [];
+
+    for(const svc of services){
+        const rows = await sf(svc.table,"GET",null,`?select=*&${svc.col}=eq.${AGENT_ID}&created_at=gte.${fromIso}`);
+        const count = Array.isArray(rows) ? rows.filter(svc.filter).length : 0;
+        if(count > 0){
+            counts.push(count);
+            labels.push(svc.key);
+            colors.push(svc.color);
+        }
+    }
+
+    if(nexusDonutChartInstanceAgent) nexusDonutChartInstanceAgent.destroy();
+
+    if(counts.length === 0){
+        const ctx = canvas.getContext("2d");
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+        ctx.font = "13px Inter, Arial";
+        ctx.fillStyle = "#94A3B8";
+        ctx.textAlign = "center";
+        ctx.fillText("Aucune transaction aujourd'hui", canvas.width/2, canvas.height/2);
+        return;
+    }
+
+    nexusDonutChartInstanceAgent = new Chart(canvas, {
+        type: "doughnut",
+        data: {
+            labels: labels,
+            datasets: [{ data: counts, backgroundColor: colors, borderWidth: 2, borderColor: "#fff" }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: "bottom", labels: { boxWidth: 12, font: { size: 11 } } } }
+        }
+    });
+}
+
 async function loadVolumeChartAgent(){
     const canvas = document.getElementById("nexusVolumeChartAgent");
     if(!canvas || typeof Chart === "undefined") return;
@@ -2409,6 +2468,7 @@ async function loadAll(){
     await loadMoneyWallet();
     await loadStats();
     loadVolumeChartAgent();
+    loadDonutChartAgent();
     await loadHistory();
     await loadMyMoneyTransactions();
     await loadDailyReport();
