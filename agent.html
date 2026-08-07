@@ -1884,6 +1884,8 @@ async function submitMoneyService(){
         fee_dop: feeDop,
         total_charged_dop: total,
         branch: AGENT_BRANCH,
+        fee_mode: feeDeducted ? "deducted" : "separate",
+        net_amount_dop: netAmountDop,
         staff_name: AGENT_NAME,
         created_at: data.created_at,
         status: "pending_validation"
