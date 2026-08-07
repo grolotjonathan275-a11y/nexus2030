@@ -13,7 +13,8 @@
         { id: "particules", label: "Particules", icon: "✨" },
         { id: "degrade", label: "Degrade anime", icon: "🎨" },
         { id: "vagues", label: "Vagues", icon: "🌊" },
-        { id: "etoiles", label: "Etoiles", icon: "⭐" }
+        { id: "etoiles", label: "Etoiles", icon: "⭐" },
+        { id: "brand", label: "Nexus Casa de Cambio", icon: "🏷️" }
     ];
 
     let currentEffectCleanup = null;
@@ -25,6 +26,7 @@
 
     function clearEffect(){
         document.body.classList.remove("nexus-effect-degrade","nexus-effect-vagues");
+        document.querySelectorAll(".nexus-brand-float").forEach(el => el.remove());
         document.querySelectorAll(".nexus-particle, .nexus-star").forEach(el => el.remove());
         if(currentEffectCleanup){ clearInterval(currentEffectCleanup); currentEffectCleanup = null; }
     }
@@ -62,6 +64,19 @@
                 s.style.top = Math.random()*100+"vh";
                 s.style.animationDelay = (Math.random()*2.5)+"s";
                 document.body.appendChild(s);
+            }
+        } else if(effectId === "brand"){
+            for(let i=0;i<10;i++){
+                const b = document.createElement("div");
+                b.className = "nexus-brand-float";
+                b.textContent = "NEXUS CASA DE CAMBIO";
+                const size = 0.9 + Math.random()*1.6;
+                b.style.fontSize = size+"rem";
+                b.style.left = Math.random()*80+"vw";
+                b.style.top = Math.random()*90+"vh";
+                b.style.animationDuration = (7+Math.random()*5)+"s";
+                b.style.animationDelay = (Math.random()*4)+"s";
+                document.body.appendChild(b);
             }
         }
     }

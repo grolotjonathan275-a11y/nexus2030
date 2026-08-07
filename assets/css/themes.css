@@ -90,3 +90,12 @@ body.nexus-effect-vagues::before {
 
 @keyframes nexusGradientShift { 0%{background-position:0% 50%;} 50%{background-position:100% 50%;} 100%{background-position:0% 50%;} }
 body.nexus-effect-degrade { background:linear-gradient(120deg,#7C3AED,#0EA5E9,#10B981,#F59E0B) !important; background-size:300% 300% !important; animation:nexusGradientShift 12s ease infinite !important; }
+
+@keyframes nexusBrandDrift { 0%{transform:translateY(0) rotate(-3deg);} 50%{transform:translateY(-25px) rotate(3deg);} 100%{transform:translateY(0) rotate(-3deg);} }
+.nexus-brand-float {
+    position:fixed; pointer-events:none; z-index:0;
+    font-weight:800; letter-spacing:1px; white-space:nowrap;
+    background:linear-gradient(90deg,#7C3AED,#F59E0B);
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+    opacity:0.18; animation:nexusBrandDrift 9s ease-in-out infinite;
+}
