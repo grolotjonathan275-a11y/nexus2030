@@ -66,6 +66,10 @@
 <div class="stat-card"><div class="stat-icon orange">📖</div><div class="stat-info"><div class="stat-number" id="totalAccounts">0</div><div class="stat-label">Comptes Epargne</div></div></div>
 <div class="stat-card"><div class="stat-icon purple">✉️</div><div class="stat-info"><div class="stat-number" id="totalMessages">0</div><div class="stat-label">Messages</div></div></div>
 </div>
+<div class="card" style="margin-bottom:1.5rem">
+<div class="card-header"><h3>📊 Volume des Transactions (7 derniers jours)</h3></div>
+<div style="padding:1.25rem;height:280px"><canvas id="nexusVolumeChartAdmin"></canvas></div>
+</div>
 <div class="dashboard-grid">
 <div class="card">
 <div class="card-header"><h3>Derniers Messages</h3><a href="#" onclick="showSectionByName(event,'contacts')">Voir tout</a></div>
@@ -590,6 +594,7 @@ soit un total de <strong id="exTotal">--</strong> DOP.
     </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 const SUPA_URL = "https://fnuplvbiwfvauwkpxsoc.supabase.co";
