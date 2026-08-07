@@ -94,6 +94,7 @@ td{padding:0.75rem;border-top:1px solid #F1F5F9;white-space:nowrap}
 <div class="form-group" id="genStaffGroup" style="display:none"><label>Personnel</label><select id="genStaff"><option value="">Tous</option></select></div>
 <div class="form-group"><button class="btn btn-primary" onclick="loadGeneralReport()">🔍 Generer le Rapport</button></div>
 <div class="form-group"><button class="btn btn-pdf" onclick="window.print()">🖨️ Telecharger / Imprimer PDF</button></div>
+<div class="form-group"><button class="btn" style="background:#16A34A;color:#fff" onclick="exportGeneralExcel()">📊 Exporter Excel</button></div>
 </div>
 </div>
 
@@ -366,6 +367,43 @@ async function loadDetailedReport(){
     document.getElementById("detSummary").innerHTML = `<div>Total transactions: <strong>${data.length}</strong></div><div>Volume total: <strong>${fmtA(total)}</strong></div>`;
 }
 
+let lastGeneralData = null;
+let lastGeneralDate = null;
+
+function exportGeneralExcel(){
+    if(!lastGeneralData){
+        alert("Generez d'abord un rapport avant d'exporter.");
+        return;
+    }
+    const wb = XLSX.utils.book_new();
+
+    Object.keys(SERVICES).forEach(svcKey => {
+        const svc = SERVICES[svcKey];
+        const rows = (lastGeneralData[svcKey] || []).map(t => {
+            const row = {};
+            svc.cols.forEach(c => { row[c.h] = c.v(t); });
+            return row;
+        });
+        if(rows.length === 0){
+            rows.push({ Info: "Aucune transaction" });
+        }
+        const total = (lastGeneralData[svcKey] || []).reduce((s,t) => s + (svc.sumField(t)||0), 0);
+        if(rows.length && rows[0].Info === undefined){
+            rows.push({});
+            const totalRow = {};
+            totalRow[svc.cols[0].h] = "TOTAL";
+            totalRow[svc.cols[svc.cols.length-1].h] = fmtA(total);
+            rows.push(totalRow);
+        }
+        const ws = XLSX.utils.json_to_sheet(rows);
+        const sheetName = svc.label.replace(/[:\\\/\?\*\[\]]/g,"-").substring(0,31);
+        XLSX.utils.book_append_sheet(wb, ws, sheetName);
+    });
+
+    const dateStr = new Date(lastGeneralDate).toLocaleDateString("fr-FR").replace(/\//g,"-");
+    XLSX.writeFile(wb, `Nexus_Rapport_General_${dateStr}.xlsx`);
+}
+
 async function loadGeneralReport(){
     const dateStr = document.getElementById("genDate").value;
     if(!dateStr){ alert("Selectionnez une date."); return; }
@@ -386,11 +424,15 @@ async function loadGeneralReport(){
     let screenHtml = "";
     let grandTotalTxns = 0;
 
+    lastGeneralData = {};
+    lastGeneralDate = dateStr;
+
     for(const svcKey of Object.keys(SERVICES)){
         const svc = SERVICES[svcKey];
         const staffFilter = isPrivileged() ? document.getElementById("detStaff").value : null;
     const { data, error } = await fetchServiceData(svcKey, dateStr, staffFilter);
         const rows = data || [];
+        lastGeneralData[svcKey] = rows;
         grandTotalTxns += rows.length;
 
         const total = rows.reduce((s,t) => s + (svc.sumField(t)||0), 0);
