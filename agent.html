@@ -1083,6 +1083,79 @@ async function loadStats(){
         </tr>`).join("")||"<tr><td colspan='5'>Aucune operation</td></tr>";
 }
 
+
+async function loadVolumeChartAgent(){
+    const canvas = document.getElementById("nexusVolumeChartAgent");
+    if(!canvas || typeof Chart === "undefined") return;
+
+    const days = [];
+    const labels = [];
+    for(let i=6; i>=0; i--){
+        const d = new Date();
+        d.setDate(d.getDate()-i);
+        d.setHours(0,0,0,0);
+        days.push(d);
+        labels.push(d.toLocaleDateString("fr-FR",{weekday:"short",day:"numeric"}));
+    }
+    const fromIso = days[0].toISOString();
+
+    const sources = [
+        { table:"transactions", col:"cashier_id" },
+        { table:"exchange_transactions", col:"cashier_id" },
+        { table:"mobile_money_transactions", col:"created_by" },
+        { table:"bank_deposit_transactions", col:"created_by" },
+        { table:"receive_transfer_transactions", col:"created_by" }
+    ];
+    const counts = days.map(()=>0);
+
+    for(const s of sources){
+        const rows = await sf(s.table,"GET",null,`?select=created_at&${s.col}=eq.${AGENT_ID}&created_at=gte.${fromIso}`);
+        if(!Array.isArray(rows)) continue;
+        rows.forEach(r => {
+            const rd = new Date(r.created_at);
+            rd.setHours(0,0,0,0);
+            const idx = days.findIndex(d => d.getTime()===rd.getTime());
+            if(idx >= 0) counts[idx]++;
+        });
+    }
+
+    const depotsHtg = days.map(()=>0);
+    const retraitsHtg = days.map(()=>0);
+    const stdTxns = await sf("transactions","GET",null,`?select=created_at,transaction_type,amount&cashier_id=eq.${AGENT_ID}&created_at=gte.${fromIso}`);
+    if(Array.isArray(stdTxns)){
+        stdTxns.forEach(r => {
+            const rd = new Date(r.created_at);
+            rd.setHours(0,0,0,0);
+            const idx = days.findIndex(d => d.getTime()===rd.getTime());
+            if(idx < 0) return;
+            const amt = Number(r.amount)||0;
+            if(r.transaction_type === "depot") depotsHtg[idx] += amt;
+            else if(r.transaction_type === "retrait") retraitsHtg[idx] += amt;
+        });
+    }
+
+    if(window.nexusVolumeChartInstanceAgent) window.nexusVolumeChartInstanceAgent.destroy();
+    window.nexusVolumeChartInstanceAgent = new Chart(canvas, {
+        data: {
+            labels: labels,
+            datasets: [
+                { type: "bar", label: "Mes Transactions", data: counts, backgroundColor: "#DDD6FE", borderRadius: 6, order: 3, yAxisID: "yCount" },
+                { type: "line", label: "Depots (HTG)", data: depotsHtg, borderColor: "#2563EB", backgroundColor: "#2563EB", pointStyle: "rectRot", pointRadius: 6, pointHoverRadius: 8, tension: 0.3, order: 1, yAxisID: "yAmount" },
+                { type: "line", label: "Retraits (HTG)", data: retraitsHtg, borderColor: "#DC2626", backgroundColor: "#DC2626", pointStyle: "rectRot", pointRadius: 6, pointHoverRadius: 8, tension: 0.3, order: 2, yAxisID: "yAmount" }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: true, position: "bottom" } },
+            scales: {
+                yCount: { beginAtZero: true, position: "left", ticks: { precision: 0 }, title:{display:true,text:"Nb transactions"} },
+                yAmount: { beginAtZero: true, position: "right", grid:{drawOnChartArea:false}, title:{display:true,text:"Montant HTG"} }
+            }
+        }
+    });
+}
+
 // ===== DEPOTS BANCAIRES (SUBAGENT) =====
 let currentBankService = "banreservas";
 const BANK_LABELS_A = {banreservas:"Banreservas", popular:"Banco Popular", bhd:"BHD"};
@@ -2141,6 +2214,7 @@ async function loadAll(){
     await loadWallet();
     await loadMoneyWallet();
     await loadStats();
+    loadVolumeChartAgent();
     await loadHistory();
     await loadMyMoneyTransactions();
     await loadDailyReport();
