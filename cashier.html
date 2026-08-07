@@ -2472,6 +2472,109 @@ async function loadDonutChartCashier(){
     });
 }
 
+let nexusGaugeInstances = { HTG:null, DOP:null, USD:null };
+
+function getMonthRange(offsetMonths){
+    const now = new Date();
+    const start = new Date(now.getFullYear(), now.getMonth() + offsetMonths, 1);
+    const end = new Date(now.getFullYear(), now.getMonth() + offsetMonths + 1, 1);
+    return { start: start.toISOString(), end: end.toISOString() };
+}
+
+async function loadGaugesCashier(){
+    const canvasHTG = document.getElementById("nexusGaugeHTG");
+    if(!canvasHTG || typeof Chart === "undefined") return;
+
+    const thisMonth = getMonthRange(0);
+    const lastMonth = getMonthRange(-1);
+
+    const volume = { HTG:0, DOP:0, USD:0 };
+    const profitThis = { HTG:0, DOP:0, USD:0 };
+    const profitLast = { HTG:0, DOP:0, USD:0 };
+
+    const stdThis = await supaFetch("transactions","GET",null,`?select=amount,currency,fee_amount&cashier_id=eq.${CASHIER_ID}&created_at=gte.${thisMonth.start}&created_at=lt.${thisMonth.end}`);
+    if(Array.isArray(stdThis)) stdThis.forEach(t => { if(volume[t.currency]!==undefined) volume[t.currency]+=Number(t.amount)||0; if(profitThis[t.currency]!==undefined) profitThis[t.currency]+=Number(t.fee_amount)||0; });
+
+    const stdLast = await supaFetch("transactions","GET",null,`?select=currency,fee_amount&cashier_id=eq.${CASHIER_ID}&created_at=gte.${lastMonth.start}&created_at=lt.${lastMonth.end}`);
+    if(Array.isArray(stdLast)) stdLast.forEach(t => { if(profitLast[t.currency]!==undefined) profitLast[t.currency]+=Number(t.fee_amount)||0; });
+
+    const excThis = await supaFetch("exchange_transactions","GET",null,`?select=dop_amount&cashier_id=eq.${CASHIER_ID}&created_at=gte.${thisMonth.start}&created_at=lt.${thisMonth.end}`);
+    if(Array.isArray(excThis)) excThis.forEach(t => { volume.DOP += Number(t.dop_amount)||0; });
+
+    const mmThis = await supaFetch("mobile_money_transactions","GET",null,`?select=total_charged_dop,fee_dop&created_by=eq.${CASHIER_ID}&created_at=gte.${thisMonth.start}&created_at=lt.${thisMonth.end}`);
+    if(Array.isArray(mmThis)) mmThis.forEach(t => { volume.DOP += Number(t.total_charged_dop)||0; profitThis.DOP += Number(t.fee_dop)||0; });
+
+    const mmLast = await supaFetch("mobile_money_transactions","GET",null,`?select=fee_dop&created_by=eq.${CASHIER_ID}&created_at=gte.${lastMonth.start}&created_at=lt.${lastMonth.end}`);
+    if(Array.isArray(mmLast)) mmLast.forEach(t => { profitLast.DOP += Number(t.fee_dop)||0; });
+
+    const bdThis = await supaFetch("bank_deposit_transactions","GET",null,`?select=amount&created_by=eq.${CASHIER_ID}&created_at=gte.${thisMonth.start}&created_at=lt.${thisMonth.end}`);
+    if(Array.isArray(bdThis)) bdThis.forEach(t => { volume.DOP += Number(t.amount)||0; });
+
+    const rtThis = await supaFetch("receive_transfer_transactions","GET",null,`?select=amount_dop_net,fee_dop&created_by=eq.${CASHIER_ID}&created_at=gte.${thisMonth.start}&created_at=lt.${thisMonth.end}`);
+    if(Array.isArray(rtThis)) rtThis.forEach(t => { volume.DOP += Number(t.amount_dop_net)||0; profitThis.DOP += Number(t.fee_dop)||0; });
+
+    const rtLast = await supaFetch("receive_transfer_transactions","GET",null,`?select=fee_dop&created_by=eq.${CASHIER_ID}&created_at=gte.${lastMonth.start}&created_at=lt.${lastMonth.end}`);
+    if(Array.isArray(rtLast)) rtLast.forEach(t => { profitLast.DOP += Number(t.fee_dop)||0; });
+
+    ["HTG","DOP","USD"].forEach(curr => {
+        let adjustment = 0;
+        if(profitLast[curr] > 0){
+            const change = (profitThis[curr] - profitLast[curr]) / profitLast[curr];
+            adjustment = Math.max(-0.15, Math.min(0.15, change));
+        }
+        const objectif = 100000 * (1 + adjustment);
+        renderGauge(curr, volume[curr], objectif);
+    });
+}
+
+function renderGauge(currency, value, objectif){
+    const canvas = document.getElementById("nexusGauge" + currency);
+    if(!canvas) return;
+    const pct = objectif > 0 ? Math.min((value / objectif) * 100, 130) : 0;
+    const displayPct = Math.round(Math.min(pct, 100));
+
+    let color = "#DC2626";
+    if(pct >= 100) color = "#F59E0B";
+    else if(pct >= 80) color = "#10B981";
+    else if(pct >= 50) color = "#F97316";
+
+    if(nexusGaugeInstances[currency]) nexusGaugeInstances[currency].destroy();
+
+    nexusGaugeInstances[currency] = new Chart(canvas, {
+        type: "doughnut",
+        data: {
+            datasets: [{
+                data: [Math.min(pct,100), 100 - Math.min(pct,100)],
+                backgroundColor: [color, "#F1F5F9"],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            circumference: 180,
+            rotation: -90,
+            cutout: "72%",
+            plugins: { legend: { display: false }, tooltip: { enabled: false } }
+        },
+        plugins: [{
+            id: "gaugeText",
+            afterDraw(chart){
+                const { ctx, chartArea } = chart;
+                ctx.save();
+                ctx.font = "bold 18px Inter, Arial";
+                ctx.fillStyle = "#0F172A";
+                ctx.textAlign = "center";
+                ctx.fillText(displayPct + "%", (chartArea.left+chartArea.right)/2, chartArea.bottom - 4);
+                ctx.restore();
+            }
+        }]
+    });
+
+    const labelEl = document.getElementById("nexusGauge" + currency + "Label");
+    if(labelEl) labelEl.textContent = value.toLocaleString("fr-FR",{maximumFractionDigits:0}) + " / " + objectif.toLocaleString("fr-FR",{maximumFractionDigits:0});
+}
+
 async function loadDashboard() {
     await loadWallet();
     await loadMoneyWallet();
@@ -2480,6 +2583,7 @@ async function loadDashboard() {
     await loadDailyReport();
     loadVolumeChartCashier();
     loadDonutChartCashier();
+    loadGaugesCashier();
 }
 
 function resetNewClientForm(){
