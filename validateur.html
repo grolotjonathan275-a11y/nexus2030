@@ -195,6 +195,58 @@ async function logout(){
     window.location.href="login.html";
 }
 
+let nexusVolumeChartInstanceValidateur = null;
+
+async function loadVolumeChartValidateur(){
+    const canvas = document.getElementById("nexusVolumeChartValidateur");
+    if(!canvas || typeof Chart === "undefined") return;
+
+    const days = [];
+    const labels = [];
+    for(let i=6; i>=0; i--){
+        const d = new Date();
+        d.setDate(d.getDate()-i);
+        d.setHours(0,0,0,0);
+        days.push(d);
+        labels.push(d.toLocaleDateString("fr-FR",{weekday:"short",day:"numeric"}));
+    }
+    const fromIso = days[0].toISOString();
+
+    const approvedCounts = days.map(()=>0);
+    const rejectedCounts = days.map(()=>0);
+
+    const { data: mmData } = await supabaseClient.from("mobile_money_transactions").select("created_at,status").eq("validated_by", currentValidatorId).gte("created_at", fromIso);
+    const { data: rtData } = await supabaseClient.from("receive_transfer_transactions").select("created_at,status").eq("validated_by", currentValidatorId).gte("created_at", fromIso);
+
+    [...(mmData||[]), ...(rtData||[])].forEach(t => {
+        const rd = new Date(t.created_at);
+        rd.setHours(0,0,0,0);
+        const idx = days.findIndex(d => d.getTime()===rd.getTime());
+        if(idx < 0) return;
+        if(t.status === "approved") approvedCounts[idx]++;
+        else if(t.status === "rejected" || t.status === "wrong_number") rejectedCounts[idx]++;
+    });
+
+    if(nexusVolumeChartInstanceValidateur) nexusVolumeChartInstanceValidateur.destroy();
+    nexusVolumeChartInstanceValidateur = new Chart(canvas, {
+        data: {
+            labels: labels,
+            datasets: [
+                { type: "bar", label: "Approuvees", data: approvedCounts, backgroundColor: "#10B981", borderRadius: 6, yAxisID: "yCount" },
+                { type: "bar", label: "Rejetees", data: rejectedCounts, backgroundColor: "#DC2626", borderRadius: 6, yAxisID: "yCount" }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: true, position: "bottom" } },
+            scales: {
+                yCount: { beginAtZero: true, ticks: { precision: 0 }, title:{display:true,text:"Nb transactions"} }
+            }
+        }
+    });
+}
+
 async function loadOverview(){
     const h=new Date().getHours();
     const gr=h<12?"Bonjour":h<18?"Bon apres-midi":"Bonsoir";
@@ -229,6 +281,8 @@ async function loadOverview(){
             <td>${fmtA(t.amount_dop)} DOP</td>
             <td>${elapsedTime(t.created_at)}</td>
         </tr>`).join("")||"<tr><td colspan='6'>Aucune transaction en attente</td></tr>";
+
+    loadVolumeChartValidateur();
 }
 
 // ===== RECEPTION TRANSFERTS - VALIDATION & NEGOCIATION =====
