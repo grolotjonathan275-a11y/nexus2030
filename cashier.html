@@ -2610,6 +2610,58 @@ function renderGauge(currency, value, objectif){
     if(labelEl) labelEl.textContent = value.toLocaleString("fr-FR",{maximumFractionDigits:0}) + " / " + objectif.toLocaleString("fr-FR",{maximumFractionDigits:0});
 }
 
+async function loadLeaderboard(){
+    const el = document.getElementById("nexusLeaderboard");
+    if(!el) return;
+
+    const { start, end } = getMonthRange(0);
+    const scores = {};
+
+    function addScore(id, amount){
+        if(!id) return;
+        scores[id] = (scores[id] || 0) + (Number(amount) || 0);
+    }
+
+    const t1 = await supaFetch("transactions","GET",null,`?select=cashier_id,amount&created_at=gte.${start}&created_at=lt.${end}`);
+    if(Array.isArray(t1)) t1.forEach(r => addScore(r.cashier_id, r.amount));
+
+    const t2 = await supaFetch("exchange_transactions","GET",null,`?select=cashier_id,dop_amount&created_at=gte.${start}&created_at=lt.${end}`);
+    if(Array.isArray(t2)) t2.forEach(r => addScore(r.cashier_id, r.dop_amount));
+
+    const t3 = await supaFetch("mobile_money_transactions","GET",null,`?select=created_by,total_charged_dop&created_at=gte.${start}&created_at=lt.${end}`);
+    if(Array.isArray(t3)) t3.forEach(r => addScore(r.created_by, r.total_charged_dop));
+
+    const t4 = await supaFetch("bank_deposit_transactions","GET",null,`?select=created_by,amount&created_at=gte.${start}&created_at=lt.${end}`);
+    if(Array.isArray(t4)) t4.forEach(r => addScore(r.created_by, r.amount));
+
+    const t5 = await supaFetch("receive_transfer_transactions","GET",null,`?select=created_by,amount_dop_net&created_at=gte.${start}&created_at=lt.${end}`);
+    if(Array.isArray(t5)) t5.forEach(r => addScore(r.created_by, r.amount_dop_net));
+
+    const ids = Object.keys(scores);
+    if(ids.length === 0){
+        el.innerHTML = "<p style='color:#94A3B8;text-align:center;padding:1rem'>Aucune donnee ce mois-ci.</p>";
+        return;
+    }
+
+    const profiles = await supaFetch("profiles","GET",null,`?select=id,full_name&id=in.(${ids.join(",")})`);
+    const nameMap = {};
+    if(Array.isArray(profiles)) profiles.forEach(p => { nameMap[p.id] = p.full_name; });
+
+    const ranked = ids.map(id => ({ id, name: nameMap[id] || "Inconnu", score: scores[id] }))
+        .sort((a,b) => b.score - a.score)
+        .slice(0,5);
+
+    const medals = ["🥇","🥈","🥉","4️⃣","5️⃣"];
+    el.innerHTML = ranked.map((r,i) => `
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:0.6rem 0;border-bottom:1px solid #F1F5F9;${r.id===CASHIER_ID?'background:#F5F3FF;border-radius:8px;padding-left:0.5rem;padding-right:0.5rem':''}">
+            <div style="display:flex;align-items:center;gap:0.6rem">
+                <span style="font-size:1.1rem">${medals[i]}</span>
+                <span style="font-weight:${r.id===CASHIER_ID?'800':'600'};color:#0F172A">${r.name}${r.id===CASHIER_ID?' (Vous)':''}</span>
+            </div>
+            <strong style="color:#7C3AED">${fmtAmount(r.score)}</strong>
+        </div>`).join("");
+}
+
 async function loadDashboard() {
     await loadWallet();
     await loadMoneyWallet();
@@ -2619,6 +2671,7 @@ async function loadDashboard() {
     loadVolumeChartCashier();
     loadDonutChartCashier();
     loadGaugesCashier();
+    loadLeaderboard();
 }
 
 function resetNewClientForm(){
