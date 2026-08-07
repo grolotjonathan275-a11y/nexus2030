@@ -870,14 +870,20 @@ async function loadLoanData(){
 
 function sendReset(){alert("Lien envoye a "+document.getElementById("forgotEmail").value);}
 
-document.addEventListener("DOMContentLoaded",()=>{
+document.addEventListener("DOMContentLoaded",async ()=>{
     const saved=localStorage.getItem("nexus_client");
     if(saved){
         try{
             const parsed=JSON.parse(saved);
             if(parsed&&parsed.account_no){
-                currentClient=parsed;
-                showDashboard();
+                const fresh=await supaFetch("savings_accounts","GET",null,`?account_no=eq.${parsed.account_no}`);
+                if(fresh&&fresh.length>0&&!fresh[0].is_blocked){
+                    currentClient=fresh[0];
+                    localStorage.setItem("nexus_client",JSON.stringify(fresh[0]));
+                    showDashboard();
+                }else{
+                    localStorage.clear();
+                }
             }else{
                 localStorage.clear();
             }
