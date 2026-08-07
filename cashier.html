@@ -38,6 +38,7 @@
             <a href="#change" class="nav-item" onclick="showSection(this,event)"><span>💱</span>Change Devises</a>
 <a href="#loan" class="nav-item" onclick="showSection(this,event)"><span>💰</span>Prestamo</a>
 <a href="#receive" class="nav-item" onclick="showSection(this,event)"><span>🔄</span>Reception Transferts</a>
+<a href="#wisecard" class="nav-item" onclick="showSection(this,event)"><span>💳</span>Carte Debit Wise</a>
 <a href="rapports.html" class="nav-item"><span>📊</span>Rapports</a>
             <a href="#search" class="nav-item" onclick="showSection(this,event)"><span>🔍</span>Recherche Client</a>
             <a href="#history" class="nav-item" onclick="showSection(this,event)"><span>📋</span>Historique</a>
@@ -578,6 +579,85 @@
 <table class="data-table">
 <thead><tr><th>Heure</th><th>Service</th><th>Client</th><th>HTG</th><th>A Remettre</th><th>Statut</th></tr></thead>
 <tbody id="rtTxnList"><tr><td colspan="6">Chargement...</td></tr></tbody>
+</table>
+</div>
+</div>
+</section>
+
+<!-- CARTE DEBIT WISE -->
+<section class="section" id="section-wisecard">
+<h2 class="section-title" style="color:#163300">💳 Demande de Carte Debit Wise</h2>
+
+<div class="card" style="margin-bottom:1.5rem">
+<div class="card-header"><h3>Mon Wallet Carte Debit (a remettre)</h3></div>
+<div style="padding:1.5rem;text-align:center">
+<div style="font-size:0.85rem;color:#64748B">Montant total du a Nexus (frais collectes)</div>
+<div style="font-size:2rem;font-weight:800;color:#163300" id="wiseWalletBalance">0.00 DOP</div>
+</div>
+</div>
+
+<div class="operation-card" style="border:2px solid #9FE870;border-radius:16px;overflow:hidden">
+<div class="op-header" style="background:linear-gradient(135deg,#163300,#0A1F00)">
+<div class="op-icon">💳</div>
+<div><h2 style="color:#9FE870">Nouvelle Demande - Carte Wise</h2><p style="color:#D1F5B0">Renseignez les informations du client</p></div>
+</div>
+<div class="op-form">
+<div id="wiseFormMsg" style="display:none;padding:0.75rem 1rem;border-radius:8px;margin-bottom:1rem;font-size:0.9rem;"></div>
+
+<div class="form-group" style="background:#F0FDE8;border:1px solid #9FE870;border-radius:10px;padding:1rem;margin-bottom:1rem">
+<label style="font-weight:700;color:#163300">Le client possede-t-il deja un compte Wise? *</label>
+<select id="wiseHasAccount" onchange="toggleWiseAccountFields()" style="width:100%;padding:0.7rem;border-radius:8px;border:1.5px solid #9FE870;margin-top:0.5rem">
+<option value="">Selectionnez...</option>
+<option value="yes">Oui</option>
+<option value="no">Non</option>
+</select>
+</div>
+
+<div id="wiseExistingAccountFields" style="display:none">
+<div class="form-group"><label>Depuis combien de temps a-t-il ce compte?</label><input type="text" id="wiseAccountAge" placeholder="Ex: 6 mois, 2 ans..."></div>
+<div class="form-group"><label>Ce compte est-il fonctionnel ou bloque?</label>
+<select id="wiseAccountStatus"><option value="fonctionnel">Fonctionnel</option><option value="bloque">Bloque</option></select>
+</div>
+<div class="form-group"><label>Numero de telephone enregistre sur Wise</label><input type="tel" id="wiseRegisteredPhone" placeholder="+1 809..."></div>
+<div class="form-group"><label>Email enregistre sur Wise</label><input type="email" id="wiseRegisteredEmail" placeholder="email@exemple.com"></div>
+</div>
+
+<div class="form-grid-2">
+<div class="form-group"><label>Nom *</label><input type="text" id="wiseLastName" placeholder="Nom de famille"></div>
+<div class="form-group"><label>Prenom *</label><input type="text" id="wiseFirstName" placeholder="Prenom"></div>
+</div>
+
+<div class="form-group"><label>Type de Document *</label>
+<select id="wiseDocType">
+<option value="passeport">Passeport</option>
+<option value="cedula">Cedula Dominicaine</option>
+<option value="kat_demalog">Kat Demalòg</option>
+<option value="permis">Permis de Conduire</option>
+</select>
+</div>
+<div class="form-group"><label>Date d'Expiration du Document *</label><input type="date" id="wiseDocExpiry"></div>
+
+<div class="form-group"><label>Numero de telephone (non enregistre sur Wise) *</label><input type="tel" id="wisePhoneNew" placeholder="+1 809..."></div>
+<div class="form-group"><label>Email (non enregistre sur Wise) *</label><input type="email" id="wiseEmailNew" placeholder="email@exemple.com"></div>
+
+<div class="form-group" style="display:flex;align-items:flex-start;gap:0.5rem;background:#FFFBEB;padding:1rem;border-radius:10px;margin-top:1rem">
+<input type="checkbox" id="wiseFeeConfirm" style="margin-top:0.2rem">
+<label for="wiseFeeConfirm" style="margin:0">Je confirme avoir recu <strong>2,500 DOP</strong> en especes du client pour cette demande.</label>
+</div>
+
+<div class="form-actions">
+<button class="btn-cancel" onclick="resetWiseForm()">Annuler</button>
+<button class="btn-confirm" style="background:#163300;color:#9FE870" onclick="submitWiseCardRequest()">📤 Soumettre la Demande</button>
+</div>
+</div>
+</div>
+
+<div class="card" style="margin-top:1.5rem">
+<div class="card-header"><h3>Mes Demandes de Carte Wise</h3><span class="badge" id="wiseTxnCount">0</span></div>
+<div class="table-wrap">
+<table class="data-table">
+<thead><tr><th>Date</th><th>Client</th><th>Document</th><th>Statut</th></tr></thead>
+<tbody id="wiseTxnList"><tr><td colspan="4">Chargement...</td></tr></tbody>
 </table>
 </div>
 </div>
