@@ -263,8 +263,13 @@ function renderReceipt(t){
     document.getElementById("rMobileNumber").textContent = t.mobile_number || "-";
     document.getElementById("rAmountDop").textContent = fmtA(t.amount_dop) + " DOP";
     document.getElementById("rRate").textContent = "1 DOP = " + t.rate + " HTG";
-    document.getElementById("rFee").textContent = fmtA(t.fee_dop) + " DOP (" + t.fee_percent + "%)";
-    document.getElementById("rTotal").textContent = fmtA(t.total_charged_dop) + " DOP";
+    if(t.fee_mode === "deducted"){
+        document.getElementById("rFee").textContent = "-" + fmtA(t.fee_dop) + " DOP (" + t.fee_percent + "%, deduits)";
+        document.getElementById("rTotal").textContent = fmtA(t.amount_dop) + " DOP (rien de plus a payer)";
+    } else {
+        document.getElementById("rFee").textContent = fmtA(t.fee_dop) + " DOP (" + t.fee_percent + "%)";
+        document.getElementById("rTotal").textContent = fmtA(t.total_charged_dop) + " DOP";
+    }
 
     const noteEl = document.getElementById("rNote");
     noteEl.className = "r-note status-" + t.status;
@@ -281,6 +286,7 @@ function getDataFromParams(){
         rate: params.get("rate"),
         amount_htg: params.get("amount_htg"),
         fee_percent: params.get("fee_percent"),
+        fee_mode: params.get("fee_mode"),
         fee_dop: params.get("fee_dop"),
         total_charged_dop: params.get("total_charged_dop"),
         branch: params.get("branch"),
@@ -395,8 +401,8 @@ function printReceiptBLE(){
         {text:"", align:"left"},
         {text:"Montant envoye: " + fmtA(t.amount_dop) + " DOP", align:"left"},
         {text:"Taux: 1 DOP = " + t.rate + " HTG", align:"left"},
-        {text:"Frais (" + t.fee_percent + "%): " + fmtA(t.fee_dop) + " DOP", align:"left"},
-        {text:"Total paye: " + fmtA(t.total_charged_dop) + " DOP", bold:true, align:"left"},
+        {text: (t.fee_mode==="deducted" ? "Frais deduits (" : "Frais (") + t.fee_percent + "%): " + (t.fee_mode==="deducted"?"-":"") + fmtA(t.fee_dop) + " DOP", align:"left"},
+        {text: t.fee_mode==="deducted" ? "Rien de plus a payer" : "Total paye: " + fmtA(t.total_charged_dop) + " DOP", bold:true, align:"left"},
         {text:"--------------------------------", align:"left"},
         {text:"Merci Nexus Casa de Cambio", align:"center"}
     ];
