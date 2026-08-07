@@ -297,7 +297,7 @@ function exportDetailedExcel(){
 
     const ws = XLSX.utils.json_to_sheet(rows);
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, svc.label.substring(0,31));
+    XLSX.utils.book_append_sheet(wb, ws, svc.label.replace(/[:\\\/\?\*\[\]]/g,"-").substring(0,31));
 
     const dateStr = new Date(lastDetailedDate).toLocaleDateString("fr-FR").replace(/\//g,"-");
     XLSX.writeFile(wb, `Nexus_${svc.label.replace(/[^a-zA-Z0-9]/g,"_")}_${dateStr}.xlsx`);
