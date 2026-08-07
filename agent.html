@@ -1798,16 +1798,29 @@ function calcMoneyService(){
     if(!amt||amt<=0)return;
     const rate=currentMoneyService==="moncash"?Number(msSettings.moncash_rate):Number(msSettings.natcash_rate);
     const feePct=Number(msSettings.fee_percent);
-    const amountHtg=amt*rate;
-    const feeDop=amt*(feePct/100);
-    const total=amt+feeDop;
+    const feeDeducted=document.getElementById("msFeeDeducted").checked;
     document.getElementById("msFeeBox").style.display="block";
-    document.getElementById("msShowAmount").textContent=fmtA(amt)+" DOP";
-    document.getElementById("msShowRate").textContent="1 DOP = "+rate+" HTG";
-    document.getElementById("msShowHtg").textContent=fmtA(amountHtg)+" HTG";
-    document.getElementById("msFeeLabel").textContent=`Frais service (${feePct}%):`;
-    document.getElementById("msShowFee").textContent=fmtA(feeDop)+" DOP";
-    document.getElementById("msShowTotal").textContent=fmtA(total)+" DOP";
+    if(feeDeducted){
+        const feeDop=amt*(feePct/100);
+        const netDop=amt-feeDop;
+        const amountHtg=netDop*rate;
+        document.getElementById("msShowAmount").textContent=fmtA(amt)+" DOP";
+        document.getElementById("msShowRate").textContent="1 DOP = "+rate+" HTG";
+        document.getElementById("msFeeLabel").textContent=`Frais deduits (${feePct}%):`;
+        document.getElementById("msShowFee").textContent="-"+fmtA(feeDop)+" DOP";
+        document.getElementById("msShowHtg").textContent=fmtA(amountHtg)+" HTG";
+        document.getElementById("msShowTotal").textContent=fmtA(amt)+" DOP (rien de plus a payer)";
+    } else {
+        const amountHtg=amt*rate;
+        const feeDop=amt*(feePct/100);
+        const total=amt+feeDop;
+        document.getElementById("msShowAmount").textContent=fmtA(amt)+" DOP";
+        document.getElementById("msShowRate").textContent="1 DOP = "+rate+" HTG";
+        document.getElementById("msShowHtg").textContent=fmtA(amountHtg)+" HTG";
+        document.getElementById("msFeeLabel").textContent=`Frais service (${feePct}%):`;
+        document.getElementById("msShowFee").textContent=fmtA(feeDop)+" DOP";
+        document.getElementById("msShowTotal").textContent=fmtA(total)+" DOP";
+    }
 }
 
 async function submitMoneyService(){
