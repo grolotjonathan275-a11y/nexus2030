@@ -201,6 +201,51 @@ async function logout(){
 
 let nexusVolumeChartInstanceValidateur = null;
 
+let nexusDonutChartInstanceValidateur = null;
+
+async function loadDonutChartValidateur(){
+    const canvas = document.getElementById("nexusDonutChartValidateur");
+    if(!canvas || typeof Chart === "undefined") return;
+
+    const todayStart = new Date();
+    todayStart.setHours(0,0,0,0);
+    const fromIso = todayStart.toISOString();
+
+    const { data: mmData } = await supabaseClient.from("mobile_money_transactions").select("status").eq("validated_by", currentValidatorId).gte("created_at", fromIso);
+    const { data: rtData } = await supabaseClient.from("receive_transfer_transactions").select("status").eq("validated_by", currentValidatorId).gte("created_at", fromIso);
+
+    let approvedCount = 0, rejectedCount = 0;
+    [...(mmData||[]), ...(rtData||[])].forEach(t => {
+        if(t.status === "approved") approvedCount++;
+        else if(t.status === "rejected" || t.status === "wrong_number") rejectedCount++;
+    });
+
+    if(nexusDonutChartInstanceValidateur) nexusDonutChartInstanceValidateur.destroy();
+
+    if(approvedCount === 0 && rejectedCount === 0){
+        const ctx = canvas.getContext("2d");
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+        ctx.font = "13px Inter, Arial";
+        ctx.fillStyle = "#94A3B8";
+        ctx.textAlign = "center";
+        ctx.fillText("Aucune validation aujourd'hui", canvas.width/2, canvas.height/2);
+        return;
+    }
+
+    nexusDonutChartInstanceValidateur = new Chart(canvas, {
+        type: "doughnut",
+        data: {
+            labels: ["Approuvees", "Rejetees"],
+            datasets: [{ data: [approvedCount, rejectedCount], backgroundColor: ["#10B981","#DC2626"], borderWidth: 2, borderColor: "#fff" }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: "bottom", labels: { boxWidth: 12, font: { size: 11 } } } }
+        }
+    });
+}
+
 async function loadVolumeChartValidateur(){
     const canvas = document.getElementById("nexusVolumeChartValidateur");
     if(!canvas || typeof Chart === "undefined") return;
@@ -287,6 +332,7 @@ async function loadOverview(){
         </tr>`).join("")||"<tr><td colspan='6'>Aucune transaction en attente</td></tr>";
 
     loadVolumeChartValidateur();
+    loadDonutChartValidateur();
 }
 
 // ===== RECEPTION TRANSFERTS - VALIDATION & NEGOCIATION =====
