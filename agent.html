@@ -1833,9 +1833,18 @@ async function submitMoneyService(){
 
     const rate=currentMoneyService==="moncash"?Number(msSettings.moncash_rate):Number(msSettings.natcash_rate);
     const feePct=Number(msSettings.fee_percent);
-    const amountHtg=amt*rate;
+    const feeDeducted=document.getElementById("msFeeDeducted").checked;
     const feeDop=amt*(feePct/100);
-    const total=amt+feeDop;
+    let amountHtg, total, netAmountDop;
+    if(feeDeducted){
+        netAmountDop=amt-feeDop;
+        amountHtg=netAmountDop*rate;
+        total=amt;
+    } else {
+        amountHtg=amt*rate;
+        total=amt+feeDop;
+        netAmountDop=amt;
+    }
 
     const { data: { session } } = await supabaseClient.auth.getSession();
     if(!session)return alert("Session expiree. Reconnectez-vous.");
@@ -1852,7 +1861,9 @@ async function submitMoneyService(){
         amount_htg: amountHtg,
         fee_percent: feePct,
         fee_dop: feeDop,
-        total_charged_dop: total
+        total_charged_dop: total,
+        fee_mode: feeDeducted ? "deducted" : "separate",
+        net_amount_dop: netAmountDop
     }).select().single();
 
     if(error){
