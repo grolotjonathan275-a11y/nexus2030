@@ -1,0 +1,54 @@
+﻿/* ===== TOAST NOTIFICATIONS ===== */
+#nexusToastContainer { position:fixed; top:20px; right:20px; z-index:999999; display:flex; flex-direction:column; gap:0.6rem; max-width:340px; }
+.nexus-toast {
+    background:#fff; border-radius:10px; padding:0.9rem 1.1rem; box-shadow:0 8px 24px rgba(0,0,0,0.15);
+    display:flex; align-items:flex-start; gap:0.6rem; font-family:'Inter',Arial,sans-serif; font-size:0.88rem;
+    border-left:4px solid #64748B; animation:nexusToastIn 0.3s ease;
+}
+.nexus-toast.success { border-left-color:#10B981; }
+.nexus-toast.error { border-left-color:#DC2626; }
+.nexus-toast.warning { border-left-color:#F59E0B; }
+.nexus-toast.info { border-left-color:#0EA5E9; }
+.nexus-toast .nexus-toast-icon { font-size:1.2rem; flex-shrink:0; }
+.nexus-toast .nexus-toast-text { color:#0F172A; line-height:1.4; flex:1; }
+.nexus-toast .nexus-toast-close { cursor:pointer; color:#94A3B8; font-size:1rem; flex-shrink:0; }
+@keyframes nexusToastIn { from{opacity:0; transform:translateX(30px);} to{opacity:1; transform:translateX(0);} }
+@keyframes nexusToastOut { from{opacity:1; transform:translateX(0);} to{opacity:0; transform:translateX(30px);} }
+.nexus-toast.closing { animation:nexusToastOut 0.25s ease forwards; }
+
+/* ===== CONFIRM MODAL ===== */
+#nexusConfirmOverlay { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.55); z-index:999998; display:none; align-items:center; justify-content:center; }
+#nexusConfirmBox { background:#fff; border-radius:14px; padding:1.5rem; max-width:380px; width:90%; box-shadow:0 20px 60px rgba(0,0,0,0.3); font-family:'Inter',Arial,sans-serif; }
+#nexusConfirmBox h3 { font-size:1.05rem; color:#0F172A; margin-bottom:0.6rem; }
+#nexusConfirmBox p { font-size:0.9rem; color:#475569; line-height:1.5; margin-bottom:1.2rem; }
+#nexusConfirmBox .nexus-confirm-actions { display:flex; gap:0.6rem; justify-content:flex-end; }
+#nexusConfirmBox button { padding:0.6rem 1.1rem; border-radius:8px; border:none; font-weight:600; font-size:0.85rem; cursor:pointer; font-family:inherit; }
+#nexusConfirmCancel { background:#F1F5F9; color:#475569; }
+#nexusConfirmOk { background:#7C3AED; color:#fff; }
+
+/* ===== KPI ANIMATED COUNTER ===== */
+.nexus-kpi-animated { transition:opacity 0.3s ease; }
+
+/* ===== SIDEBAR COLLAPSE ===== */
+.sidebar.nexus-collapsed { width:76px !important; }
+.sidebar.nexus-collapsed .nav-item span:not(:first-child),
+.sidebar.nexus-collapsed .nav-section,
+.sidebar.nexus-collapsed .sec-name,
+.sidebar.nexus-collapsed .sec-title,
+.sidebar.nexus-collapsed .sidebar-logo img { display:none !important; }
+.sidebar.nexus-collapsed .nav-item { justify-content:center !important; padding:0.75rem !important; }
+#nexusCollapseBtn {
+    position:absolute; bottom:14px; left:50%; transform:translateX(-50%);
+    background:rgba(255,255,255,0.08); border:none; color:#94A3B8; width:34px; height:34px;
+    border-radius:8px; cursor:pointer; font-size:0.95rem; z-index:10;
+}
+.sidebar { position:relative; transition:width 0.25s ease; }
+
+/* ===== SESSION BADGE ===== */
+#nexusSessionBadge {
+    display:inline-flex; align-items:center; gap:0.4rem; background:#F0FDF4; color:#166534;
+    border:1px solid #BBF7D0; border-radius:999px; padding:0.3rem 0.8rem; font-size:0.75rem;
+    font-weight:600; font-family:'Inter',Arial,sans-serif;
+}
+#nexusSessionBadge .nexus-session-dot { width:7px; height:7px; border-radius:50%; background:#22C55E; animation:nexusPulseDot 2s infinite; }
+@keyframes nexusPulseDot { 0%,100%{opacity:1;} 50%{opacity:0.3;} }
