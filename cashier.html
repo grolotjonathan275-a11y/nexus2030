@@ -1037,16 +1037,46 @@ async function loadMoneyWallet(){
 async function loadTransactions() {
     const txns = await supaFetch("transactions", "GET", null, `?cashier_id=eq.${CASHIER_ID}&order=created_at.desc`);
     const today = new Date().toDateString();
+    const yesterday = new Date(Date.now() - 86400000).toDateString();
     const todayTxns = txns.filter(t => new Date(t.created_at).toDateString() === today);
+    const yesterdayTxns = txns.filter(t => new Date(t.created_at).toDateString() === yesterday);
     const depots = todayTxns.filter(t => t.transaction_type === "depot");
     const retraits = todayTxns.filter(t => t.transaction_type === "retrait");
     const totalAmt = todayTxns.reduce((s, t) => s + Number(t.amount), 0);
+
+    const yDepots = yesterdayTxns.filter(t => t.transaction_type === "depot").length;
+    const yRetraits = yesterdayTxns.filter(t => t.transaction_type === "retrait").length;
+    const yOps = yesterdayTxns.length;
+    const yAmt = yesterdayTxns.reduce((s, t) => s + Number(t.amount), 0);
+
+    function renderTrend(elId, todayVal, yesterdayVal){
+        const el = document.getElementById(elId);
+        if(!el) return;
+        if(yesterdayVal === 0){
+            el.innerHTML = todayVal > 0 ? "<span style='color:#10B981'>&uarr; Nouveau</span>" : "";
+            return;
+        }
+        const diff = todayVal - yesterdayVal;
+        const pct = Math.round((diff / yesterdayVal) * 100);
+        if(diff > 0){
+            el.innerHTML = "<span style='color:#10B981'>&uarr; +" + pct + "% vs hier</span>";
+        } else if(diff < 0){
+            el.innerHTML = "<span style='color:#DC2626'>&darr; " + pct + "% vs hier</span>";
+        } else {
+            el.innerHTML = "<span style='color:#94A3B8'>= identique a hier</span>";
+        }
+    }
 
     document.getElementById("totalDepots").textContent = depots.length;
     document.getElementById("totalRetraits").textContent = retraits.length;
     document.getElementById("totalOps").textContent = todayTxns.length;
     document.getElementById("totalAmount").textContent = fmtAmount(totalAmt);
     document.getElementById("historyCount").textContent = txns.length;
+
+    renderTrend("totalDepotsTrend", depots.length, yDepots);
+    renderTrend("totalRetraitsTrend", retraits.length, yRetraits);
+    renderTrend("totalOpsTrend", todayTxns.length, yOps);
+    renderTrend("totalAmountTrend", totalAmt, yAmt);
 
     document.getElementById("recentTxns").innerHTML = txns.slice(0,5).map(t =>
         `<tr><td>${new Date(t.created_at).toLocaleTimeString("fr-FR")}</td><td>${t.client_name||"-"}</td><td><span class="txn-badge ${t.transaction_type}">${t.transaction_type}</span></td><td>${fmtAmount(t.amount)} ${t.currency}</td><td><span class="status-badge">${t.status}</span></td></tr>`
