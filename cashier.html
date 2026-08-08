@@ -2667,6 +2667,63 @@ async function loadLeaderboard(){
         </div>`).join("");
 }
 
+async function loadHeatmap(){
+    const el = document.getElementById("nexusHeatmap");
+    if(!el) return;
+
+    const { start, end } = getMonthRange(0);
+    const now = new Date();
+    const daysInMonth = new Date(now.getFullYear(), now.getMonth()+1, 0).getDate();
+    const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).getDay();
+
+    const counts = {};
+    for(let d=1; d<=daysInMonth; d++) counts[d] = 0;
+
+    const sources = [
+        { table:"transactions", col:"cashier_id" },
+        { table:"exchange_transactions", col:"cashier_id" },
+        { table:"mobile_money_transactions", col:"created_by" },
+        { table:"bank_deposit_transactions", col:"created_by" },
+        { table:"receive_transfer_transactions", col:"created_by" }
+    ];
+
+    for(const s of sources){
+        const rows = await supaFetch(s.table,"GET",null,`?select=created_at&${s.col}=eq.${CASHIER_ID}&created_at=gte.${start}&created_at=lt.${end}`);
+        if(!Array.isArray(rows)) continue;
+        rows.forEach(r => {
+            const day = new Date(r.created_at).getDate();
+            counts[day] = (counts[day] || 0) + 1;
+        });
+    }
+
+    const maxCount = Math.max(1, ...Object.values(counts));
+
+    function getColor(count){
+        if(count === 0) return "#F1F5F9";
+        const intensity = count / maxCount;
+        if(intensity <= 0.25) return "#DDD6FE";
+        if(intensity <= 0.5) return "#B4A5F5";
+        if(intensity <= 0.75) return "#8B6FE8";
+        return "#7C3AED";
+    }
+
+    const dayLabels = ["D","L","M","M","J","V","S"];
+    let html = '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;max-width:320px;margin:0 auto">';
+    dayLabels.forEach(l => { html += `<div style="text-align:center;font-size:0.7rem;color:#94A3B8;font-weight:600">${l}</div>`; });
+
+    for(let i=0; i<firstDay; i++){ html += '<div></div>'; }
+
+    for(let d=1; d<=daysInMonth; d++){
+        const count = counts[d];
+        const isToday = d === now.getDate();
+        html += `<div title="${d}: ${count} transaction(s)" style="aspect-ratio:1;background:${getColor(count)};border-radius:4px;${isToday?'border:2px solid #0F172A':''};display:flex;align-items:center;justify-content:center;font-size:0.65rem;color:${count>0?'#fff':'#CBD5E1'}">${d}</div>`;
+    }
+    html += '</div>';
+    html += '<div style="display:flex;align-items:center;justify-content:center;gap:0.3rem;margin-top:0.75rem;font-size:0.7rem;color:#94A3B8">Moins <div style="width:12px;height:12px;background:#F1F5F9;border-radius:2px"></div><div style="width:12px;height:12px;background:#DDD6FE;border-radius:2px"></div><div style="width:12px;height:12px;background:#B4A5F5;border-radius:2px"></div><div style="width:12px;height:12px;background:#8B6FE8;border-radius:2px"></div><div style="width:12px;height:12px;background:#7C3AED;border-radius:2px"></div> Plus</div>';
+
+    el.innerHTML = html;
+}
+
 async function loadDashboard() {
     await loadWallet();
     await loadMoneyWallet();
@@ -2677,6 +2734,7 @@ async function loadDashboard() {
     loadDonutChartCashier();
     loadGaugesCashier();
     loadLeaderboard();
+    loadHeatmap();
 }
 
 function resetNewClientForm(){
