@@ -39,6 +39,7 @@
 <a href="#loan" class="nav-item" onclick="showSection(this,event)"><span>💰</span>Prestamo</a>
 <a href="#receive" class="nav-item" onclick="showSection(this,event)"><span>🔄</span>Reception Transferts</a>
 <a href="#wisecard" class="nav-item" onclick="showSection(this,event)"><span>💳</span>Carte Debit Wise</a>
+<a href="#disashop" class="nav-item" onclick="showSection(this,event)"><span>🛍️</span>Disashop</a>
 <a href="rapports.html" class="nav-item"><span>📊</span>Rapports</a>
             <a href="#search" class="nav-item" onclick="showSection(this,event)"><span>🔍</span>Recherche Client</a>
             <a href="#history" class="nav-item" onclick="showSection(this,event)"><span>📋</span>Historique</a>
@@ -694,6 +695,65 @@
 <table class="data-table">
 <thead><tr><th>Date</th><th>Client</th><th>Document</th><th>Statut</th></tr></thead>
 <tbody id="wiseTxnList"><tr><td colspan="4">Chargement...</td></tr></tbody>
+</table>
+</div>
+</div>
+</section>
+
+<!-- DISASHOP -->
+<section class="section" id="section-disashop">
+<h2 class="section-title">🛍️ Services Disashop</h2>
+
+<div class="card" style="margin-bottom:1.5rem">
+<div class="card-header"><h3>Mes Wallets Disashop (a remettre)</h3></div>
+<div class="table-wrap"><table class="data-table">
+<thead><tr><th>Service</th><th>Montant a Remettre</th></tr></thead>
+<tbody id="disaWalletsList"><tr><td colspan="2">Chargement...</td></tr></tbody>
+</table></div>
+</div>
+
+<div class="operation-card">
+<div class="op-header" style="background:linear-gradient(135deg,#E4002B,#8B0018)">
+<div class="op-icon">🛍️</div>
+<div><h2>Nouvelle Transaction Disashop</h2><p>Choisissez un service et renseignez les informations</p></div>
+</div>
+<div class="op-form">
+<div id="disaFormMsg" style="display:none;padding:0.75rem 1rem;border-radius:8px;margin-bottom:1rem;font-size:0.9rem;"></div>
+
+<div class="form-group"><label>Choisir le Service *</label>
+<div id="disaServiceGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:0.6rem;margin-top:0.5rem"></div>
+</div>
+
+<div id="disaSelectedInfo" style="display:none;background:#F8FAFC;border-radius:10px;padding:1rem;margin:1rem 0">
+<div style="font-size:0.85rem;color:#64748B">Service selectionne:</div>
+<div style="font-weight:700;font-size:1.1rem" id="disaSelectedName">-</div>
+<div style="font-size:0.8rem;color:#64748B;margin-top:0.25rem" id="disaSelectedCategory">-</div>
+</div>
+
+<div class="form-grid-2">
+<div class="form-group"><label>Nom du Client *</label><input type="text" id="disaClientName" placeholder="Nom complet"></div>
+<div class="form-group"><label>Telephone (optionnel)</label><input type="tel" id="disaClientPhone" placeholder="+1 809..."></div>
+</div>
+
+<div class="form-group"><label>Montant (DOP) *</label><input type="number" id="disaAmount" placeholder="0.00" min="1" oninput="calcDisaCommission()"></div>
+
+<div id="disaCalcBox" style="display:none;background:#FEF2F2;border-radius:10px;padding:1rem;margin:1rem 0">
+<div style="display:flex;justify-content:space-between;padding:0.3rem 0"><span>Commission Nexus (<span id="disaCommPct">0</span>%):</span><strong id="disaCommAmt">-</strong></div>
+</div>
+
+<div class="form-actions">
+<button class="btn-cancel" onclick="resetDisaForm()">Annuler</button>
+<button class="btn-confirm" style="background:#E4002B" onclick="submitDisaTransaction()">📤 Soumettre la Demande</button>
+</div>
+</div>
+</div>
+
+<div class="card" style="margin-top:1.5rem">
+<div class="card-header"><h3>Mes Transactions Disashop</h3><span class="badge" id="disaTxnCount">0</span></div>
+<div class="table-wrap">
+<table class="data-table">
+<thead><tr><th>Date</th><th>Service</th><th>Client</th><th>Montant</th><th>Statut</th></tr></thead>
+<tbody id="disaTxnList"><tr><td colspan="5">Chargement...</td></tr></tbody>
 </table>
 </div>
 </div>
