@@ -1008,6 +1008,7 @@ function showSection(el, e) {
     if(id === "loan"){ loadBranchLoans(); }
     if(id === "receive"){ loadRwBalances(); loadRtSettingsCache(); loadRtTransactions(); loadRtNegotiations(); }
     if(id === "wisecard"){ loadWiseWallet(); loadWiseTransactions(); }
+    if(id === "disashop"){ loadDisaServices(); loadDisaWallets(); loadDisaTransactions(); }
     if(id === "banking"){ loadBankWallets(); loadMyBankTransactions(); }
 }
 
@@ -2007,6 +2008,165 @@ async function loadWiseTransactions(){
             <td>${docLabels[t.document_type]||t.document_type}</td>
             <td>${statusLabels[t.status]||t.status}</td>
         </tr>`).join("") || "<tr><td colspan='4'>Aucune demande</td></tr>";
+}
+
+// ===== DISASHOP =====
+const DISA_SERVICES_LIST = [
+    { key:"claro", name:"Claro", category:"Recharge telephonique", bg:"#E30613", fg:"#fff" },
+    { key:"altice", name:"Altice", category:"Recharge telephonique", bg:"#000000", fg:"#fff" },
+    { key:"viva", name:"Viva", category:"Recharge telephonique", bg:"#8DC63F", fg:"#0A2E0A" },
+    { key:"digicel", name:"Digicel", category:"Recharge telephonique", bg:"#E4002B", fg:"#fff" },
+    { key:"moun", name:"Moun", category:"Recharge telephonique", bg:"#F5A623", fg:"#3A2200" },
+    { key:"natcom", name:"Natcom", category:"Recharge telephonique", bg:"#005BAA", fg:"#fff" },
+    { key:"activa", name:"Activa", category:"Telephone/Cable/Internet", bg:"#003876", fg:"#fff" },
+    { key:"wind", name:"Wind Telecom", category:"Internet prepaye", bg:"#1B3A6B", fg:"#fff" },
+    { key:"cepm", name:"CEPM", category:"Energie electrique", bg:"#0072BC", fg:"#fff" },
+    { key:"edesur", name:"Edesur", category:"Energie electrique", bg:"#F7941E", fg:"#3A2200" },
+    { key:"betcris", name:"Betcris", category:"Paris sportifs", bg:"#0E4C92", fg:"#fff" },
+    { key:"juancito_sport", name:"Juancito Sport", category:"Paris sportifs", bg:"#1A1A1A", fg:"#fff" },
+    { key:"orobet", name:"OroBet", category:"Paris sportifs", bg:"#FFD700", fg:"#1A1A1A" },
+    { key:"superbets", name:"SuperBets", category:"Paris sportifs", bg:"#0B3D2E", fg:"#7FD858" },
+    { key:"paso_rapido", name:"Paso Rapido", category:"Recharge de peage", bg:"#0A1F0A", fg:"#7FD858" },
+    { key:"angloamericana", name:"AngloAmericana", category:"Assurance vehicule", bg:"#F5F5F5", fg:"#1A1A1A" }
+];
+
+let disaServicesCache = {};
+let disaSelectedService = null;
+
+async function loadDisaServices(){
+    const data = await supaFetch("disashop_services", "GET", null, "?select=*");
+    if(Array.isArray(data)) data.forEach(s => disaServicesCache[s.service_key] = s);
+
+    const grid = document.getElementById("disaServiceGrid");
+    grid.innerHTML = DISA_SERVICES_LIST.map(s => `
+        <div onclick="selectDisaService('${s.key}')" id="disaCard_${s.key}"
+            style="background:${s.bg};color:${s.fg};border-radius:10px;padding:0.9rem 0.6rem;text-align:center;cursor:pointer;font-weight:800;font-size:0.85rem;border:3px solid transparent;transition:transform 0.15s">
+            ${s.name}
+        </div>`).join("");
+}
+
+function selectDisaService(key){
+    disaSelectedService = key;
+    DISA_SERVICES_LIST.forEach(s => {
+        const el = document.getElementById("disaCard_" + s.key);
+        if(el) el.style.border = s.key === key ? "3px solid #0F172A" : "3px solid transparent";
+    });
+    const svc = DISA_SERVICES_LIST.find(s => s.key === key);
+    const meta = disaServicesCache[key];
+    document.getElementById("disaSelectedInfo").style.display = "block";
+    document.getElementById("disaSelectedName").textContent = svc.name;
+    document.getElementById("disaSelectedCategory").textContent = svc.category + " — Commission: " + (meta ? meta.commission_percent : "?") + "%";
+    calcDisaCommission();
+}
+
+function calcDisaCommission(){
+    const amt = Number(document.getElementById("disaAmount").value);
+    const box = document.getElementById("disaCalcBox");
+    if(!disaSelectedService || !amt || amt <= 0 || !disaServicesCache[disaSelectedService]){
+        box.style.display = "none";
+        return;
+    }
+    const pct = Number(disaServicesCache[disaSelectedService].commission_percent);
+    const commAmt = amt * (pct / 100);
+    document.getElementById("disaCommPct").textContent = pct;
+    document.getElementById("disaCommAmt").textContent = fmtAmount(commAmt) + " DOP";
+    box.style.display = "block";
+}
+
+function showDisaFormMsg(text, isError){
+    const el = document.getElementById("disaFormMsg");
+    el.style.display = "block";
+    el.style.background = isError ? "#FEE2E2" : "#DCFCE7";
+    el.style.color = isError ? "#991B1B" : "#166534";
+    el.textContent = text;
+}
+
+function resetDisaForm(){
+    disaSelectedService = null;
+    document.getElementById("disaClientName").value = "";
+    document.getElementById("disaClientPhone").value = "";
+    document.getElementById("disaAmount").value = "";
+    document.getElementById("disaSelectedInfo").style.display = "none";
+    document.getElementById("disaCalcBox").style.display = "none";
+    document.getElementById("disaFormMsg").style.display = "none";
+    DISA_SERVICES_LIST.forEach(s => {
+        const el = document.getElementById("disaCard_" + s.key);
+        if(el) el.style.border = "3px solid transparent";
+    });
+}
+
+async function submitDisaTransaction(){
+    const clientName = document.getElementById("disaClientName").value.trim();
+    const clientPhone = document.getElementById("disaClientPhone").value.trim();
+    const amount = Number(document.getElementById("disaAmount").value);
+
+    if(!disaSelectedService){ showDisaFormMsg("Selectionnez un service.", true); return; }
+    if(!clientName){ showDisaFormMsg("Entrez le nom du client.", true); return; }
+    if(!amount || amount <= 0){ showDisaFormMsg("Entrez un montant valide.", true); return; }
+
+    const svcMeta = disaServicesCache[disaSelectedService];
+    if(!svcMeta){ showDisaFormMsg("Service non disponible, rafraichissez la page.", true); return; }
+
+    const pct = Number(svcMeta.commission_percent);
+    const commAmt = amount * (pct / 100);
+
+    const result = await supaFetch("disashop_transactions", "POST", {
+        service_key: disaSelectedService,
+        client_name: clientName,
+        client_phone: clientPhone,
+        amount_dop: amount,
+        commission_percent_used: pct,
+        commission_amount: commAmt,
+        status: "pending",
+        created_by: CASHIER_ID,
+        staff_name: CASHIER_NAME,
+        branch: CASHIER_BRANCH
+    });
+
+    if(!result || !result.ok){ showDisaFormMsg("Erreur lors de la soumission.", true); return; }
+
+    const walletData = await supaFetch("disashop_wallets", "GET", null, `?staff_id=eq.${CASHIER_ID}&service_key=eq.${disaSelectedService}`);
+    const wallet = walletData && walletData[0];
+    if(wallet){
+        await supaFetch("disashop_wallets", "PATCH", { balance_dop: Number(wallet.balance_dop) + commAmt, updated_at: new Date().toISOString() }, `?id=eq.${wallet.id}`);
+    } else {
+        await supaFetch("disashop_wallets", "POST", { staff_id: CASHIER_ID, staff_name: CASHIER_NAME, service_key: disaSelectedService, balance_dop: commAmt });
+    }
+
+    showDisaFormMsg("✅ Transaction soumise! En attente d'approbation.", false);
+    resetDisaForm();
+    loadDisaWallets();
+    loadDisaTransactions();
+}
+
+async function loadDisaWallets(){
+    const data = await supaFetch("disashop_wallets", "GET", null, `?staff_id=eq.${CASHIER_ID}&order=balance_dop.desc`);
+    const tbody = document.getElementById("disaWalletsList");
+    if(!Array.isArray(data) || !data.length){ tbody.innerHTML = "<tr><td colspan='2'>Aucun wallet actif.</td></tr>"; return; }
+
+    tbody.innerHTML = data.filter(w => Number(w.balance_dop) > 0).map(w => {
+        const svc = DISA_SERVICES_LIST.find(s => s.key === w.service_key);
+        return `<tr><td>${svc ? svc.name : w.service_key}</td><td><strong>${fmtAmount(w.balance_dop)} DOP</strong></td></tr>`;
+    }).join("") || "<tr><td colspan='2'>Aucun solde en attente.</td></tr>";
+}
+
+async function loadDisaTransactions(){
+    const data = await supaFetch("disashop_transactions", "GET", null, `?created_by=eq.${CASHIER_ID}&order=created_at.desc&limit=30`);
+    if(!Array.isArray(data)){ document.getElementById("disaTxnList").innerHTML = "<tr><td colspan='5'>Erreur de chargement</td></tr>"; return; }
+
+    document.getElementById("disaTxnCount").textContent = data.length;
+    const statusLabels = {pending:"⏳ En attente", approved:"✅ Approuve", rejected:"❌ Rejete"};
+
+    document.getElementById("disaTxnList").innerHTML = data.map(t => {
+        const svc = DISA_SERVICES_LIST.find(s => s.key === t.service_key);
+        return `<tr>
+            <td>${new Date(t.created_at).toLocaleDateString("fr-FR")}</td>
+            <td>${svc ? svc.name : t.service_key}</td>
+            <td>${t.client_name}</td>
+            <td>${fmtAmount(t.amount_dop)} DOP</td>
+            <td>${statusLabels[t.status]||t.status}</td>
+        </tr>`;
+    }).join("") || "<tr><td colspan='5'>Aucune transaction</td></tr>";
 }
 
 async function searchAccount(type) {
