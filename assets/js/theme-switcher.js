@@ -11,6 +11,12 @@
         { id: "trading", label: "Trading Pro", icon: "📈" },
         { id: "gridmod", label: "Grid Moderne", icon: "🔷" }
     ];
+    const FONT_SIZES = [
+        { id: "small", label: "Petit", icon: "🔎", zoom: "85%" },
+        { id: "normal", label: "Normal", icon: "🔤", zoom: "100%" },
+        { id: "large", label: "Grand", icon: "🔠", zoom: "115%" },
+        { id: "xlarge", label: "Tres Grand", icon: "🔡", zoom: "130%" }
+    ];
     const EFFECTS = [
         { id: "none", label: "Aucun", icon: "🚫" },
         { id: "particules", label: "Particules", icon: "✨" },
@@ -21,6 +27,12 @@
     ];
 
     let currentEffectCleanup = null;
+
+    function applyFontSize(sizeId){
+        const size = FONT_SIZES.find(s => s.id === sizeId) || FONT_SIZES[1];
+        document.documentElement.style.zoom = size.zoom;
+        localStorage.setItem("nexus_fontsize", sizeId);
+    }
 
     function applyTheme(themeId){
         document.documentElement.setAttribute("data-theme", themeId);
@@ -97,11 +109,14 @@
         function renderPanelContent(){
             const currentTheme = localStorage.getItem("nexus_theme") || "simple";
             const currentEffect = localStorage.getItem("nexus_effect") || "none";
+            const currentFontSize = localStorage.getItem("nexus_fontsize") || "normal";
             panel.innerHTML = `
                 <div style="font-weight:700;font-size:0.9rem;margin-bottom:0.5rem;color:#0F172A">🎨 Theme</div>
                 <div id="nexusThemeList" style="display:flex;flex-direction:column;gap:0.35rem;margin-bottom:1rem"></div>
                 <div style="font-weight:700;font-size:0.9rem;margin-bottom:0.5rem;color:#0F172A">✨ Effet d'ecran</div>
-                <div id="nexusEffectList" style="display:flex;flex-direction:column;gap:0.35rem"></div>
+                <div id="nexusEffectList" style="display:flex;flex-direction:column;gap:0.35rem;margin-bottom:1rem"></div>
+                <div style="font-weight:700;font-size:0.9rem;margin-bottom:0.5rem;color:#0F172A">🔤 Taille du Texte</div>
+                <div id="nexusFontSizeList" style="display:flex;flex-direction:column;gap:0.35rem"></div>
             `;
             const themeList = panel.querySelector("#nexusThemeList");
             THEMES.forEach(t => {
@@ -118,6 +133,15 @@
                 item.style.cssText = "text-align:left;padding:0.5rem 0.7rem;border-radius:8px;border:1px solid " + (e.id===currentEffect?"#7C3AED":"#E2E8F0") + ";background:" + (e.id===currentEffect?"#F5F3FF":"#fff") + ";color:#0F172A;cursor:pointer;font-size:0.85rem;font-family:inherit;";
                 item.onclick = () => { applyEffect(e.id); renderPanelContent(); };
                 effectList.appendChild(item);
+            });
+
+            const fontSizeList = panel.querySelector("#nexusFontSizeList");
+            FONT_SIZES.forEach(s => {
+                const item = document.createElement("button");
+                item.textContent = s.icon + " " + s.label;
+                item.style.cssText = "text-align:left;padding:0.5rem 0.7rem;border-radius:8px;border:1px solid " + (s.id===currentFontSize?"#7C3AED":"#E2E8F0") + ";background:" + (s.id===currentFontSize?"#F5F3FF":"#fff") + ";color:#0F172A;cursor:pointer;font-size:0.85rem;font-family:inherit;";
+                item.onclick = () => { applyFontSize(s.id); renderPanelContent(); };
+                fontSizeList.appendChild(item);
             });
         }
 
@@ -139,8 +163,10 @@
     document.addEventListener("DOMContentLoaded", () => {
         const savedTheme = localStorage.getItem("nexus_theme") || "simple";
         const savedEffect = localStorage.getItem("nexus_effect") || "none";
+        const savedFontSize = localStorage.getItem("nexus_fontsize") || "normal";
         applyTheme(savedTheme);
         applyEffect(savedEffect);
+        applyFontSize(savedFontSize);
         buildPanel();
     });
 })();
