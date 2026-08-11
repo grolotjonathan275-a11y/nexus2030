@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
@@ -47,13 +47,13 @@ td{padding:0.75rem;border-top:1px solid #F1F5F9;white-space:nowrap}
 <body>
 
 <div class="topbar">
-<h1>?? Rapports</h1>
-<a href="#" onclick="history.back()" class="back-link">? Retour au tableau de bord</a>
+<h1>📊 Rapports</h1>
+<a href="#" onclick="history.back()" class="back-link">← Retour au tableau de bord</a>
 </div>
 
 <div class="tabs">
-<button class="tab-btn active" onclick="switchTab('detail')">?? Historique Detaille</button>
-<button class="tab-btn" onclick="switchTab('general')">?? Historique General (PDF)</button>
+<button class="tab-btn active" onclick="switchTab('detail')">📋 Historique Detaille</button>
+<button class="tab-btn" onclick="switchTab('general')">📄 Historique General (PDF)</button>
 </div>
 
 <!-- ONGLET DETAILLE -->
@@ -74,9 +74,9 @@ td{padding:0.75rem;border-top:1px solid #F1F5F9;white-space:nowrap}
 </div>
 <div class="form-group"><label>Date</label><input type="date" id="detDate"></div>
 <div class="form-group" id="detStaffGroup" style="display:none"><label>Personnel</label><select id="detStaff"><option value="">Tous</option></select></div>
-<div class="form-group"><button class="btn btn-primary" onclick="loadDetailedReport()">?? Rechercher</button></div>
-<div class="form-group"><button class="btn btn-pdf" onclick="printDetailedReport()">??? Telecharger / Imprimer PDF</button></div>
-<div class="form-group"><button class="btn" style="background:#16A34A;color:#fff" onclick="exportDetailedExcel()">?? Exporter Excel</button></div>
+<div class="form-group"><button class="btn btn-primary" onclick="loadDetailedReport()">🔍 Rechercher</button></div>
+<div class="form-group"><button class="btn btn-pdf" onclick="printDetailedReport()">🖨️ Telecharger / Imprimer PDF</button></div>
+<div class="form-group"><button class="btn" style="background:#16A34A;color:#fff" onclick="exportDetailedExcel()">📊 Exporter Excel</button></div>
 </div>
 </div>
 
@@ -93,9 +93,9 @@ td{padding:0.75rem;border-top:1px solid #F1F5F9;white-space:nowrap}
 <div class="filters">
 <div class="form-group"><label>Date</label><input type="date" id="genDate"></div>
 <div class="form-group" id="genStaffGroup" style="display:none"><label>Personnel</label><select id="genStaff"><option value="">Tous</option></select></div>
-<div class="form-group"><button class="btn btn-primary" onclick="loadGeneralReport()">?? Generer le Rapport</button></div>
-<div class="form-group"><button class="btn btn-pdf" onclick="window.print()">??? Telecharger / Imprimer PDF</button></div>
-<div class="form-group"><button class="btn" style="background:#16A34A;color:#fff" onclick="exportGeneralExcel()">?? Exporter Excel</button></div>
+<div class="form-group"><button class="btn btn-primary" onclick="loadGeneralReport()">🔍 Generer le Rapport</button></div>
+<div class="form-group"><button class="btn btn-pdf" onclick="window.print()">🖨️ Telecharger / Imprimer PDF</button></div>
+<div class="form-group"><button class="btn" style="background:#16A34A;color:#fff" onclick="exportGeneralExcel()">📊 Exporter Excel</button></div>
 </div>
 </div>
 
@@ -128,8 +128,8 @@ async function loadStaffFilter(){
     if(!isPrivileged()) return;
     document.getElementById("detStaffGroup").style.display = "flex";
     document.getElementById("genStaffGroup").style.display = "flex";
-    const { data } = await supabaseClient.from("profiles").select("id,full_name,role").order("full_name");
-    const roleLabels = {caissier:"Caissier", agent:"Agent", validateur:"Validateur", superviseur:"Superviseur", secretaire:"Secretaire", ceo:"CEO", super_admin:"Super Admin", gestion_banking:"Gestion Banking"};
+    const { data } = await supabaseClient.from("profiles").select("id,full_name,role").in("role",["caissier","agent","validateur"]).order("full_name");
+    const roleLabels = {caissier:"Caissier", agent:"Agent", validateur:"Validateur"};
     const optionsHtml = '<option value="">Tous</option>' + (data||[]).map(s => `<option value="${s.id}">${s.full_name} (${roleLabels[s.role]||s.role})</option>`).join("");
     document.getElementById("detStaff").innerHTML = optionsHtml;
     document.getElementById("genStaff").innerHTML = optionsHtml;
