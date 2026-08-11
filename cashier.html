@@ -3106,6 +3106,22 @@ document.addEventListener("DOMContentLoaded", async () => {
     if(profile.avatar_url) applyAvatar(profile.avatar_url);
 
     loadDashboard();
+
+    // ===== TEMPS REEL: mise a jour automatique de mes transactions =====
+    supabaseClient.channel("cashier-realtime-mm")
+        .on("postgres_changes", { event: "*", schema: "public", table: "mobile_money_transactions", filter: `created_by=eq.${CASHIER_ID}` }, () => {
+            const activeSection = document.querySelector(".section.active");
+            if(activeSection && activeSection.id === "section-moneyservice") loadMyMoneyTransactions();
+            if(activeSection && activeSection.id === "section-dashboard") loadDashboard();
+        })
+        .subscribe();
+
+    supabaseClient.channel("cashier-realtime-rt")
+        .on("postgres_changes", { event: "*", schema: "public", table: "receive_transfer_transactions", filter: `created_by=eq.${CASHIER_ID}` }, () => {
+            const activeSection = document.querySelector(".section.active");
+            if(activeSection && activeSection.id === "section-receive"){ loadRtTransactions(); loadRtNegotiations(); }
+        })
+        .subscribe();
 });
 </script>
 
