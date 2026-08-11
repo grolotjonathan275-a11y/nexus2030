@@ -6,7 +6,10 @@
         { id: "claire", label: "Claire", icon: "☀️" },
         { id: "sombre", label: "Sombre", icon: "🌙" },
         { id: "arcenciel", label: "Arc-en-ciel", icon: "🌈" },
-        { id: "led", label: "Lumiere LED", icon: "💡" }
+        { id: "led", label: "Lumiere LED", icon: "💡" },
+        { id: "natcash", label: "NatCash", icon: "🟠" },
+        { id: "trading", label: "Trading Pro", icon: "📈" },
+        { id: "gridmod", label: "Grid Moderne", icon: "🔷" }
     ];
     const EFFECTS = [
         { id: "none", label: "Aucun", icon: "🚫" },
