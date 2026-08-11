@@ -1021,7 +1021,7 @@ function showSection(el, e) {
     if(id === "loan"){ loadBranchLoans(); }
     if(id === "receive"){ loadRwBalances(); loadRtSettingsCache(); loadRtTransactions(); loadRtNegotiations(); }
     if(id === "wisecard"){ loadWiseWallet(); loadWiseTransactions(); }
-    if(id === "disashop"){ loadDisaServices(); loadDisaWallets(); loadDisaTransactions(); }
+    if(id === "disashop"){ loadDisaServices(); loadDisaWallets(); loadDisaTransactions(); loadDisaGeneralBalance(); loadDisaRadarChart(); }
     if(id === "banking"){ loadBankWallets(); loadMyBankTransactions(); }
 }
 
@@ -2045,6 +2045,61 @@ const DISA_SERVICES_LIST = [
 
 let disaServicesCache = {};
 let disaSelectedService = null;
+
+let disaRadarChartInstance = null;
+
+async function loadDisaGeneralBalance(){
+    const data = await supaFetch("disashop_wallets", "GET", null, `?staff_id=eq.${CASHIER_ID}`);
+    const el = document.getElementById("disaGeneralBalance");
+    if(!el) return;
+    if(!Array.isArray(data)){ el.textContent = "0.00 DOP"; return; }
+    const total = data.reduce((s,w) => s + (Number(w.balance_dop)||0), 0);
+    el.textContent = fmtAmount(total) + " DOP";
+}
+
+async function loadDisaRadarChart(){
+    const canvas = document.getElementById("disaRadarChart");
+    if(!canvas || typeof Chart === "undefined") return;
+
+    const todayStart = new Date();
+    todayStart.setHours(0,0,0,0);
+    const fromIso = todayStart.toISOString();
+
+    const rows = await supaFetch("disashop_transactions","GET",null,`?select=service_key,amount_dop&created_by=eq.${CASHIER_ID}&created_at=gte.${fromIso}`);
+    const totals = {};
+    DISA_SERVICES_LIST.forEach(s => { totals[s.key] = 0; });
+    if(Array.isArray(rows)) rows.forEach(r => { if(totals[r.service_key]!==undefined) totals[r.service_key] += Number(r.amount_dop)||0; });
+
+    if(disaRadarChartInstance) disaRadarChartInstance.destroy();
+
+    disaRadarChartInstance = new Chart(canvas, {
+        type: "radar",
+        data: {
+            labels: DISA_SERVICES_LIST.map(s => s.name),
+            datasets: [{
+                label: "Volume aujourd'hui (DOP)",
+                data: DISA_SERVICES_LIST.map(s => totals[s.key]),
+                backgroundColor: "rgba(228,0,43,0.15)",
+                borderColor: "#E4002B",
+                pointBackgroundColor: "#E4002B",
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                r: {
+                    beginAtZero: true,
+                    ticks: { display: false },
+                    pointLabels: { font: { size: 9 } },
+                    grid: { color: "#E2E8F0" }
+                }
+            }
+        }
+    });
+}
 
 async function loadDisaServices(){
     const data = await supaFetch("disashop_services", "GET", null, "?select=*");
