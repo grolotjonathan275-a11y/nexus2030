@@ -55,6 +55,58 @@ html[data-theme="arcenciel"] .sidebar { background:rgba(10,10,10,0.85) !importan
 html[data-theme="arcenciel"] .topbar { background:rgba(255,255,255,0.85) !important; backdrop-filter:blur(6px) !important; }
 html[data-theme="arcenciel"] .card, html[data-theme="arcenciel"] .op-card, html[data-theme="arcenciel"] .operation-card { background:rgba(255,255,255,0.92) !important; border-radius:14px !important; }
 
+/* ---------- THEME: NATCASH (orange gradient, pill buttons) ---------- */
+html[data-theme="natcash"] body { background:linear-gradient(160deg,#FF8A00,#FFB347) !important; color:#1A1A1A !important; }
+html[data-theme="natcash"] .sidebar { background:#FF8A00 !important; border-right:none !important; }
+html[data-theme="natcash"] .nav-item { border-radius:999px !important; margin:2px 8px !important; color:#FFE8CC !important; }
+html[data-theme="natcash"] .nav-item.active { background:#fff !important; color:#FF8A00 !important; font-weight:800 !important; }
+html[data-theme="natcash"] .topbar { background:#fff !important; border-radius:0 0 20px 20px !important; border-bottom:none !important; box-shadow:0 4px 14px rgba(255,138,0,0.15) !important; }
+html[data-theme="natcash"] .card, html[data-theme="natcash"] .op-card, html[data-theme="natcash"] .operation-card, html[data-theme="natcash"] .kpi-card, html[data-theme="natcash"] .stat-card {
+    background:#fff !important; border-radius:22px !important; border:none !important; box-shadow:0 6px 20px rgba(255,138,0,0.12) !important;
+}
+html[data-theme="natcash"] .kpi-icon, html[data-theme="natcash"] .stat-icon { border-radius:50% !important; }
+html[data-theme="natcash"] .btn-approve, html[data-theme="natcash"] .btn-confirm, html[data-theme="natcash"] .btn-ceo-action, html[data-theme="natcash"] .btn-action, html[data-theme="natcash"] .btn-primary {
+    background:linear-gradient(135deg,#FF8A00,#FF6B00) !important; border-radius:999px !important; border:none !important; font-weight:800 !important; box-shadow:0 4px 12px rgba(255,107,0,0.35) !important;
+}
+html[data-theme="natcash"] input, html[data-theme="natcash"] select, html[data-theme="natcash"] textarea { border-radius:14px !important; border:1.5px solid #FFD9A8 !important; }
+html[data-theme="natcash"] .card-header h3, html[data-theme="natcash"] .section-title { color:#FF6B00 !important; font-weight:800 !important; }
+html[data-theme="natcash"] table th { background:#FFF3E0 !important; border-radius:10px !important; }
+
+/* ---------- THEME: TRADING PRO (dark glass, neon orange/gold) ---------- */
+html[data-theme="trading"] body { background:#0A0A0F !important; color:#F0F0F5 !important; }
+html[data-theme="trading"] .sidebar { background:#050508 !important; border-right:1px solid #2A1F0F !important; }
+html[data-theme="trading"] .topbar { background:#0F0F16 !important; border-bottom:1px solid #2A1F0F !important; color:#F0F0F5 !important; }
+html[data-theme="trading"] .card, html[data-theme="trading"] .op-card, html[data-theme="trading"] .operation-card, html[data-theme="trading"] .kpi-card, html[data-theme="trading"] .stat-card {
+    background:linear-gradient(145deg,#15151E,#0D0D12) !important; border:1px solid #2A2A3A !important; border-radius:16px !important; color:#F0F0F5 !important;
+    box-shadow:0 8px 30px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.03) !important;
+}
+html[data-theme="trading"] .card-header h3, html[data-theme="trading"] .section-title { color:#FFB347 !important; text-shadow:0 0 12px rgba(255,179,71,0.4) !important; }
+html[data-theme="trading"] .kpi-number, html[data-theme="trading"] .stat-number { color:#fff !important; text-shadow:0 0 8px rgba(255,255,255,0.15) !important; }
+html[data-theme="trading"] table, html[data-theme="trading"] th, html[data-theme="trading"] td { background:transparent !important; color:#E0E0E8 !important; border-color:#2A2A3A !important; }
+html[data-theme="trading"] th { color:#8A8A9A !important; }
+html[data-theme="trading"] input, html[data-theme="trading"] select, html[data-theme="trading"] textarea { background:#15151E !important; color:#F0F0F5 !important; border:1px solid #2A2A3A !important; border-radius:10px !important; }
+html[data-theme="trading"] .btn-approve, html[data-theme="trading"] .btn-confirm, html[data-theme="trading"] .btn-ceo-action, html[data-theme="trading"] .btn-action, html[data-theme="trading"] .btn-primary {
+    background:linear-gradient(135deg,#FF7A00,#FFB347) !important; color:#0A0A0F !important; font-weight:800 !important; border:none !important; box-shadow:0 0 16px rgba(255,138,0,0.5) !important;
+}
+html[data-theme="trading"] .nav-item { color:#8A8A9A !important; }
+html[data-theme="trading"] .nav-item.active { background:rgba(255,138,0,0.1) !important; color:#FFB347 !important; }
+
+/* ---------- THEME: GRID MODERNE (light blue, clean grid) ---------- */
+html[data-theme="gridmod"] body { background:#EAF4FF !important; color:#0F172A !important; }
+html[data-theme="gridmod"] .sidebar { background:#fff !important; border-right:1px solid #DCEBFA !important; }
+html[data-theme="gridmod"] .sidebar .nav-item { color:#334155 !important; }
+html[data-theme="gridmod"] .topbar { background:#fff !important; border-bottom:1px solid #DCEBFA !important; border-radius:0 0 16px 16px !important; }
+html[data-theme="gridmod"] .card, html[data-theme="gridmod"] .op-card, html[data-theme="gridmod"] .operation-card, html[data-theme="gridmod"] .kpi-card, html[data-theme="gridmod"] .stat-card {
+    background:#fff !important; border:1px solid #DCEBFA !important; border-radius:18px !important; box-shadow:0 4px 16px rgba(30,136,229,0.08) !important;
+}
+html[data-theme="gridmod"] .kpi-icon, html[data-theme="gridmod"] .stat-icon { border-radius:16px !important; }
+html[data-theme="gridmod"] .btn-approve, html[data-theme="gridmod"] .btn-confirm, html[data-theme="gridmod"] .btn-ceo-action, html[data-theme="gridmod"] .btn-action, html[data-theme="gridmod"] .btn-primary {
+    background:#1E88E5 !important; border-radius:14px !important; border:none !important; font-weight:700 !important;
+}
+html[data-theme="gridmod"] .card-header h3, html[data-theme="gridmod"] .section-title { color:#1E88E5 !important; font-weight:800 !important; }
+html[data-theme="gridmod"] input, html[data-theme="gridmod"] select, html[data-theme="gridmod"] textarea { border-radius:12px !important; border:1.5px solid #DCEBFA !important; }
+html[data-theme="gridmod"] table th { background:#EAF4FF !important; }
+
 /* ---------- THEME: LUMIERE LED (neon glow) ---------- */
 html[data-theme="led"] body { background:#05060A !important; color:#E5FBFF !important; }
 html[data-theme="led"] .sidebar { background:#05060A !important; border-right:1px solid #00F0FF !important; box-shadow:2px 0 20px rgba(0,240,255,0.25) !important; }
