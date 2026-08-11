@@ -621,6 +621,22 @@ document.addEventListener("DOMContentLoaded",async ()=>{
     if(profile.avatar_url) applyAvatar(profile.avatar_url);
     loadOverview();
     loadPending();
+
+    // ===== TEMPS REEL: nouvelles transactions MonCash/NatCash et Reception Transferts =====
+    supabaseClient.channel("validateur-realtime-mm")
+        .on("postgres_changes", { event: "*", schema: "public", table: "mobile_money_transactions" }, () => {
+            const activeSection = document.querySelector(".section.active");
+            if(activeSection && activeSection.id === "section-pending") loadPending();
+            if(activeSection && activeSection.id === "section-overview") loadOverview();
+        })
+        .subscribe();
+
+    supabaseClient.channel("validateur-realtime-rt")
+        .on("postgres_changes", { event: "*", schema: "public", table: "receive_transfer_transactions" }, () => {
+            const activeSection = document.querySelector(".section.active");
+            if(activeSection && activeSection.id === "section-receive") loadReceivePending();
+        })
+        .subscribe();
 });
 
 // Rafrechi lis la chak 30 segond pou wè nouvo tranzaksyon
