@@ -67,6 +67,16 @@
     100% { left:150%; }
 }
 
+/* ===== LIVE TICKER (Pouls du Systeme) ===== */
+@keyframes nexusTickerScroll {
+    0% { transform:translateX(0); }
+    100% { transform:translateX(-50%); }
+}
+.nexus-ticker-item { display:inline-flex; align-items:center; gap:0.4rem; font-family:'Courier New',monospace; font-size:0.95rem; font-weight:700; }
+.nexus-ticker-up { color:#22C55E; }
+.nexus-ticker-down { color:#EF4444; }
+.nexus-ticker-neutral { color:#94A3B8; }
+
 /* ===== SESSION BADGE ===== */
 #nexusSessionBadge {
     display:inline-flex; align-items:center; gap:0.4rem; background:#F0FDF4; color:#166534;
