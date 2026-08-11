@@ -213,15 +213,67 @@
         document.removeEventListener("click", unlockAudio);
     }, { once:true });
 
+    // ===== LIVE TICKER (Pouls du Systeme - effet visuel uniquement) =====
+    const NEXUS_TICKER_SYMBOLS = ["Σ","%","√","Δ","π","∞","∑","÷","≈","∫"];
+    const NEXUS_TICKER_CURRENCIES = ["HTG","DOP","USD"];
+
+    function nexusRandomTickerItem(){
+        const roll = Math.random();
+        const isUp = Math.random() > 0.45;
+        const arrow = isUp ? "▲" : "▼";
+        const cssClass = isUp ? "nexus-ticker-up" : "nexus-ticker-down";
+
+        if(roll < 0.4){
+            const amount = (Math.random()*9000 + 50).toFixed(2);
+            const curr = NEXUS_TICKER_CURRENCIES[Math.floor(Math.random()*NEXUS_TICKER_CURRENCIES.length)];
+            return `<span class="nexus-ticker-item ${cssClass}">${arrow} ${Number(amount).toLocaleString("fr-FR",{minimumFractionDigits:2})} ${curr}</span>`;
+        } else if(roll < 0.7){
+            const pct = (Math.random()*12).toFixed(2);
+            return `<span class="nexus-ticker-item ${cssClass}">${arrow} ${pct}%</span>`;
+        } else {
+            const sym = NEXUS_TICKER_SYMBOLS[Math.floor(Math.random()*NEXUS_TICKER_SYMBOLS.length)];
+            const val = (Math.random()*100).toFixed(1);
+            return `<span class="nexus-ticker-item nexus-ticker-neutral">${sym} = ${val}</span>`;
+        }
+    }
+
+    function nexusBuildTickerContent(){
+        let html = "";
+        for(let i=0;i<24;i++){
+            html += nexusRandomTickerItem();
+        }
+        return html;
+    }
+
+    function nexusInitLiveTicker(){
+        const track = document.getElementById("nexusLiveTickerTrack");
+        if(!track || track.dataset.nexusInit) return;
+        track.dataset.nexusInit = "1";
+        const content = nexusBuildTickerContent();
+        track.innerHTML = content + content;
+
+        setInterval(() => {
+            if(Math.random() > 0.5){
+                const items = track.querySelectorAll(".nexus-ticker-item");
+                if(items.length > 4){
+                    const idx = Math.floor(Math.random() * (items.length/2));
+                    items[idx].outerHTML = nexusRandomTickerItem();
+                }
+            }
+        }, 900);
+    }
+
     // ===== INIT =====
     document.addEventListener("DOMContentLoaded", () => {
         setupSidebarCollapse();
         setupSessionBadge();
         setTimeout(autoAnimateKpis, 400);
+        setTimeout(nexusInitLiveTicker, 400);
 
         const observer = new MutationObserver(() => {
             clearTimeout(window._nexusKpiTimer);
             window._nexusKpiTimer = setTimeout(autoAnimateKpis, 300);
+            nexusInitLiveTicker();
         });
         observer.observe(document.body, { childList:true, subtree:true });
     });
