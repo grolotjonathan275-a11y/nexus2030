@@ -131,6 +131,72 @@ html[data-theme="natcash"] .menu-toggle {
     html[data-theme="natcash"] .sidebar { transform:none !important; }
 }
 
+/* ---------- TRADING PRO: sidebar fine, icones seules ---------- */
+html[data-theme="trading"] .sidebar {
+    width:78px !important;
+}
+html[data-theme="trading"] .sidebar-logo .logo-name,
+html[data-theme="trading"] .sidebar-logo .logo-year,
+html[data-theme="trading"] .nav-section,
+html[data-theme="trading"] .cashier-name,
+html[data-theme="trading"] .cashier-branch,
+html[data-theme="trading"] .nav-item span:last-child {
+    display:none !important;
+}
+html[data-theme="trading"] .sidebar-logo {
+    justify-content:center !important;
+    padding:1.25rem 0.5rem !important;
+}
+html[data-theme="trading"] .cashier-info {
+    justify-content:center !important;
+    padding:0.75rem 0.5rem !important;
+}
+html[data-theme="trading"] .nav-item {
+    justify-content:center !important;
+    padding:0.85rem 0.5rem !important;
+}
+html[data-theme="trading"] .nav-item span:first-child {
+    font-size:1.3rem !important;
+}
+html[data-theme="trading"] .main-content {
+    margin-left:78px !important;
+}
+
+/* ---------- GRID MODERNE: cartes KPI en grille carree, icones carrees ---------- */
+html[data-theme="gridmod"] .stats-grid,
+html[data-theme="gridmod"] .kpi-grid {
+    display:grid !important;
+    grid-template-columns:repeat(4,1fr) !important;
+    gap:1rem !important;
+}
+html[data-theme="gridmod"] .stat-card, html[data-theme="gridmod"] .kpi-card {
+    flex-direction:column !important;
+    text-align:center !important;
+    align-items:center !important;
+    justify-content:center !important;
+    padding:1.5rem 1rem !important;
+    border-left:none !important;
+    gap:0.6rem !important;
+}
+html[data-theme="gridmod"] .stat-icon, html[data-theme="gridmod"] .kpi-icon {
+    width:52px !important;
+    height:52px !important;
+    border-radius:16px !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    font-size:1.4rem !important;
+    background:#EAF4FF !important;
+}
+html[data-theme="gridmod"] .stat-number, html[data-theme="gridmod"] .kpi-number {
+    font-size:1.5rem !important;
+}
+@media (max-width:992px){
+    html[data-theme="gridmod"] .stats-grid, html[data-theme="gridmod"] .kpi-grid {
+        grid-template-columns:repeat(2,1fr) !important;
+    }
+}
+
 /* ---------- THEME: TRADING PRO (dark glass, neon orange/gold) ---------- */
 html[data-theme="trading"] body { background:#0A0A0F !important; color:#F0F0F5 !important; }
 html[data-theme="trading"] .sidebar { background:#050508 !important; border-right:1px solid #2A1F0F !important; }
