@@ -274,6 +274,10 @@
                 <div class="form-group"><label>Succursale</label>
                     <input type="text" id="createBranch" placeholder="Santo Domingo" value="Santo Domingo">
                 </div>
+                <div class="form-group"><label>Mot de Passe *</label><input type="password" id="createPassword" placeholder="Min. 8 caracteres"></div>
+                <div class="form-group"><label>Photo Piece Identite *</label><input type="file" id="createIdDoc" accept="image/*"></div>
+                <div class="form-group"><label>Date Expiration Document *</label><input type="date" id="createIdDocExpiry"></div>
+                <div class="form-group"><label>Photo Selfie *</label><input type="file" id="createSelfie" accept="image/*" capture="user"></div>
                 <div class="form-group"><label>Notes internes (non visible au client)</label>
                     <textarea id="createNotes" rows="2" placeholder="Notes..."></textarea>
                 </div>
@@ -1141,7 +1145,7 @@ async function loadOverview(){
             <td>
                 <button class="btn-sm" onclick="viewClient('${c.account_no}')">Voir</button>
                 ${c.id_document_photo ? `<button class="btn-sm" style="background:#7C3AED" onclick="viewDocument('${c.account_no}')">Doc</button>` : ""}
-                <button class="btn-sm danger" onclick="toggleBlock('${c.account_no}',${c.is_blocked})">${c.is_blocked?"Debloquer":"Bloquer"}</button>
+                <button class="btn-sm" style="background:#16A34A" onclick="approveKyc('${c.account_no}')">Approuver</button><button class="btn-sm" style="background:#F59E0B" onclick="rejectKyc('${c.account_no}')">Rejeter</button><button class="btn-sm danger" onclick="toggleBlock('${c.account_no}',${c.is_blocked})">${c.is_blocked?"Debloquer":"Bloquer"}</button>
             </td>
         </tr>`).join("")||"<tr><td colspan='7'>Aucun client</td></tr>";
 
@@ -1246,11 +1250,21 @@ async function searchClients(){
             <td>
                 <button class="btn-sm" onclick="viewClient('${c.account_no}')">Voir</button>
                 ${c.id_document_photo ? `<button class="btn-sm" style="background:#7C3AED" onclick="viewDocument('${c.account_no}')">Doc</button>` : ""}
-                <button class="btn-sm danger" onclick="toggleBlock('${c.account_no}',${c.is_blocked})">${c.is_blocked?"Debloquer":"Bloquer"}</button>
+                <button class="btn-sm" style="background:#16A34A" onclick="approveKyc('${c.account_no}')">Approuver</button><button class="btn-sm" style="background:#F59E0B" onclick="rejectKyc('${c.account_no}')">Rejeter</button><button class="btn-sm danger" onclick="toggleBlock('${c.account_no}',${c.is_blocked})">${c.is_blocked?"Debloquer":"Bloquer"}</button>
             </td>
         </tr>`).join("")||"<tr><td colspan='7'>Aucun resultat</td></tr>";
 }
 
+async function approveKyc(accountNo){
+    if(!confirm("Approuver le KYC de ce client?"))return;
+    await sf("savings_accounts","PATCH",{kyc_status:"approved"},`?account_no=eq.${accountNo}`);
+    loadOverview();
+}
+async function rejectKyc(accountNo){
+    if(!confirm("Rejeter le KYC de ce client?"))return;
+    await sf("savings_accounts","PATCH",{kyc_status:"rejected"},`?account_no=eq.${accountNo}`);
+    loadOverview();
+}
 async function toggleBlock(accountNo,isBlocked){
     if(!confirm(isBlocked?"Debloquer ce compte?":"Bloquer ce compte?"))return;
     await sf("savings_accounts","PATCH",{is_blocked:!isBlocked},`?account_no=eq.${accountNo}`);
@@ -1277,24 +1291,46 @@ function viewClient(accountNo){
     searchForAdjust();
 }
 
+function nexusFileToBase64(file){
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+}
 async function createAccount(){
     const firstName=document.getElementById("createFirstName").value.trim();
     const lastName=document.getElementById("createLastName").value.trim();
     const phone=document.getElementById("createPhone").value.trim();
     if(!firstName||!lastName||!phone)return alert("Remplissez les champs obligatoires.");
+    const password=document.getElementById("createPassword").value;
+    const idDocFile=document.getElementById("createIdDoc").files[0];
+    const idDocExpiry=document.getElementById("createIdDocExpiry").value;
+    const selfieFile=document.getElementById("createSelfie").files[0];
+    if(!password||password.length<8)return alert("Mot de passe requis (min 8 caracteres).");
+    if(!idDocFile||!idDocExpiry||!selfieFile)return alert("Document, date expiration et selfie sont obligatoires.");
+    const todayStr=new Date().toISOString().split("T")[0];
+    if(idDocExpiry<=todayStr)return alert("Le document est expire.");
+    const idDocBase64=await nexusFileToBase64(idDocFile);
+    const selfieBase64=await nexusFileToBase64(selfieFile);
     const accountNo="NEXUS-"+new Date().getFullYear()+"-"+String(Math.floor(Math.random()*999999)).padStart(6,"0");
     const r=await sf("savings_accounts","POST",{
         account_no:accountNo,
         client_name:firstName+" "+lastName,
         client_phone:phone,
         email:document.getElementById("createEmail").value,
+        password_hash:btoa(password),
+        id_document_photo:idDocBase64,
+        id_document_expiry:idDocExpiry,
+        selfie_photo:selfieBase64,
         account_type:document.getElementById("createType").value,
         currency:document.getElementById("createCurrency").value,
         client_nat:document.getElementById("createNat").value,
         balance:Number(document.getElementById("createBalance").value)||0,
         branch:document.getElementById("createBranch").value||"Santo Domingo",
         kyc_status:"approved",
-        status:"active",
+        status:"pending",
         created_by:"CEO"
     });
     const res=document.getElementById("createResult");
