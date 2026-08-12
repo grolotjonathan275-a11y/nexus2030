@@ -11,7 +11,7 @@
         wrap.style.cssText = "position:relative;margin-right:0.6rem;";
         wrap.innerHTML = `
             <input id="nexusGlobalSearchInput" type="text" placeholder="🔍 Rechercher un client..."
-                style="padding:0.5rem 0.9rem;border-radius:999px;border:1px solid #E2E8F0;font-size:0.82rem;width:200px;font-family:'Inter',Arial,sans-serif;outline:none;">
+                style="padding:0.5rem 0.9rem;border-radius:999px;border:1px solid #E2E8F0;font-size:0.82rem;width:100%;max-width:200px;min-width:0;font-family:'Inter',Arial,sans-serif;outline:none;box-sizing:border-box;">
         `;
         topbarRight.insertBefore(wrap, topbarRight.firstChild);
 
