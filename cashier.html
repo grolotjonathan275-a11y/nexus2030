@@ -924,6 +924,13 @@
                             </div>
                             <div class="form-group"><label>Solde Initial</label><input type="number" id="ncBalance" placeholder="0.00" min="0"></div>
                         </div>
+                        <div class="form-group"><label>Mot de Passe *</label><input type="password" id="ncPassword" placeholder="Min. 8 caracteres"></div>
+                        <div class="form-group"><label>Type de Pièce d'Identité *</label>
+                            <select id="ncDocType"><option value="passeport">Passeport</option><option value="cin">Carte d'Identité Nationale</option><option value="permis">Permis de Conduire</option></select>
+                        </div>
+                        <div class="form-group"><label>Photo de la Pièce d'Identité *</label><input type="file" id="ncIdDoc" accept="image/*"></div>
+                        <div class="form-group"><label>Date d'Expiration du Document *</label><input type="date" id="ncIdDocExpiry"></div>
+                        <div class="form-group"><label>Photo du Visage (Selfie) *</label><input type="file" id="ncSelfie" accept="image/*" capture="user"></div>
                         <div class="form-group"><label>Notes (optionnel)</label><input type="text" id="ncNotes" placeholder="Informations supplementaires..."></div>
                         <div class="form-actions">
                             <button class="btn-cancel" onclick="resetNewClientForm()">Annuler</button>
@@ -3038,6 +3045,14 @@ function resetNewClientForm(){
     document.getElementById("ncResult").style.display="none";
 }
 
+function nexusFileToBase64(file){
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+}
 async function createClientAccount(){
     const firstName=document.getElementById("ncFirstName").value.trim();
     const lastName=document.getElementById("ncLastName").value.trim();
@@ -3048,14 +3063,36 @@ async function createClientAccount(){
     const currency=document.getElementById("ncCurrency").value;
     const balance=Number(document.getElementById("ncBalance").value)||0;
     const notes=document.getElementById("ncNotes").value.trim();
+    const password=document.getElementById("ncPassword").value;
+    const idDocFile=document.getElementById("ncIdDoc").files[0];
+    const idDocExpiry=document.getElementById("ncIdDocExpiry").value;
+    const selfieFile=document.getElementById("ncSelfie").files[0];
 
     const res=document.getElementById("ncResult");
-    if(!firstName||!lastName||!phone){
+    if(!firstName||!lastName||!phone||!password){
         res.style.display="block"; res.className="result-box error";
         res.innerHTML="Remplissez tous les champs obligatoires (*).";
         return;
     }
 
+    if(password.length<8){
+        res.style.display="block"; res.className="result-box error";
+        res.innerHTML="Mot de passe trop court (min. 8 caracteres).";
+        return;
+    }
+    if(!idDocFile||!idDocExpiry||!selfieFile){
+        res.style.display="block"; res.className="result-box error";
+        res.innerHTML="Document, date expiration et selfie sont obligatoires.";
+        return;
+    }
+    const todayStr=new Date().toISOString().split("T")[0];
+    if(idDocExpiry<=todayStr){
+        res.style.display="block"; res.className="result-box error";
+        res.innerHTML="Le document est expire.";
+        return;
+    }
+    const idDocBase64=await nexusFileToBase64(idDocFile);
+    const selfieBase64=await nexusFileToBase64(selfieFile);
     const accountNo="NEXUS-"+new Date().getFullYear()+"-"+String(Math.floor(Math.random()*999999)).padStart(6,"0");
 
     const r=await supaFetch("savings_accounts","POST",{
@@ -3063,13 +3100,17 @@ async function createClientAccount(){
         client_name:firstName+" "+lastName,
         client_phone:phone,
         email:email,
+        password_hash:btoa(password),
+        id_document_photo:idDocBase64,
+        id_document_expiry:idDocExpiry,
+        selfie_photo:selfieBase64,
         account_type:accountType,
         currency:currency,
         client_nat:nat,
         balance:balance,
         branch:CASHIER_BRANCH,
         kyc_status:"pending",
-        status:"active",
+        status:"pending",
         created_by:"caissier"
     });
 
