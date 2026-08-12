@@ -135,3 +135,25 @@ img, canvas, table {
     .reports-grid { grid-template-columns: 1fr !important; }
     .stat-card { flex-direction: row; }
 }
+/* ===== CLASSES POUR CREER COMPTE CLIENT / AJUSTER SOLDE ===== */
+.operation-card{background:white;border-radius:16px;border:1px solid #E2E8F0;padding:2rem;box-shadow:0 4px 20px rgba(8,20,64,0.06);max-width:700px;}
+.op-note{display:flex;align-items:flex-start;gap:0.75rem;background:#FFF7ED;border:1px solid #FED7AA;border-radius:10px;padding:1rem;margin-bottom:1.5rem;font-size:0.825rem;color:#92400E;}
+.op-note.warning{background:#FFF5F5;border-color:#FECACA;color:#991B1B;}
+.form-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:1rem;}
+.form-group{margin-bottom:1.1rem;}
+.form-group label{display:block;font-size:0.825rem;font-weight:600;color:#374151;margin-bottom:0.4rem;}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:0.75rem 1rem;border:1.5px solid #E2E8F0;border-radius:10px;font-size:0.9rem;font-family:Inter,sans-serif;color:#0F1729;outline:none;transition:border 0.2s;}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:#FF7A20;box-shadow:0 0 0 3px rgba(255,122,32,0.1);}
+.form-group textarea{resize:vertical;}
+.input-search{display:flex;gap:0.5rem;}
+.input-search input{flex:1;}
+.input-search button{background:#081440;color:white;border:none;padding:0.75rem 1.25rem;border-radius:10px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;white-space:nowrap;}
+.client-found-card{background:#F8FAFF;border:1px solid #E2E8F0;border-radius:12px;padding:1rem;margin-bottom:1.25rem;}
+.cfc-name{font-size:1rem;font-weight:700;color:#081440;}
+.cfc-meta{font-size:0.825rem;color:#64748B;margin-top:0.2rem;}
+.cfc-balance{font-size:0.875rem;color:#374151;margin-top:0.5rem;}
+.form-actions{margin-top:1.5rem;padding-top:1.5rem;border-top:1px solid #E2E8F0;}
+.result-box{margin-top:1rem;padding:1rem;border-radius:10px;font-size:0.875rem;font-weight:600;}
+.result-box.success{background:#F0FDF4;border:1px solid #BBF7D0;color:#15803D;}
+.result-box.error{background:#FFF5F5;border:1px solid #FECACA;color:#DC2626;}
+@media(max-width:600px){.form-grid-2{grid-template-columns:1fr;}}
