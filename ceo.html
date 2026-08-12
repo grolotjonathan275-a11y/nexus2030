@@ -39,6 +39,7 @@
         <div class="nav-section">RAPPORTS</div>
         <a href="#reports" class="nav-item" onclick="showSection(this,event)"><span>📋</span>Rapports</a>
         <a href="#cashiers" class="nav-item" onclick="showSection(this,event)"><span>👤</span>Caissiers</a>
+        <a href="#pointage-ceo" class="nav-item" onclick="showSection(this,event)"><span>📍</span>Pointage Caissiers</a>
         <a href="#employees" class="nav-item" onclick="showSection(this,event)"><span>👤</span>Employes</a>
         <a href="#users" class="nav-item" onclick="showSection(this,event)"><span>🧑‍💻</span>Gestion Utilisateurs</a>
         <div class="nav-section">DEVISES</div>
@@ -433,6 +434,19 @@
             <div class="card">
                 <div class="card-header"><h3>👤 Annuaire des Employes</h3><span class="badge" id="employeeCount">0</span></div>
                 <div id="employeeDirectory" style="padding:1.5rem"></div>
+            </div>
+        </section>
+
+        <section class="section" id="section-pointage-ceo">
+            <h2 class="section-title">📍 Pointage Caissiers</h2>
+            <div class="kpi-grid">
+                <div class="kpi-card orange"><div class="kpi-icon">⏰</div><div class="kpi-info"><div class="kpi-number" id="pointageCeoLateToday">0</div><div class="kpi-label">En Retard Aujourd'hui</div></div></div>
+                <div class="kpi-card red"><div class="kpi-icon">🚫</div><div class="kpi-info"><div class="kpi-number" id="pointageCeoRejected">0</div><div class="kpi-label">Pointages Rejetes (30j)</div></div></div>
+                <div class="kpi-card red"><div class="kpi-icon">💸</div><div class="kpi-info"><div class="kpi-number" id="pointageCeoDeduction">0</div><div class="kpi-label">Deductions Totales (DOP)</div></div></div>
+            </div>
+            <div class="card" style="margin-top:1.5rem">
+                <div class="card-header"><h3>Historique de Pointage - Tous les Caissiers</h3><span class="badge" id="pointageCeoCount">0</span></div>
+                <div class="table-wrap"><table class="data-table"><thead><tr><th>Caissier</th><th>Succursale</th><th>Date</th><th>Heure</th><th>Distance</th><th>Statut</th><th>Retard</th><th>Deduction</th><th>Selfie</th></tr></thead><tbody id="pointageCeoList"><tr><td colspan="9">Chargement...</td></tr></tbody></table></div>
             </div>
         </section>
 
@@ -1058,6 +1072,34 @@ async function deleteUserCeo(id, name) {
     if (error) { alert("Erreur: " + error.message); return; }
     loadUsers();
 }
+async function loadPointageCeo(){
+    const rows = await sf("cashier_attendance", "GET", null, "?order=check_in_time.desc&limit=100");
+    if(!Array.isArray(rows)){
+        document.getElementById("pointageCeoList").innerHTML = "<tr><td colspan='9'>Erreur de chargement</td></tr>";
+        return;
+    }
+    const today = new Date().toDateString();
+    const lateToday = rows.filter(x => x.is_late && new Date(x.check_in_time).toDateString() === today).length;
+    const rejected = rows.filter(x => !x.within_geofence).length;
+    const totalDeduction = rows.reduce((s,x) => s + Number(x.deduction_amount||0), 0);
+    document.getElementById("pointageCeoLateToday").textContent = lateToday;
+    document.getElementById("pointageCeoRejected").textContent = rejected;
+    document.getElementById("pointageCeoDeduction").textContent = totalDeduction;
+    document.getElementById("pointageCeoCount").textContent = rows.length;
+    document.getElementById("pointageCeoList").innerHTML = rows.map(x => `
+        <tr>
+            <td>${x.cashier_name||"-"}</td>
+            <td>${x.branch||"-"}</td>
+            <td>${new Date(x.check_in_time).toLocaleDateString("fr-FR")}</td>
+            <td>${new Date(x.check_in_time).toLocaleTimeString("fr-FR")}</td>
+            <td>${x.within_geofence ? (x.distance_meters+"m") : "Hors zone"}</td>
+            <td><span class="status-badge ${x.within_geofence ? "active" : ""}">${x.within_geofence ? "Valide" : "Rejete"}</span></td>
+            <td>${x.is_late ? x.minutes_late+" min" : "-"}</td>
+            <td>${x.deduction_amount > 0 ? x.deduction_amount+" DOP" : "-"}</td>
+            <td>${x.selfie_photo ? `<img src="${x.selfie_photo}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;cursor:pointer" onclick="window.open('${x.selfie_photo}','_blank')">` : "-"}</td>
+        </tr>
+    `).join("") || "<tr><td colspan='9'>Aucun pointage</td></tr>";
+}
 async function loadEmployeeDirectory(){
     const { data: users, error } = await supabaseClient.from("profiles").select("*").order("role", { ascending: true });
     const container = document.getElementById("employeeDirectory");
@@ -1134,6 +1176,7 @@ function showSection(el,e){
     if(id==="contact-info")loadContactInfo();
     if(id==="manage-branches")loadBranchesManagement();
     if(id==="employees")loadEmployeeDirectory();
+    if(id==="pointage-ceo")loadPointageCeo();
     if(id==="users")loadUsers();
 }
 
