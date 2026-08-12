@@ -878,6 +878,7 @@ Equipe</h3><span class="badge" id="usersCount">0</span></div>
                     </div>
                     <div class="form-grid-2">
                         <div class="form-group"><label>Horaires</label><input type="text" id="brHours" placeholder="Lun-Sam 8h-18h"></div>
+                        <div class="form-group"><label>Heure d'Ouverture (pour pointage) *</label><input type="time" id="brOpeningTime" value="08:00"></div>
                         <div class="form-group"><label>Photo de la Succursale</label><input type="file" id="brPhoto" accept="image/*"></div>
                     </div>
                     <div class="form-grid-2">
@@ -2702,6 +2703,7 @@ async function saveBranch(){
     const region = document.getElementById("brRegion").value.trim();
     const phone = document.getElementById("brPhone").value.trim();
     const hours = document.getElementById("brHours").value.trim();
+    const opening_time = document.getElementById("brOpeningTime").value;
     const latitude = document.getElementById("brLat").value.trim();
     const longitude = document.getElementById("brLng").value.trim();
     const address = document.getElementById("brAddress").value.trim();
@@ -2727,6 +2729,7 @@ async function saveBranch(){
     const payload = {
         name, country, region, phone, address,
         hours: hours || null,
+        opening_time: opening_time || "08:00",
         latitude: latitude ? Number(latitude) : null,
         longitude: longitude ? Number(longitude) : null
     };
@@ -2778,6 +2781,7 @@ async function editBranch(id){
     document.getElementById("brPhone").value = data.phone || "";
     document.getElementById("brHours").value = data.hours || "";
     document.getElementById("brLat").value = data.latitude || "";
+    document.getElementById("brOpeningTime").value = data.opening_time || "08:00";
     document.getElementById("brLng").value = data.longitude || "";
     document.getElementById("brAddress").value = data.address || "";
     window.scrollTo({top:0, behavior:"smooth"});
