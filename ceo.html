@@ -1019,6 +1019,7 @@ async function loadUsers() {
             <td>
                 <button onclick="toggleUserStatusCeo('${u.id}','${u.status}')" class="btn-sm" style="background:${u.status === "active" ? "#F59E0B" : "#10B981"};">${u.status === "active" ? "Desactiver" : "Activer"}</button>
                 <button onclick="deleteUserCeo('${u.id}','${u.full_name}')" class="btn-sm danger">Supprimer</button>
+                ${u.face_blocked ? `<button onclick="unblockFaceCeo('${u.id}')" class="btn-sm" style="background:#7C3AED;margin-left:0.4rem">Debloquer visage</button>` : ""}
             </td>
         </tr>
     `).join("") || "<tr><td colspan='7'>Aucun utilisateur</td></tr>";
@@ -1042,6 +1043,13 @@ async function toggleUserStatusCeo(id, currentStatus) {
     const newStatus = currentStatus === "active" ? "inactive" : "active";
     const { error } = await supabaseClient.from("profiles").update({ status: newStatus }).eq("id", id);
     if (error) { alert("Erreur: " + error.message); return; }
+    loadUsers();
+}
+async function unblockFaceCeo(id) {
+    if (!confirm("Debloquer ce compte? La personne devra refaire son enregistrement facial a sa prochaine connexion."))return;
+    const { error } = await supabaseClient.from("profiles").update({ face_blocked: false, face_fail_count: 0, reference_face_descriptor: null }).eq("id", id);
+    if (error) { alert("Erreur: " + error.message); return; }
+    alert("Compte debloque! La personne devra refaire son enregistrement facial.");
     loadUsers();
 }
 async function deleteUserCeo(id, name) {
