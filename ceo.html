@@ -39,6 +39,8 @@
         <div class="nav-section">RAPPORTS</div>
         <a href="#reports" class="nav-item" onclick="showSection(this,event)"><span>📋</span>Rapports</a>
         <a href="#cashiers" class="nav-item" onclick="showSection(this,event)"><span>👤</span>Caissiers</a>
+        <a href="#employees" class="nav-item" onclick="showSection(this,event)"><span>👤</span>Employes</a>
+        <a href="#users" class="nav-item" onclick="showSection(this,event)"><span>🧑‍💻</span>Gestion Utilisateurs</a>
         <div class="nav-section">DEVISES</div>
         <a href="#currency-distribution" class="nav-item" onclick="showSection(this,event)"><span>💵</span>Distribution Devises</a>
 <a href="#loans" class="nav-item" onclick="showSection(this,event)"><span>💰</span>Prestamo</a>
@@ -424,6 +426,48 @@
                     <div class="form-group"><label>Montant</label><input type="number" id="rechargeAmount" placeholder="0.00"></div>
                     <button class="btn-ceo-action" onclick="rechargeCashier()">💰 Recharger</button>
                 </div>
+            </div>
+        </section>
+
+        <section class="section" id="section-employees">
+            <div class="card">
+                <div class="card-header"><h3>👤 Annuaire des Employes</h3><span class="badge" id="employeeCount">0</span></div>
+                <div id="employeeDirectory" style="padding:1.5rem"></div>
+            </div>
+        </section>
+
+        <section class="section" id="section-users">
+            <div class="card">
+                <div class="card-header"><h3>Creer un Nouveau Compte</h3></div>
+                <div style="padding:1.5rem;">
+                    <div id="createUserMsg" style="display:none;padding:0.75rem 1rem;border-radius:8px;margin-bottom:1rem;font-size:0.9rem;"></div>
+                    <div class="settings-grid">
+                        <div class="setting-item"><label>Nom Complet *</label><input type="text" id="newFullName" placeholder="Jean Dupont"></div>
+                        <div class="setting-item"><label>Email *</label><input type="email" id="newEmail" placeholder="jean@nexus2030.com"></div>
+                        <div class="setting-item"><label>Telephone</label><input type="tel" id="newPhone" placeholder="+509 / +1 809"></div>
+                        <div class="setting-item"><label>Mot de Passe *</label><input type="text" id="newPassword" placeholder="Min. 8 caracteres"></div>
+                        <div class="setting-item">
+                            <label>Role *</label>
+                            <select id="newRole" style="width:100%;padding:0.6rem;border-radius:8px;border:1px solid #CBD5E1;font-family:inherit;">
+                                <option value="">-- Choisir un role --</option>
+                                <option value="super_admin">Super Admin</option>
+                                <option value="ceo">CEO / Directeur General</option>
+                                <option value="secretaire">Secretaire</option>
+                                <option value="superviseur">Superviseur</option>
+                                <option value="caissier">Caissier</option>
+                                <option value="agent">Agent</option>
+                                <option value="validateur">Validateur</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button class="btn-ceo-action" onclick="createNewUser()">➕ Creer le Compte</button>
+                </div>
+            </div>
+            <div class="card" style="margin-top:1.5rem;">
+                <div class="card-header"><h3>Comptes de l
+'
+Equipe</h3><span class="badge" id="usersCount">0</span></div>
+                <div class="table-wrap"><table class="data-table"><thead><tr><th>Nom</th><th>Email</th><th>Telephone</th><th>Role</th><th>Superviseur</th><th>Statut</th><th>Action</th></tr></thead><tbody id="allUsers"><tr><td colspan="7">Chargement...</td></tr></tbody></table></div>
             </div>
         </section>
 
@@ -885,6 +929,156 @@
 const SUPA_URL="https://fnuplvbiwfvauwkpxsoc.supabase.co";
 const SUPA_KEY="sb_publishable_QBqdKkpcjDS3_psUdmc4uA_sMCzLqLo";
 const supabaseClient = supabase.createClient(SUPA_URL, SUPA_KEY);
+const ROLE_LABELS = {
+    super_admin: "Super Admin",
+    ceo: "CEO",
+    secretaire: "Secretaire",
+    superviseur: "Superviseur",
+    caissier: "Caissier",
+    agent: "Agent",
+    validateur: "Validateur",
+    client: "Client"
+};
+function showCreateMsg(text, isError) {
+    const el = document.getElementById("createUserMsg");
+    el.style.display = "block";
+    el.style.background = isError ? "#FEE2E2" : "#DCFCE7";
+    el.style.color = isError ? "#991B1B" : "#166534";
+    el.textContent = text;
+}
+async function createNewUser() {
+    const full_name = document.getElementById("newFullName").value.trim();
+    const email = document.getElementById("newEmail").value.trim();
+    const phone = document.getElementById("newPhone").value.trim();
+    const password = document.getElementById("newPassword").value;
+    const role = document.getElementById("newRole").value;
+    if (!full_name || !email || !password || !role) {
+        showCreateMsg("Remplissez tous les champs obligatoires (*).", true);
+        return;
+    }
+    if (password.length < 8) {
+        showCreateMsg("Le mot de passe doit avoir au moins 8 caracteres.", true);
+        return;
+    }
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (!session) {
+        showCreateMsg("Session expiree. Reconnectez-vous.", true);
+        return;
+    }
+    try {
+        const res = await fetch(`${SUPA_URL}/functions/v1/create-user`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${session.access_token}`
+            },
+            body: JSON.stringify({ full_name, email, phone, password, role })
+        });
+        const result = await res.json();
+        if (!res.ok) {
+            showCreateMsg("Erreur: " + (result.error || "Impossible de creer le compte."), true);
+            return;
+        }
+        showCreateMsg(`Compte cree avec succes pour ${full_name} (${ROLE_LABELS[role]}). Communiquez les identifiants a la personne.`, false);
+        document.getElementById("newFullName").value = "";
+        document.getElementById("newEmail").value = "";
+        document.getElementById("newPhone").value = "";
+        document.getElementById("newPassword").value = "";
+        document.getElementById("newRole").value = "";
+        loadUsers();
+    } catch (err) {
+        showCreateMsg("Erreur de connexion: " + err.message, true);
+    }
+}
+async function loadUsers() {
+    const { data: users, error } = await supabaseClient.from("profiles").select("*").order("created_at", { ascending: false });
+    if (error) {
+        document.getElementById("allUsers").innerHTML = `<tr><td colspan="7">Erreur: ${error.message}</td></tr>`;
+        return;
+    }
+    const supervisors = users.filter(u => u.role === "superviseur");
+    document.getElementById("usersCount").textContent = users.length;
+    document.getElementById("allUsers").innerHTML = users.map(u => `
+        <tr>
+            <td>${u.full_name || "-"}</td>
+            <td>${u.email || "-"}</td>
+            <td>${u.phone || "-"}</td>
+            <td>${ROLE_LABELS[u.role] || u.role}</td>
+            <td>${renderSupervisorCellCeo(u, supervisors)}</td>
+            <td><span class="status-badge ${u.status === "active" ? "active" : ""}">${u.status || "-"}</span></td>
+            <td>
+                <button onclick="toggleUserStatusCeo('${u.id}','${u.status}')" class="btn-sm" style="background:${u.status === "active" ? "#F59E0B" : "#10B981"};">${u.status === "active" ? "Desactiver" : "Activer"}</button>
+                <button onclick="deleteUserCeo('${u.id}','${u.full_name}')" class="btn-sm danger">Supprimer</button>
+            </td>
+        </tr>
+    `).join("") || "<tr><td colspan='7'>Aucun utilisateur</td></tr>";
+}
+function renderSupervisorCellCeo(u, supervisors) {
+    if (!["agent","caissier"].includes(u.role)) return "-";
+    const options = supervisors.map(s =>
+        `<option value="${s.id}" ${u.supervisor_id === s.id ? "selected" : ""}>${s.full_name}</option>`
+    ).join("");
+    return `<select onchange="assignSupervisorCeo('${u.id}', this.value)" style="padding:0.35rem;border-radius:6px;border:1px solid #CBD5E1;font-size:0.85rem;">
+        <option value="">-- Aucun --</option>
+        ${options}
+    </select>`;
+}
+async function assignSupervisorCeo(userId, supervisorId) {
+    const { error } = await supabaseClient.from("profiles").update({ supervisor_id: supervisorId || null }).eq("id", userId);
+    if (error) { alert("Erreur: " + error.message); return; }
+    loadUsers();
+}
+async function toggleUserStatusCeo(id, currentStatus) {
+    const newStatus = currentStatus === "active" ? "inactive" : "active";
+    const { error } = await supabaseClient.from("profiles").update({ status: newStatus }).eq("id", id);
+    if (error) { alert("Erreur: " + error.message); return; }
+    loadUsers();
+}
+async function deleteUserCeo(id, name) {
+    if (!confirm(`Supprimer le compte de ${name}? Cette action retire l'acces au tableau de bord.`)) return;
+    const { error } = await supabaseClient.from("profiles").delete().eq("id", id);
+    if (error) { alert("Erreur: " + error.message); return; }
+    loadUsers();
+}
+async function loadEmployeeDirectory(){
+    const { data: users, error } = await supabaseClient.from("profiles").select("*").order("role", { ascending: true });
+    const container = document.getElementById("employeeDirectory");
+    if (error || !users) {
+        container.innerHTML = "<p style='color:#DC2626'>Erreur de chargement</p>";
+        return;
+    }
+    document.getElementById("employeeCount").textContent = users.length;
+    const groups = {};
+    users.forEach(u => {
+        if (!groups[u.role]) groups[u.role] = [];
+        groups[u.role].push(u);
+    });
+    const roleOrder = ["super_admin","ceo","secretaire","superviseur","caissier","agent","validateur","client"];
+    const roleColors = {
+        super_admin:"#7C3AED", ceo:"#0F172A", secretaire:"#7C3AED", superviseur:"#0EA5E9",
+        caissier:"#F97316", agent:"#10B981", validateur:"#6366F1", client:"#64748B"
+    };
+    container.innerHTML = roleOrder.filter(r => groups[r]).map(role => `
+        <div style="margin-bottom:1.5rem">
+            <h4 style="color:#64748B;font-size:0.8rem;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:0.75rem">${ROLE_LABELS[role] || role} (${groups[role].length})</h4>
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:0.75rem">
+                ${groups[role].map(u => `
+                    <div style="display:flex;align-items:center;gap:0.75rem;padding:0.9rem;border:1px solid #E2E8F0;border-radius:10px">
+                        ${u.avatar_url
+                            ? `<img src="${u.avatar_url}" style="width:44px;height:44px;border-radius:50%;object-fit:cover">`
+                            : `<div style="width:44px;height:44px;border-radius:50%;background:${roleColors[role]||"#64748B"};color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.85rem">${(u.full_name||"?").split(" ").map(n=>n[0]).join("").substring(0,2).toUpperCase()}</div>`
+                        }
+                        <div style="min-width:0">
+                            <div style="font-weight:600;font-size:0.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${u.full_name}</div>
+                            <div style="font-size:0.78rem;color:#64748B;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${u.phone||u.email||"-"}</div>
+                            <span class="status-badge ${u.status==="active"?"active":""}" style="font-size:0.7rem;margin-top:0.2rem;display:inline-block">${u.status}</span>
+                        </div>
+                    </div>
+                `).join("")}
+            </div>
+        </div>
+    `).join("") || "<p style='color:#64748B'>Aucun employe</p>";
+}
 
 async function sf(table,method="GET",body=null,filter=""){
     const opts={method,headers:{"apikey":SUPA_KEY,"Authorization":`Bearer ${SUPA_KEY}`,"Content-Type":"application/json","Prefer":method!=="GET"?"return=representation":""}};
@@ -921,6 +1115,8 @@ function showSection(el,e){
     if(id==="partners")loadPartnerLogos();
     if(id==="contact-info")loadContactInfo();
     if(id==="manage-branches")loadBranchesManagement();
+    if(id==="employees")loadEmployeeDirectory();
+    if(id==="users")loadUsers();
 }
 
 function toggleSidebar(){document.getElementById("sidebar").classList.toggle("open");document.getElementById("sidebarOverlay").classList.toggle("show");}
