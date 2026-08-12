@@ -1,4 +1,4 @@
-import { createClient } from "npm:@supabase/supabase-js@2"
+﻿import { createClient } from "npm:@supabase/supabase-js@2"
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -41,11 +41,13 @@ Deno.serve(async (req) => {
     )
 
     // Verifye si moun k ap rele a se Super Admin oswa CEO
-    const { data: callerProfile } = await supabaseAdmin
+    const { data: callerProfile, error: profileError } = await supabaseAdmin
       .from("profiles")
       .select("role")
       .eq("id", caller.id)
       .single()
+
+
 
     if (!callerProfile || !["super_admin", "ceo"].includes(callerProfile.role)) {
       return new Response(JSON.stringify({ error: "Ou pa gen dwa kreye kont" }), {
@@ -79,7 +81,7 @@ Deno.serve(async (req) => {
     }
 
     // Ajoute pwofil la (non, telefòn, wòl, foto)
-    const { error: profileError } = await supabaseAdmin.from("profiles").insert({
+    const { error: insertProfileError } = await supabaseAdmin.from("profiles").insert({
       id: newUser.user.id,
       full_name,
       email,
