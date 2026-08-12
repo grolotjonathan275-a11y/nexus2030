@@ -44,6 +44,7 @@
             <a href="#search" class="nav-item" onclick="showSection(this,event)"><span>🔍</span>Recherche Client</a>
             <a href="#history" class="nav-item" onclick="showSection(this,event)"><span>📋</span>Historique</a>
             <a href="#new-client" class="nav-item" onclick="showSection(this,event)"><span>➕</span>Nouveau Client</a>
+            <a href="#pointage" class="nav-item" onclick="showSection(this,event)"><span>📍</span>Pointage</a>
             <div class="nav-section">CAISSE</div>
             <a href="#wallet" class="nav-item" onclick="showSection(this,event)"><span>👛</span>Mon Wallet</a>
             <a href="#receipts" class="nav-item" onclick="showSection(this,event)"><span>🧾</span>Recus</a>
@@ -938,6 +939,27 @@
                         </div>
                     </div>
                 </div>
+
+            <!-- POINTAGE -->
+            <section class="section" id="section-pointage">
+                <h2 class="section-title">📍 Pointage</h2>
+                <div class="card">
+                    <div style="padding:1.5rem;text-align:center">
+                        <p id="pointageStatus" style="color:#64748B;margin-bottom:1rem">Verification GPS et selfie requise pour marquer votre arrivee.</p>
+                        <button class="btn-confirm green" id="pointageBtn" onclick="markArrival()" style="padding:0.9rem 2rem;font-size:1rem">📍 Marquer Arrivee</button>
+                        <input type="file" id="pointageSelfieInput" accept="image/*" capture="user" style="display:none">
+                    </div>
+                </div>
+                <div class="stats-grid" style="margin-top:1.5rem">
+                    <div class="stat-card"><div class="stat-icon orange">⏰</div><div class="stat-info"><div class="stat-number" id="pointageLateDays">0</div><div class="stat-label">Jours en Retard (ce mois)</div></div></div>
+                    <div class="stat-card"><div class="stat-icon red">⏱️</div><div class="stat-info"><div class="stat-number" id="pointageLateMinutes">0</div><div class="stat-label">Minutes de Retard (total)</div></div></div>
+                    <div class="stat-card"><div class="stat-icon red">💸</div><div class="stat-info"><div class="stat-number" id="pointageDeduction">0</div><div class="stat-label">Deduction Totale (DOP)</div></div></div>
+                </div>
+                <div class="card" style="margin-top:1.5rem">
+                    <div class="card-header"><h3>Historique de Pointage</h3></div>
+                    <div class="table-wrap"><table class="data-table"><thead><tr><th>Date</th><th>Heure Arrivee</th><th>Zone</th><th>Statut</th><th>Retard</th><th>Deduction</th></tr></thead><tbody id="pointageHistory"><tr><td colspan="6">Chargement...</td></tr></tbody></table></div>
+                </div>
+            </section>
             </section>
 
             <!-- RECUS -->
@@ -1037,6 +1059,7 @@ function showSection(el, e) {
     if(id === "wisecard"){ loadWiseWallet(); loadWiseTransactions(); }
     if(id === "disashop"){ loadDisaServices(); loadDisaWallets(); loadDisaTransactions(); loadDisaGeneralBalance(); loadDisaRadarChart(); }
     if(id === "banking"){ loadBankWallets(); loadMyBankTransactions(); }
+    if(id === "pointage"){ loadPointageHistory(); }
 }
 
 function showSectionByName(e, id) {
@@ -3056,6 +3079,124 @@ function nexusFileToBase64(file){
         reader.onerror = reject;
         reader.readAsDataURL(file);
     });
+}
+function nexusHaversine(lat1, lon1, lat2, lon2){
+    const R = 6371000;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
+}
+function nexusGetPosition(){
+    return new Promise((resolve, reject) => {
+        if(!navigator.geolocation){ reject(new Error("no_geo")); return; }
+        navigator.geolocation.getCurrentPosition(
+            pos => resolve(pos.coords),
+            err => reject(err),
+            { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+        );
+    });
+}
+function nexusPointageSelfie(){
+    return new Promise((resolve) => {
+        const input = document.getElementById("pointageSelfieInput");
+        input.value = "";
+        input.onchange = () => {
+            if(input.files[0]) resolve(input.files[0]);
+            else resolve(null);
+        };
+        input.click();
+    });
+}
+async function markArrival(){
+    const statusEl = document.getElementById("pointageStatus");
+    const btn = document.getElementById("pointageBtn");
+    btn.disabled = true;
+    statusEl.textContent = "Recherche de votre succursale...";
+
+    const branchData = await supaFetch("branches", "GET", null, `?name=eq.${encodeURIComponent(CASHIER_BRANCH)}`);
+    if(!branchData || branchData.length === 0 || branchData[0].latitude == null || branchData[0].longitude == null){
+        statusEl.textContent = "Erreur: GPS de la succursale non configure. Contactez l'administrateur.";
+        btn.disabled = false;
+        return;
+    }
+    const branch = branchData[0];
+
+    statusEl.textContent = "Verification de votre position GPS...";
+    let coords;
+    try {
+        coords = await nexusGetPosition();
+    } catch(err){
+        statusEl.textContent = "Erreur: impossible d'obtenir votre position GPS. Activez la localisation.";
+        btn.disabled = false;
+        return;
+    }
+
+    const distance = nexusHaversine(coords.latitude, coords.longitude, Number(branch.latitude), Number(branch.longitude));
+    if(distance > 50){
+        statusEl.textContent = `Pointage refuse: vous etes a ${Math.round(distance)}m de la succursale (max 50m autorise).`;
+        await supaFetch("cashier_attendance", "POST", {
+            cashier_id: CASHIER_ID, cashier_name: CASHIER_NAME, branch: CASHIER_BRANCH,
+            latitude: coords.latitude, longitude: coords.longitude, distance_meters: Math.round(distance),
+            within_geofence: false, branch_opening_time: branch.opening_time,
+            minutes_late: 0, is_late: false, deduction_amount: 0
+        });
+        btn.disabled = false;
+        return;
+    }
+
+    statusEl.textContent = "Prenez une photo de votre visage...";
+    const selfieFile = await nexusPointageSelfie();
+    if(!selfieFile){
+        statusEl.textContent = "Pointage annule: photo requise.";
+        btn.disabled = false;
+        return;
+    }
+    const selfieBase64 = await nexusFileToBase64(selfieFile);
+
+    const now = new Date();
+    const openingParts = (branch.opening_time || "08:00:00").split(":");
+    const openingDate = new Date(now);
+    openingDate.setHours(Number(openingParts[0]), Number(openingParts[1]) + 15, 0, 0);
+    const isLate = now > openingDate;
+    const minutesLate = isLate ? Math.round((now - openingDate) / 60000) : 0;
+    const deduction = isLate ? 150 : 0;
+
+    await supaFetch("cashier_attendance", "POST", {
+        cashier_id: CASHIER_ID, cashier_name: CASHIER_NAME, branch: CASHIER_BRANCH,
+        latitude: coords.latitude, longitude: coords.longitude, distance_meters: Math.round(distance),
+        within_geofence: true, selfie_photo: selfieBase64, branch_opening_time: branch.opening_time,
+        minutes_late: minutesLate, is_late: isLate, deduction_amount: deduction
+    });
+
+    statusEl.textContent = isLate
+        ? `Arrivee enregistree. En retard de ${minutesLate} min - deduction 150 DOP.`
+        : "Arrivee enregistree a l'heure!";
+    btn.disabled = false;
+    loadPointageHistory();
+}
+async function loadPointageHistory(){
+    const rows = await supaFetch("cashier_attendance", "GET", null, `?cashier_id=eq.${CASHIER_ID}&order=check_in_time.desc&limit=30`);
+    if(!Array.isArray(rows)){ return; }
+    const now = new Date();
+    const thisMonth = rows.filter(r => { const d = new Date(r.check_in_time); return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear(); });
+    const lateDays = thisMonth.filter(r => r.is_late).length;
+    const totalMinutes = rows.reduce((s,r) => s + (r.minutes_late || 0), 0);
+    const totalDeduction = rows.reduce((s,r) => s + Number(r.deduction_amount || 0), 0);
+    document.getElementById("pointageLateDays").textContent = lateDays;
+    document.getElementById("pointageLateMinutes").textContent = totalMinutes;
+    document.getElementById("pointageDeduction").textContent = totalDeduction;
+    document.getElementById("pointageHistory").innerHTML = rows.map(r => `
+        <tr>
+            <td>${new Date(r.check_in_time).toLocaleDateString("fr-FR")}</td>
+            <td>${new Date(r.check_in_time).toLocaleTimeString("fr-FR")}</td>
+            <td>${r.within_geofence ? (r.distance_meters + "m") : "Hors zone"}</td>
+            <td><span class="badge-status ${r.within_geofence ? "approved" : "pending"}">${r.within_geofence ? "Valide" : "Rejete"}</span></td>
+            <td>${r.is_late ? r.minutes_late + " min" : "-"}</td>
+            <td>${r.deduction_amount > 0 ? r.deduction_amount + " DOP" : "-"}</td>
+        </tr>
+    `).join("") || "<tr><td colspan='6'>Aucun pointage</td></tr>";
 }
 async function createClientAccount(){
     const firstName=document.getElementById("ncFirstName").value.trim();
