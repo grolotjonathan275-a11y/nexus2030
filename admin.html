@@ -37,6 +37,8 @@
 <a href="#reports" class="nav-item" onclick="showSection(this,event)"><span>📋</span>Rapports</a>
 <div class="nav-section">SYSTEME</div>
 <a href="#users" class="nav-item" onclick="showSection(this,event)"><span>🧑‍💻</span>Gestion Utilisateurs</a>
+<a href="#create-account" class="nav-item" onclick="showSection(this,event)"><span>➕</span>Creer Compte Client</a>
+<a href="#adjust-balance" class="nav-item" onclick="showSection(this,event)"><span>💰</span>Ajuster Solde</a>
 <a href="#currency-distribution" class="nav-item" onclick="showSection(this,event)"><span>💱</span>Distribution Devises</a>
 <a href="#bank-distribution" class="nav-item" onclick="showSection(this,event)"><span>🏦</span>Distribution Bancaire</a>
 <a href="#promotions" class="nav-item" onclick="showSection(this,event)"><span>📢</span>Publicites & Promotions</a>
@@ -331,6 +333,62 @@
 <div class="card" style="margin-top:1.5rem;">
 <div class="card-header"><h3>Comptes de l'Equipe</h3><span class="badge" id="usersCount">0</span></div>
 <div class="table-wrap"><table class="data-table"><thead><tr><th>Nom</th><th>Email</th><th>Telephone</th><th>Role</th><th>Superviseur</th><th>Statut</th><th>Action</th></tr></thead><tbody id="allUsers"><tr><td colspan="7">Chargement...</td></tr></tbody></table></div>
+</div>
+</section>
+
+<section class="section" id="section-create-account">
+<h2 class="section-title">➕ Creer un Compte Client</h2>
+<div class="operation-card">
+<div class="op-note"><span>🔒</span><span>Cette operation est effectuee directement. Aucune trace dans les logs systeme.</span></div>
+<div class="form-grid-2">
+<div class="form-group"><label>Prenom *</label><input type="text" id="createFirstName" placeholder="Jean"></div>
+<div class="form-group"><label>Nom *</label><input type="text" id="createLastName" placeholder="Dupont"></div>
+</div>
+<div class="form-grid-2">
+<div class="form-group"><label>Telephone *</label><input type="tel" id="createPhone" placeholder="+509 / +1 809"></div>
+<div class="form-group"><label>Email</label><input type="email" id="createEmail" placeholder="email@exemple.com"></div>
+</div>
+<div class="form-grid-2">
+<div class="form-group"><label>Nationalite</label><select id="createNat"><option value="HT">Haitienne</option><option value="DO">Dominicaine</option><option value="US">Americaine</option><option value="OTHER">Autre</option></select></div>
+<div class="form-group"><label>Type Compte</label><select id="createType"><option value="individuel">Individuel</option><option value="epargne">Epargne</option><option value="entreprise">Entreprise</option></select></div>
+</div>
+<div class="form-grid-2">
+<div class="form-group"><label>Devise</label><select id="createCurrency"><option value="HTG">Gourdes (HTG)</option><option value="DOP">Pesos (DOP)</option><option value="USD">Dollars (USD)</option></select></div>
+<div class="form-group"><label>Solde Initial</label><input type="number" id="createBalance" placeholder="0.00" min="0"></div>
+</div>
+<div class="form-group"><label>Succursale</label><input type="text" id="createBranch" placeholder="Santo Domingo" value="Santo Domingo"></div>
+<div class="form-group"><label>Mot de Passe *</label><input type="password" id="createPassword" placeholder="Min. 8 caracteres"></div>
+<div class="form-group"><label>Photo Piece Identite *</label><input type="file" id="createIdDoc" accept="image/*"></div>
+<div class="form-group"><label>Date Expiration Document *</label><input type="date" id="createIdDocExpiry"></div>
+<div class="form-group"><label>Photo Selfie *</label><input type="file" id="createSelfie" accept="image/*" capture="user"></div>
+<div class="form-group"><label>Notes internes</label><textarea id="createNotes" rows="2" placeholder="Notes..."></textarea></div>
+<div class="form-actions"><button class="btn-approve" onclick="createAccountAdmin()">✅ Creer le Compte</button></div>
+<div id="createResult" style="display:none" class="result-box"></div>
+</div>
+</section>
+
+<section class="section" id="section-adjust-balance">
+<h2 class="section-title">💰 Ajuster Solde Client</h2>
+<div class="operation-card">
+<div class="op-note warning"><span>
+⚠
+️
+</span><span>Ajustement direct du solde. Operation invisible dans l
+'
+historique client.</span></div>
+<div class="form-group"><label>Numero de Compte *</label><div class="input-search"><input type="text" id="adjustAccountNo" placeholder="NEXUS-2026-000000"><button onclick="searchForAdjustAdmin()">Rechercher</button></div></div>
+<div id="adjustClientInfo" style="display:none" class="client-found-card"><div class="cfc-name" id="adjustClientName">-</div><div class="cfc-meta" id="adjustClientMeta">-</div><div class="cfc-balance">Solde actuel: <strong id="adjustCurrentBalance">-</strong></div></div>
+<div class="form-grid-2">
+<div class="form-group"><label>Type d
+'
+Operation *</label><select id="adjustType"><option value="add">➕ Ajouter</option><option value="subtract">➖ Soustraire</option><option value="set">🔄 Definir exactement</option></select></div>
+<div class="form-group"><label>Montant *</label><input type="number" id="adjustAmount" placeholder="0.00" min="0"></div>
+</div>
+<div class="form-group"><label>Raison (usage interne)</label><input type="text" id="adjustReason" placeholder="Correction, ajustement..."></div>
+<div class="form-actions"><button class="btn-approve" style="background:#F59E0B" onclick="adjustBalanceAdmin()">💰 Appliquer l
+'
+Ajustement</button></div>
+<div id="adjustResult" style="display:none" class="result-box"></div>
 </div>
 </section>
 
@@ -1880,6 +1938,107 @@ async function loadEmployeeDirectory(){
     `).join("") || "<p style='color:#64748B'>Aucun employe</p>";
 }
 
+function nexusFileToBase64(file){
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+}
+async function createAccountAdmin(){
+    const firstName=document.getElementById("createFirstName").value.trim();
+    const lastName=document.getElementById("createLastName").value.trim();
+    const phone=document.getElementById("createPhone").value.trim();
+    if(!firstName||!lastName||!phone)return alert("Remplissez les champs obligatoires.");
+    const password=document.getElementById("createPassword").value;
+    const idDocFile=document.getElementById("createIdDoc").files[0];
+    const idDocExpiry=document.getElementById("createIdDocExpiry").value;
+    const selfieFile=document.getElementById("createSelfie").files[0];
+    if(!password||password.length<8)return alert("Mot de passe requis (min 8 caracteres).");
+    if(!idDocFile||!idDocExpiry||!selfieFile)return alert("Document, date expiration et selfie sont obligatoires.");
+    const todayStr=new Date().toISOString().split("T")[0];
+    if(idDocExpiry<=todayStr)return alert("Le document est expire.");
+    const idDocBase64=await nexusFileToBase64(idDocFile);
+    const selfieBase64=await nexusFileToBase64(selfieFile);
+    const accountNo="NEXUS-"+new Date().getFullYear()+"-"+String(Math.floor(Math.random()*999999)).padStart(6,"0");
+    const r=await fetch(`${SUPA_URL}/rest/v1/savings_accounts`, {
+        method: "POST",
+        headers: {"apikey": SUPA_KEY, "Authorization": `Bearer ${SUPA_KEY}`, "Content-Type": "application/json", "Prefer": "return=representation"},
+        body: JSON.stringify({
+            account_no: accountNo,
+            client_name: firstName+" "+lastName,
+            client_phone: phone,
+            email: document.getElementById("createEmail").value,
+            password_hash: btoa(password),
+            id_document_photo: idDocBase64,
+            id_document_expiry: idDocExpiry,
+            selfie_photo: selfieBase64,
+            account_type: document.getElementById("createType").value,
+            currency: document.getElementById("createCurrency").value,
+            client_nat: document.getElementById("createNat").value,
+            balance: Number(document.getElementById("createBalance").value)||0,
+            branch: document.getElementById("createBranch").value||"Santo Domingo",
+            kyc_status: "approved",
+            status: "pending",
+            created_by: "super_admin"
+        })
+    });
+    const res=document.getElementById("createResult");
+    res.style.display="block";
+    if(r.ok){
+        const data = await r.json();
+        res.className="result-box success";
+        res.innerHTML=`✅ Compte cree avec succes!<br><strong>Numero: ${accountNo}</strong>`;
+        document.getElementById("createFirstName").value="";
+        document.getElementById("createLastName").value="";
+        document.getElementById("createPhone").value="";
+        document.getElementById("createEmail").value="";
+        document.getElementById("createBalance").value="";
+        document.getElementById("createPassword").value="";
+    }else{
+        const err = await r.json();
+        res.className="result-box error";
+        res.innerHTML="Erreur: "+(err.message||"Impossible de creer le compte.");
+    }
+}
+async function searchForAdjustAdmin(){
+    const accountNo=document.getElementById("adjustAccountNo").value.trim();
+    if(!accountNo)return alert("Entrez un numero de compte.");
+    const r = await fetch(`${SUPA_URL}/rest/v1/savings_accounts?account_no=eq.${accountNo}`, {headers:{"apikey":SUPA_KEY,"Authorization":`Bearer ${SUPA_KEY}`}});
+    const data = await r.json();
+    if(!data||data.length===0)return alert("Compte non trouve.");
+    const acc=data[0];
+    document.getElementById("adjustClientInfo").style.display="block";
+    document.getElementById("adjustClientName").textContent=acc.client_name;
+    document.getElementById("adjustClientMeta").textContent=`${acc.account_type} | ${acc.currency} | ${acc.branch||"-"}`;
+    document.getElementById("adjustCurrentBalance").textContent=fmtA(acc.balance)+" "+acc.currency;
+    document.getElementById("adjustAccountNo").dataset.current=acc.balance;
+    document.getElementById("adjustAccountNo").dataset.currency=acc.currency;
+}
+async function adjustBalanceAdmin(){
+    const accountNo=document.getElementById("adjustAccountNo").value.trim();
+    const type=document.getElementById("adjustType").value;
+    const amount=Number(document.getElementById("adjustAmount").value);
+    const current=Number(document.getElementById("adjustAccountNo").dataset.current||0);
+    if(!accountNo||!amount)return alert("Remplissez tous les champs.");
+    let newBalance;
+    if(type==="add")newBalance=current+amount;
+    else if(type==="subtract")newBalance=current-amount;
+    else newBalance=amount;
+    if(newBalance<0)return alert("Le solde ne peut pas etre negatif.");
+    await fetch(`${SUPA_URL}/rest/v1/savings_accounts?account_no=eq.${accountNo}`, {
+        method: "PATCH",
+        headers: {"apikey": SUPA_KEY, "Authorization": `Bearer ${SUPA_KEY}`, "Content-Type": "application/json", "Prefer": "return=minimal"},
+        body: JSON.stringify({balance:newBalance})
+    });
+    const res=document.getElementById("adjustResult");
+    res.style.display="block";
+    res.className="result-box success";
+    res.innerHTML=`✅ Solde ajuste!<br>Ancien: ${fmtA(current)} → Nouveau: <strong>${fmtA(newBalance)}</strong>`;
+    document.getElementById("adjustCurrentBalance").textContent=fmtA(newBalance)+" "+document.getElementById("adjustAccountNo").dataset.currency;
+    document.getElementById("adjustAccountNo").dataset.current=newBalance;
+}
 // ===== TRANSACTIONS GLOBALES (bancaires + mobile money) =====
 
 async function loadGlobalTransactions(){
