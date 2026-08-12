@@ -31,7 +31,8 @@
     </div>
     <nav class="sidebar-nav">
         <div class="nav-section">TABLEAU DE BORD</div>
-        <a href="#overview" class="nav-item active" onclick="showSection(this,event)"><span>📊</span>Vue d'ensemble</a>
+        <a href="#overview" class="nav-item active" onclick="showSection(this,event)"><span>📊</span>Vue d''ensemble</a>
+        <a href="#mon-equipe" class="nav-item" onclick="showSection(this,event)"><span>👥</span>Mon Equipe</a>
         <div class="nav-section">SUPERVISION</div>
         <a href="#requests" class="nav-item" onclick="showSection(this,event)"><span>📋</span>Demandes en Attente</a>
         <a href="#accounts" class="nav-item" onclick="showSection(this,event)"><span>📖</span>Comptes Epargne</a>
@@ -101,6 +102,15 @@
                         </table>
                     </div>
                 </div>
+            </div>
+        </section>
+
+        <!-- MON EQUIPE -->
+        <section class="section" id="section-mon-equipe">
+            <h2 class="section-title">👥 Mon Equipe</h2>
+            <div class="card">
+                <div class="card-header"><h3>Succursales et Personnel sous ma Supervision</h3><span class="badge" id="equipeCount">0</span></div>
+                <div id="equipeBySuccursale" style="padding:1.5rem"></div>
             </div>
         </section>
 
@@ -277,6 +287,7 @@ function showSection(el,e){
     document.getElementById("section-"+id).classList.add("active");
     document.getElementById("pageTitle").textContent=el.textContent.trim();
     if(id==="requests")loadRequests();
+    if(id==="mon-equipe")loadMonEquipe();
     if(id==="accounts")loadAccounts();
     if(id==="kyc")loadKyc();
     if(id==="team")loadTeam();
@@ -449,6 +460,44 @@ async function loadKyc(){
 function exportData(table){window.open(`${SUPA_URL}/rest/v1/${table}?select=*&apikey=${SUPA_KEY}`);}
 
 // ===== DISTRIBUTION DEVISES (SUPERVISEUR) =====
+async function loadMonEquipe(){
+    if(!currentSupervisorId){
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if(session) currentSupervisorId = session.user.id;
+    }
+    const { data: staff } = await supabaseClient.from("profiles").select("*").eq("supervisor_id", currentSupervisorId).in("role", ["caissier","agent"]);
+    const container = document.getElementById("equipeBySuccursale");
+    if(!staff || staff.length === 0){
+        container.innerHTML = "<p style='color:#64748B'>Aucun membre dans votre equipe.</p>";
+        document.getElementById("equipeCount").textContent = "0";
+        return;
+    }
+    document.getElementById("equipeCount").textContent = staff.length;
+    const groups = {};
+    staff.forEach(s => {
+        const b = s.branch || "Non assigne";
+        if(!groups[b]) groups[b] = [];
+        groups[b].push(s);
+    });
+    const roleLabels = { caissier: "Caissier", agent: "Agent" };
+    container.innerHTML = Object.entries(groups).map(([branch, members]) => `
+        <div style="margin-bottom:1.5rem">
+            <h4 style="color:#081440;font-size:0.95rem;margin-bottom:0.75rem;padding-bottom:0.5rem;border-bottom:2px solid #E2E8F0">🏢 ${branch} (${members.length})</h4>
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:0.75rem">
+                ${members.map(m => `
+                    <div style="display:flex;align-items:center;gap:0.75rem;padding:0.9rem;border:1px solid #E2E8F0;border-radius:10px">
+                        <div style="width:44px;height:44px;border-radius:50%;background:${m.role==='caissier'?'#F97316':'#10B981'};color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.85rem">${(m.full_name||"?").split(" ").map(n=>n[0]).join("").substring(0,2).toUpperCase()}</div>
+                        <div style="min-width:0">
+                            <div style="font-weight:600;font-size:0.9rem">${m.full_name}</div>
+                            <div style="font-size:0.78rem;color:#64748B">${roleLabels[m.role]||m.role}</div>
+                            <span class="badge-status ${m.status==='active'?'approved':'pending'}" style="font-size:0.7rem;margin-top:0.2rem;display:inline-block">${m.status||"-"}</span>
+                        </div>
+                    </div>
+                `).join("")}
+            </div>
+        </div>
+    `).join("");
+}
 async function loadAllocationFormSup(){
     if(!currentSupervisorId){
         const { data: { session } } = await supabaseClient.auth.getSession();
