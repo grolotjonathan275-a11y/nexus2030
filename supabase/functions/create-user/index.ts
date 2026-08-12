@@ -57,7 +57,7 @@ Deno.serve(async (req) => {
     }
 
     // Done nouvo kont lan
-    const { full_name, email, phone, password, role, avatar_url } = await req.json()
+    const { full_name, email, phone, password, role, avatar_url, branch } = await req.json()
 
     if (!full_name || !email || !password || !role) {
       return new Response(JSON.stringify({ error: "Manke enfòmasyon obligatwa" }), {
@@ -88,11 +88,12 @@ Deno.serve(async (req) => {
       phone: phone || null,
       role,
       avatar_url: avatar_url || null,
+      branch: branch || null,
       status: "active",
     })
 
-    if (profileError) {
-      return new Response(JSON.stringify({ error: profileError.message }), {
+    if (insertProfileError) {
+      return new Response(JSON.stringify({ error: insertProfileError.message }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       })
