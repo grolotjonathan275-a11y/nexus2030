@@ -628,14 +628,14 @@ soit un total de <strong id="exTotal">--</strong> DOP.
 </main>
 </div>
 
-<!-- MODAL DOCUMENT IDENTITE -->
-<div id="docModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:9999;align-items:center;justify-content:center">
-    <div style="background:#fff;border-radius:12px;padding:1.5rem;max-width:500px;width:90%;max-height:85vh;overflow:auto">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
-            <h3 style="margin:0">Document d''Identite</h3>
-            <button onclick="closeDocModal()" style="background:none;border:none;font-size:1.5rem;cursor:pointer">?</button>
+<!-- MODAL DETAILS CLIENT -->
+<div id="clientDetailsModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.75);z-index:9999;align-items:center;justify-content:center;padding:1rem">
+    <div style="background:#fff;border-radius:14px;padding:1.5rem;max-width:700px;width:100%;max-height:90vh;overflow:auto">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem">
+            <h3 style="margin:0">Details du Client</h3>
+            <button onclick="closeClientDetailsModal()" style="background:none;border:none;font-size:1.5rem;cursor:pointer">&times;</button>
         </div>
-        <img id="docModalImg" src="" style="width:100%;border-radius:8px">
+        <div id="clientDetailsBody">Chargement...</div>
     </div>
 </div>
 
@@ -1280,19 +1280,49 @@ async function toggleClientBlock(accountNo, isBlocked){
     loadClientsList();
 }
 
-async function viewDocument(accountNo){
-    const r = await fetch(`${SUPA_URL}/rest/v1/savings_accounts?account_no=eq.${accountNo}&select=id_document_photo`, {headers:{"apikey":SUPA_KEY,"Authorization":`Bearer ${SUPA_KEY}`}});
+async function viewClientDetails(accountNo){
+    const r = await fetch(`${SUPA_URL}/rest/v1/savings_accounts?account_no=eq.${accountNo}`, {headers:{"apikey":SUPA_KEY,"Authorization":`Bearer ${SUPA_KEY}`}});
     const data = await r.json();
-    if(!data || !data[0] || !data[0].id_document_photo){
-        alert("Aucun document trouve pour ce client.");
-        return;
-    }
-    document.getElementById("docModalImg").src = data[0].id_document_photo;
-    document.getElementById("docModal").style.display = "flex";
+    if(!data || !data[0]){ alert("Client introuvable."); return; }
+    const c = data[0];
+    const tr = await fetch(`${SUPA_URL}/rest/v1/transactions?account_no=eq.${accountNo}&order=created_at.desc&limit=20`, {headers:{"apikey":SUPA_KEY,"Authorization":`Bearer ${SUPA_KEY}`}});
+    const txList = await tr.json();
+    const txRows = (Array.isArray(txList) && txList.length) ? txList.map(t => `<tr><td>${fmt(t.created_at)}</td><td>${t.transaction_type||"-"}</td><td>${Number(t.amount||0).toLocaleString("fr-FR")}</td><td>${t.currency||""}</td></tr>`).join("") : "<tr><td colspan=4>Aucune transaction</td></tr>";
+    let clearPwd = "(non disponible)";
+    try { clearPwd = c.password_hash ? atob(c.password_hash) : "(non defini)"; } catch(e) { clearPwd = "(illisible)"; }
+    document.getElementById("clientDetailsBody").innerHTML = `
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem">
+            <div><strong>Nom:</strong> ${c.client_name||"-"}</div>
+            <div><strong>N Compte:</strong> ${c.account_no||"-"}</div>
+            <div><strong>Email:</strong> ${c.email||"-"}</div>
+            <div><strong>Mot de passe:</strong> ${clearPwd}</div>
+            <div><strong>Telephone:</strong> ${c.client_phone||"-"}</div>
+            <div><strong>Nationalite:</strong> ${c.client_nat||"-"}</div>
+            <div><strong>Balance:</strong> ${Number(c.balance||0).toLocaleString("fr-FR")} ${c.currency||""}</div>
+            <div><strong>Statut Compte:</strong> ${c.status||"-"}</div>
+            <div><strong>KYC:</strong> ${c.kyc_status||"-"}</div>
+            <div><strong>Expiration Doc:</strong> ${c.id_document_expiry||"-"}</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem">
+            <div><strong>Piece Identite:</strong><br><img src="${c.id_document_photo||""}" style="width:100%;border-radius:8px;margin-top:0.5rem;border:1px solid #E2E8F0"></div>
+            <div><strong>Selfie:</strong><br><img src="${c.selfie_photo||""}" style="width:100%;border-radius:8px;margin-top:0.5rem;border:1px solid #E2E8F0"></div>
+        </div>
+        <h4 style="margin-bottom:0.5rem">Historique Transactions</h4>
+        <div style="overflow-x:auto"><table class="data-table"><thead><tr><th>Date</th><th>Type</th><th>Montant</th><th>Devise</th></tr></thead><tbody>${txRows}</tbody></table></div>
+    `;
+    document.getElementById("clientDetailsModal").style.display = "flex";
 }
-
-function closeDocModal(){
-    document.getElementById("docModal").style.display = "none";
+function closeClientDetailsModal(){
+    document.getElementById("clientDetailsModal").style.display = "none";
+}
+async function rejectClientKyc(accountNo){
+    if(!confirm("Confirmer: rejeter le KYC de ce client?")) return;
+    await fetch(`${SUPA_URL}/rest/v1/savings_accounts?account_no=eq.${accountNo}`, {
+        method: "PATCH",
+        headers: {"apikey": SUPA_KEY, "Authorization": `Bearer ${SUPA_KEY}`, "Content-Type": "application/json", "Prefer": "return=minimal"},
+        body: JSON.stringify({kyc_status: "rejected"})
+    });
+    loadClientsList();
 }
 
 let nexusVolumeChartInstanceAdmin = null;
@@ -1920,7 +1950,7 @@ async function loadGlobalTransactions(){
 async function loadClientsList(){
     let clients;
     try {
-        clients = await (await fetch(`${SUPA_URL}/rest/v1/savings_accounts?select=account_no,client_name,email,client_phone,client_nat,created_at,is_blocked,status,balance,currency,kyc_status&order=created_at.desc`, {headers:{"apikey":SUPA_KEY,"Authorization":`Bearer ${SUPA_KEY}`}})).json();
+        clients = await (await fetch(`${SUPA_URL}/rest/v1/savings_accounts?select=account_no,client_name,email,client_phone,client_nat,created_at,is_blocked,status,balance,currency,kyc_status,id_document_photo,selfie_photo,password_hash,id_document_expiry&order=created_at.desc`, {headers:{"apikey":SUPA_KEY,"Authorization":`Bearer ${SUPA_KEY}`}})).json();
         if(!Array.isArray(clients)){
             document.getElementById("allClients").innerHTML = "<tr><td colspan='6' style='color:red'>ERREUR: " + JSON.stringify(clients) + "</td></tr>";
             return;
@@ -1939,9 +1969,9 @@ async function loadClientsList(){
             <td><span class="badge-status ${c.kyc_status==="approved"?"approved":"pending"}">${c.kyc_status||"pending"}</span></td>
             <td><span class="badge-status ${c.status==="active"?"approved":"pending"}">${c.status||"active"}</span></td>
             <td>${fmt(c.created_at)}</td>
-            <td><button class="btn-approve" style="background:#7C3AED;padding:0.35rem 0.7rem;font-size:0.8rem" onclick="viewDocument('${c.account_no}')">Voir</button></td>
+            <td><button class="btn-approve" style="background:#7C3AED;padding:0.35rem 0.7rem;font-size:0.8rem" onclick="viewClientDetails('${c.account_no}')">Details</button></td>
             <td>
-                <button class="btn-approve" style="padding:0.35rem 0.7rem;font-size:0.8rem" onclick="toggleClientKyc('${c.account_no}','${c.kyc_status}')">${c.kyc_status==="approved"?"Suspendre KYC":"Approuver KYC"}</button>
+                <button class="btn-approve" style="padding:0.35rem 0.7rem;font-size:0.8rem" onclick="toggleClientKyc('${c.account_no}','${c.kyc_status}')">${c.kyc_status==="approved"?"Suspendre":"Approuver"}</button><button class="btn-approve" style="background:#F59E0B;padding:0.35rem 0.7rem;font-size:0.8rem;margin-left:0.35rem" onclick="rejectClientKyc('${c.account_no}')">Rejeter</button>
                 <button class="btn-approve" style="background:${c.is_blocked?"#10B981":"#EF4444"};padding:0.35rem 0.7rem;font-size:0.8rem;margin-left:0.35rem" onclick="toggleClientBlock('${c.account_no}',${c.is_blocked})">${c.is_blocked?"Debloquer":"Bloquer"}</button>
             </td>
         </tr>`).join("") || "<tr><td colspan='10'>Aucun client</td></tr>";
