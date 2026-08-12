@@ -2504,14 +2504,36 @@ async function createClientAccount(){
     const accountType=document.getElementById("ncAccountType").value;
     const currency=document.getElementById("ncCurrency").value;
     const balance=Number(document.getElementById("ncBalance").value)||0;
+    const password=document.getElementById("ncPassword").value;
+    const idDocFile=document.getElementById("ncIdDoc").files[0];
+    const idDocExpiry=document.getElementById("ncIdDocExpiry").value;
+    const selfieFile=document.getElementById("ncSelfie").files[0];
 
     const res=document.getElementById("ncResult");
-    if(!firstName||!lastName||!phone){
+    if(!firstName||!lastName||!phone||!password){
         res.style.display="block"; res.className="result-box error";
         res.innerHTML="Remplissez tous les champs obligatoires (*).";
         return;
     }
 
+    if(password.length<8){
+        res.style.display="block"; res.className="result-box error";
+        res.innerHTML="Mot de passe trop court (min. 8 caracteres).";
+        return;
+    }
+    if(!idDocFile||!idDocExpiry||!selfieFile){
+        res.style.display="block"; res.className="result-box error";
+        res.innerHTML="Document, date expiration et selfie sont obligatoires.";
+        return;
+    }
+    const todayStr=new Date().toISOString().split("T")[0];
+    if(idDocExpiry<=todayStr){
+        res.style.display="block"; res.className="result-box error";
+        res.innerHTML="Le document est expire.";
+        return;
+    }
+    const idDocBase64=await nexusFileToBase64(idDocFile);
+    const selfieBase64=await nexusFileToBase64(selfieFile);
     const accountNo="NEXUS-"+new Date().getFullYear()+"-"+String(Math.floor(Math.random()*999999)).padStart(6,"0");
 
     const r=await sf("savings_accounts","POST",{
@@ -2519,13 +2541,17 @@ async function createClientAccount(){
         client_name:firstName+" "+lastName,
         client_phone:phone,
         email:email,
+        password_hash:btoa(password),
+        id_document_photo:idDocBase64,
+        id_document_expiry:idDocExpiry,
+        selfie_photo:selfieBase64,
         account_type:accountType,
         currency:currency,
         client_nat:nat,
         balance:balance,
         branch:AGENT_BRANCH,
         kyc_status:"pending",
-        status:"active",
+        status:"pending",
         created_by:"agent"
     });
 
