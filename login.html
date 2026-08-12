@@ -204,10 +204,130 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="assets/js/i18n.js"></script>
 <script src="assets/js/main.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
 <script>
 const SUPA_URL = "https://fnuplvbiwfvauwkpxsoc.supabase.co";
 const SUPA_KEY = "sb_publishable_QBqdKkpcjDS3_psUdmc4uA_sMCzLqLo";
 const supabaseClient = supabase.createClient(SUPA_URL, SUPA_KEY);
+
+const FACE_MODEL_URL = "https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js-models/";
+let nexusFaceModelsLoaded = false;
+
+async function nexusLoadFaceModels(){
+    if(nexusFaceModelsLoaded) return true;
+    try {
+        await faceapi.nets.tinyFaceDetector.loadFromUri(FACE_MODEL_URL);
+        await faceapi.nets.faceLandmark68Net.loadFromUri(FACE_MODEL_URL);
+        await faceapi.nets.faceRecognitionNet.loadFromUri(FACE_MODEL_URL);
+        nexusFaceModelsLoaded = true;
+        return true;
+    } catch(err){
+        console.error("Erreur chargement modeles face-api:", err);
+        return false;
+    }
+}
+
+function nexusFaceDistance(d1, d2){
+    let sum = 0;
+    for(let i = 0; i < d1.length; i++){ sum += (d1[i] - d2[i]) * (d1[i] - d2[i]); }
+    return Math.sqrt(sum);
+}
+
+function nexusFaceCapture(timeoutMs){
+    return new Promise(async (resolve) => {
+        const modal = document.getElementById("faceModal");
+        const video = document.getElementById("faceVideo");
+        const status = document.getElementById("faceStatus");
+        const cancelBtn = document.getElementById("faceCancelBtn");
+        let stream = null;
+        let intervalId = null;
+        let timeoutId = null;
+        let finished = false;
+
+        function cleanup(result){
+            if(finished) return;
+            finished = true;
+            if(intervalId) clearInterval(intervalId);
+            if(timeoutId) clearTimeout(timeoutId);
+            if(stream) stream.getTracks().forEach(t => t.stop());
+            modal.style.display = "none";
+            cancelBtn.onclick = null;
+            resolve(result);
+        }
+
+        cancelBtn.onclick = () => cleanup({ error: "cancelled" });
+
+        modal.style.display = "flex";
+        status.textContent = "Chargement du systeme de verification...";
+
+        const modelsOk = await nexusLoadFaceModels();
+        if(!modelsOk){ cleanup({ error: "models" }); return; }
+
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+        } catch(err){
+            cleanup({ error: "camera" });
+            return;
+        }
+        video.srcObject = stream;
+        status.textContent = "Recherche du visage...";
+
+        timeoutId = setTimeout(() => cleanup({ error: "timeout" }), timeoutMs || 20000);
+
+        intervalId = setInterval(async () => {
+            if(finished) return;
+            try {
+                const detection = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptor();
+                if(detection && detection.descriptor){
+                    status.textContent = "Visage detecte, verification...";
+                    cleanup({ descriptor: Array.from(detection.descriptor) });
+                }
+            } catch(err){
+                // continue trying
+            }
+        }, 600);
+    });
+}
+
+async function nexusVerifyFace(profile){
+    if(profile.role === "ceo") return { ok: true };
+    if(profile.face_blocked) return { ok: false, reason: "blocked" };
+
+    const capture = await nexusFaceCapture(20000);
+
+    if(capture.error === "cancelled"){
+        return { ok: false, reason: "cancelled" };
+    }
+    if(capture.error){
+        return { ok: true, technicalIssue: true };
+    }
+
+    if(!profile.reference_face_descriptor){
+        await supabaseClient.from("profiles").update({
+            reference_face_descriptor: JSON.stringify(capture.descriptor),
+            face_fail_count: 0
+        }).eq("id", profile.id);
+        return { ok: true, enrolled: true };
+    }
+
+    const refDescriptor = JSON.parse(profile.reference_face_descriptor);
+    const distance = nexusFaceDistance(refDescriptor, capture.descriptor);
+
+    if(distance < 0.6){
+        if(profile.face_fail_count > 0){
+            await supabaseClient.from("profiles").update({ face_fail_count: 0 }).eq("id", profile.id);
+        }
+        return { ok: true };
+    }
+
+    const newCount = (profile.face_fail_count || 0) + 1;
+    if(newCount >= 3){
+        await supabaseClient.from("profiles").update({ face_fail_count: newCount, face_blocked: true }).eq("id", profile.id);
+        return { ok: false, reason: "blocked_now" };
+    }
+    await supabaseClient.from("profiles").update({ face_fail_count: newCount }).eq("id", profile.id);
+    return { ok: false, reason: "mismatch", attemptsLeft: 3 - newCount };
+}
 
 // REDIREKSYON PA WOL
 const ROLE_REDIRECTS = {
@@ -272,6 +392,20 @@ document.getElementById("loginSubmit").addEventListener("click", async function(
                 .single();
 
             if (profile && profile.status === "active" && ROLE_REDIRECTS[profile.role]) {
+                const faceResult = await nexusVerifyFace(profile);
+                if(!faceResult.ok){
+                    await supabaseClient.auth.signOut();
+                    if(faceResult.reason === "blocked" || faceResult.reason === "blocked_now"){
+                        alert("Compte bloque pour verification faciale. Contactez le CEO pour debloquer votre compte.");
+                    } else if(faceResult.reason === "mismatch"){
+                        alert("Visage non reconnu. Tentatives restantes: " + faceResult.attemptsLeft);
+                    } else if(faceResult.reason === "cancelled"){
+                        alert("Verification annulee.");
+                    }
+                    btn.textContent = originalText;
+                    btn.disabled = false;
+                    return;
+                }
                 localStorage.setItem("nexus_role", profile.role);
                 localStorage.setItem("nexus_staff", JSON.stringify(profile));
                 showSuccess();
@@ -466,5 +600,16 @@ function nexusTogglePwd(id, btn){
     else { input.type = "password"; btn.textContent = "👁️"; }
 }
 </script>
+<div id="faceModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:99999;align-items:center;justify-content:center">
+    <div style="background:#fff;border-radius:16px;padding:1.5rem;max-width:420px;width:92%;text-align:center">
+        <h3 id="faceModalTitle" style="margin:0 0 0.5rem">Verification du visage</h3>
+        <p id="faceModalSub" style="color:#64748B;font-size:0.85rem;margin-bottom:1rem">Regardez la camera, gardez votre visage bien visible</p>
+        <div style="position:relative;border-radius:12px;overflow:hidden;background:#000">
+            <video id="faceVideo" autoplay muted playsinline style="width:100%;display:block;transform:scaleX(-1)"></video>
+        </div>
+        <p id="faceStatus" style="margin-top:1rem;font-weight:600;color:#081440">Initialisation...</p>
+        <button id="faceCancelBtn" style="margin-top:0.5rem;background:#F1F5F9;border:none;padding:0.6rem 1.2rem;border-radius:8px;cursor:pointer;color:#475569">Annuler</button>
+    </div>
+</div>
 </body>
 </html>
