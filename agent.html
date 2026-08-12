@@ -1995,7 +1995,9 @@ async function executeDepot(){
     if(!amt||amt<=0)return alert("Entrez un montant valide.");
     const balBefore=Number(c.balance);
     const balAfter=balBefore+amt;
-    await sf("savings_accounts","PATCH",{balance:balAfter},`?account_no=eq.${c.account_no}`);
+    const accUpdate={balance:balAfter};
+    if(c.status==="pending"&&balAfter>=1000){accUpdate.status="active";}
+    await sf("savings_accounts","PATCH",accUpdate,`?account_no=eq.${c.account_no}`);
     await sf("transactions","POST",{account_no:c.account_no,client_name:c.client_name,transaction_type:"depot",amount:amt,balance_before:balBefore,balance_after:balAfter,currency:curr,cashier_id:AGENT_ID,cashier_name:AGENT_NAME,branch:AGENT_BRANCH,notes:document.getElementById("depotNotes").value,status:"completed"});
     const p=new URLSearchParams({client_name:c.client_name,account_no:c.account_no,amount:amt,currency:curr,balance_before:balBefore,balance_after:balAfter});
     window.open("receipt.html?"+p.toString(),"_blank");
