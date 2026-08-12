@@ -1135,7 +1135,7 @@ async function decideLoanAdmin(loanId, decision){
 }
 
 async function loadAdminCashiersList(){
-    const wallets = await fetchData("cashier_wallets");
+    const wr = await fetch(`${SUPA_URL}/rest/v1/cashier_wallets?order=last_updated.desc`, {headers:{"apikey":SUPA_KEY,"Authorization":`Bearer ${SUPA_KEY}`}}); const wallets = await wr.json();
     document.getElementById("adminCashiersList").innerHTML = wallets.map(w => `
         <tr>
             <td>${w.cashier_name||w.cashier_id}</td>
