@@ -473,6 +473,12 @@
                                 <option value="validateur">Validateur</option>
                             </select>
                         </div>
+                        <div class="setting-item">
+                            <label>Succursale (optionnel - laisser vide si stagiaire)</label>
+                            <select id="newBranch" style="width:100%;padding:0.6rem;border-radius:8px;border:1px solid #CBD5E1;font-family:inherit;">
+                                <option value="">-- Non assigne --</option>
+                            </select>
+                        </div>
                     </div>
                     <button class="btn-ceo-action" onclick="createNewUser()">➕ Creer le Compte</button>
                 </div>
@@ -971,12 +977,20 @@ function showCreateMsg(text, isError) {
     el.style.color = isError ? "#991B1B" : "#166534";
     el.textContent = text;
 }
+async function loadBranchOptionsForNewUser(){
+    const r = await fetch(`${SUPA_URL}/rest/v1/branches?select=name&order=name.asc`, {headers:{"apikey":SUPA_KEY,"Authorization":`Bearer ${SUPA_KEY}`}});
+    const branches = await r.json();
+    const sel = document.getElementById("newBranch");
+    if(!sel || !Array.isArray(branches)) return;
+    sel.innerHTML = '<option value="">-- Non assigne --</option>' + branches.map(b => `<option value="${b.name}">${b.name}</option>`).join("");
+}
 async function createNewUser() {
     const full_name = document.getElementById("newFullName").value.trim();
     const email = document.getElementById("newEmail").value.trim();
     const phone = document.getElementById("newPhone").value.trim();
     const password = document.getElementById("newPassword").value;
     const role = document.getElementById("newRole").value;
+    const branch = document.getElementById("newBranch").value;
     if (!full_name || !email || !password || !role) {
         showCreateMsg("Remplissez tous les champs obligatoires (*).", true);
         return;
@@ -997,7 +1011,7 @@ async function createNewUser() {
                 "Content-Type": "application/json",
                 "Authorization": `Bearer ${session.access_token}`
             },
-            body: JSON.stringify({ full_name, email, phone, password, role })
+            body: JSON.stringify({ full_name, email, phone, password, role, branch })
         });
         const result = await res.json();
         if (!res.ok) {
@@ -1178,7 +1192,7 @@ function showSection(el,e){
     if(id==="manage-branches")loadBranchesManagement();
     if(id==="employees")loadEmployeeDirectory();
     if(id==="pointage-ceo")loadPointageCeo();
-    if(id==="users")loadUsers();
+    if(id==="users"){loadUsers();loadBranchOptionsForNewUser();}
 }
 
 function toggleSidebar(){document.getElementById("sidebar").classList.toggle("open");document.getElementById("sidebarOverlay").classList.toggle("show");}
