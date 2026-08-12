@@ -3113,6 +3113,11 @@ async function markArrival(){
     const statusEl = document.getElementById("pointageStatus");
     const btn = document.getElementById("pointageBtn");
     btn.disabled = true;
+    if(CASHIER_BRANCH === "Non assigne"){
+        statusEl.textContent = "Vous n'etes pas encore assigne a une succursale. Contactez votre superviseur ou l'administrateur.";
+        btn.disabled = false;
+        return;
+    }
     statusEl.textContent = "Recherche de votre succursale...";
 
     const branchData = await supaFetch("branches", "GET", null, `?name=eq.${encodeURIComponent(CASHIER_BRANCH)}`);
@@ -3288,7 +3293,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     currentProfile=profile;
     CASHIER_ID=profile.id;
     CASHIER_NAME=profile.full_name;
-    CASHIER_BRANCH="Santo Domingo";
+    CASHIER_BRANCH=profile.branch||"Non assigne";
 
     await loadMoneyServiceSettings();
 

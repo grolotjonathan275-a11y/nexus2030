@@ -2586,7 +2586,7 @@ document.addEventListener("DOMContentLoaded",async ()=>{
     currentProfile=profile;
     AGENT_ID=profile.id;
     AGENT_NAME=profile.full_name;
-    AGENT_BRANCH="Santo Domingo";
+    AGENT_BRANCH=profile.branch||"Non assigne";
 
     await loadMoneyServiceSettings();
 
