@@ -299,7 +299,7 @@ async function nexusVerifyFace(profile){
         return { ok: false, reason: "cancelled" };
     }
     if(capture.error){
-        return { ok: true, technicalIssue: true };
+        return { ok: false, reason: "technical" };
     }
 
     if(!profile.reference_face_descriptor){
@@ -401,10 +401,17 @@ document.getElementById("loginSubmit").addEventListener("click", async function(
                         alert("Visage non reconnu. Tentatives restantes: " + faceResult.attemptsLeft);
                     } else if(faceResult.reason === "cancelled"){
                         alert("Verification annulee.");
+                    } else if(faceResult.reason === "technical"){
+                        alert("Impossible de verifier votre visage (camera ou connexion). Reessayez ou contactez l'administrateur.");
                     }
                     btn.textContent = originalText;
                     btn.disabled = false;
                     return;
+                }
+                if(faceResult.enrolled){
+                    alert("Visage enregistre avec succes comme reference!");
+                } else if(profile.role !== "ceo"){
+                    alert("Visage reconnu, acces autorise.");
                 }
                 localStorage.setItem("nexus_role", profile.role);
                 localStorage.setItem("nexus_staff", JSON.stringify(profile));
