@@ -141,3 +141,30 @@ body{font-family:Inter,sans-serif;background:#F0F4FF;}
 .form-grid-2{grid-template-columns:1fr;}
 }
 .site-logo-img{height:40px;width:auto;object-fit:contain;display:block;}
+/* ===================================================== */
+/* ===== RESPONSIVE COMPLET CEO - MOBILE, TABLET, DESKTOP ===== */
+/* ===================================================== */
+
+html, body {
+    overflow-x: hidden;
+    max-width: 100%;
+}
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+img, canvas, table {
+    max-width: 100%;
+}
+
+@media (max-width: 1024px) {
+    .kpi-grid { grid-template-columns: repeat(2, 1fr) !important; }
+    .stats-grid-big { grid-template-columns: repeat(2, 1fr) !important; }
+    .overview-grid { grid-template-columns: 1fr !important; }
+}
+
+@media (max-width: 480px) {
+    .kpi-grid { grid-template-columns: 1fr !important; }
+    .stats-grid-big { grid-template-columns: 1fr !important; }
+}
+
+.table-wrap { overflow-x: auto !important; -webkit-overflow-scrolling: touch; }
