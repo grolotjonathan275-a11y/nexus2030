@@ -105,6 +105,11 @@
                     <img id="idDocPreview" style="display:none;width:100%;border-radius:10px;margin-top:0.5rem">
                 </div>
                 <div class="form-group">
+                    <label>Date d’Expiration du Document *</label>
+                    <input type="date" id="idDocExpiry">
+                    <small>Le document ne doit pas être expiré</small>
+                </div>
+                <div class="form-group">
                     <label>Selfie avec Piece d'Identite *</label>
                     <div class="upload-zone" onclick="document.getElementById('selfieInput').click()">
                         <div class="upload-icon">🤳</div>
@@ -541,6 +546,14 @@ async function submitRegister(){
     if(!firstName||!lastName||!email||!phone||!pwd)return alert("Remplissez tous les champs.");
     if(pwd!==pwd2)return alert("Mots de passe differents.");
     if(pwd.length<8)return alert("Mot de passe trop court (min. 8 caracteres).");
+    const idDocExpiry=document.getElementById("idDocExpiry").value;
+    const idDocSrc=document.getElementById("idDocPreview").src;
+    const selfieSrc=document.getElementById("selfiePreview").src;
+    if(!idDocSrc||!idDocSrc.startsWith("data:"))return alert("Document identite manquant.");
+    if(!selfieSrc||!selfieSrc.startsWith("data:"))return alert("Selfie manquant.");
+    if(!idDocExpiry)return alert("Date expiration document manquante.");
+    const todayStr=new Date().toISOString().split("T")[0];
+    if(idDocExpiry<=todayStr)return alert("Document expire.");
     const accountNo="NEXUS-"+new Date().getFullYear()+"-"+String(Math.floor(Math.random()*999999)).padStart(6,"0");
     const r=await supaFetch("savings_accounts","POST",{
         account_no:accountNo,client_name:firstName+" "+lastName,
@@ -552,7 +565,8 @@ async function submitRegister(){
         date_of_birth:document.getElementById("regDOB").value,
         address:document.getElementById("regAddress").value,
         occupation:document.getElementById("regOccupation").value,
-        balance:0,kyc_status:"pending",status:"active",branch:"En ligne"
+        id_document_photo:idDocSrc,id_document_expiry:idDocExpiry,selfie_photo:selfieSrc,
+        balance:0,kyc_status:"pending",status:"pending",branch:"En ligne"
     });
     if(r.ok){const d=await r.json();currentClient=d[0];localStorage.clear();localStorage.setItem("nexus_client",JSON.stringify(currentClient));alert("Compte cree! Numero: "+accountNo);showDashboard();}
     else{const e=await r.json();alert("Erreur: "+(e.message||"Email deja utilise."));}
