@@ -2280,7 +2280,9 @@ async function executeDepot() {
     const balanceBefore = Number(acc.balance);
     const balanceAfter = balanceBefore + amount;
 
-    await supaFetch("savings_accounts", "PATCH", {balance: balanceAfter}, `?account_no=eq.${acc.account_no}`);
+    const accUpdate = {balance: balanceAfter};
+    if(acc.status === "pending" && balanceAfter >= 1000){ accUpdate.status = "active"; }
+    await supaFetch("savings_accounts", "PATCH", accUpdate, `?account_no=eq.${acc.account_no}`);
 
     await supaFetch("transactions", "POST", {
         account_no: acc.account_no,
@@ -2340,6 +2342,8 @@ async function executeRetrait() {
     const netAmount = amount - feeAmount;
     const balanceBefore = Number(acc.balance);
     const balanceAfter = balanceBefore - amount;
+
+
     await supaFetch("savings_accounts", "PATCH", {balance: balanceAfter}, `?account_no=eq.${acc.account_no}`);
     await supaFetch("transactions", "POST", {
         account_no: acc.account_no,
