@@ -210,7 +210,7 @@ const SUPA_URL = "https://fnuplvbiwfvauwkpxsoc.supabase.co";
 const SUPA_KEY = "sb_publishable_QBqdKkpcjDS3_psUdmc4uA_sMCzLqLo";
 const supabaseClient = supabase.createClient(SUPA_URL, SUPA_KEY);
 
-const FACE_MODEL_URL = "https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js-models/";
+const FACE_MODEL_URL = "https://justadudewhohacks.github.io/face-api.js/models/";
 let nexusFaceModelsLoaded = false;
 
 async function nexusLoadFaceModels(){
@@ -606,6 +606,13 @@ function nexusTogglePwd(id, btn){
         <p id="faceModalSub" style="color:#64748B;font-size:0.85rem;margin-bottom:1rem">Regardez la camera, gardez votre visage bien visible</p>
         <div style="position:relative;border-radius:12px;overflow:hidden;background:#000">
             <video id="faceVideo" autoplay muted playsinline style="width:100%;display:block;transform:scaleX(-1)"></video>
+            <svg viewBox="0 0 300 240" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none">
+                <defs>
+                    <mask id="ovalMask"><rect width="300" height="240" fill="white"/><ellipse cx="150" cy="120" rx="75" ry="95" fill="black"/></mask>
+                </defs>
+                <rect width="300" height="240" fill="rgba(0,0,0,0.45)" mask="url(#ovalMask)"/>
+                <ellipse cx="150" cy="120" rx="75" ry="95" fill="none" stroke="#FF7A20" stroke-width="3"/>
+            </svg>
         </div>
         <p id="faceStatus" style="margin-top:1rem;font-weight:600;color:#081440">Initialisation...</p>
         <button id="faceCancelBtn" style="margin-top:0.5rem;background:#F1F5F9;border:none;padding:0.6rem 1.2rem;border-radius:8px;cursor:pointer;color:#475569">Annuler</button>
