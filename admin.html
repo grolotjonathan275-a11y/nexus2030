@@ -28,6 +28,7 @@
 <a href="#employees" class="nav-item" onclick="showSection(this,event)"><span>👤</span>Employes</a>
 <a href="#cashiers-wallets" class="nav-item" onclick="showSection(this,event)"><span>🧑‍💼</span>Caissiers</a>
 <a href="#pointage-admin" class="nav-item" onclick="showSection(this,event)"><span>📍</span>Pointage Caissiers</a>
+<a href="#login-history" class="nav-item" onclick="showSection(this,event)"><span>🔐</span>Historique Connexions</a>
 <a href="#loans" class="nav-item" onclick="showSection(this,event)"><span>💰</span>Prestamo</a>
 <a href="#receive-transfers" class="nav-item" onclick="showSection(this,event)"><span>🔄</span>Reception Transferts</a>
 <a href="rapports.html" class="nav-item"><span>📈</span>Rapports</a>
@@ -152,6 +153,14 @@
 <div class="card" style="margin-top:1.5rem">
 <div class="card-header"><h3>Historique de Pointage - Tous les Caissiers</h3><span class="badge" id="pointageAdminCount">0</span></div>
 <div class="table-wrap"><table class="data-table"><thead><tr><th>Caissier</th><th>Succursale</th><th>Date</th><th>Heure</th><th>Distance</th><th>IP</th><th>Statut</th><th>Retard</th><th>Deduction</th><th>Selfie</th></tr></thead><tbody id="pointageAdminList"><tr><td colspan="10">Chargement...</td></tr></tbody></table></div>
+</div>
+</section>
+
+<section class="section" id="section-login-history">
+<h2 class="section-title">🔐 Historique des Connexions</h2>
+<div class="card">
+<div class="card-header"><h3>Toutes les Connexions du Personnel</h3><span class="badge" id="loginHistoryCount">0</span></div>
+<div class="table-wrap"><table class="data-table"><thead><tr><th>Nom</th><th>Role</th><th>Date</th><th>Heure</th><th>IP</th></tr></thead><tbody id="loginHistoryList"><tr><td colspan="5">Chargement...</td></tr></tbody></table></div>
 </div>
 </section>
 
@@ -1221,6 +1230,24 @@ async function decideLoanAdmin(loanId, decision){
     loadLoansOverviewAdmin();
 }
 
+async function loadLoginHistory(){
+    const r = await fetch(`${SUPA_URL}/rest/v1/login_history?order=created_at.desc&limit=100`, {headers:{"apikey":SUPA_KEY,"Authorization":`Bearer ${SUPA_KEY}`}});
+    const rows = await r.json();
+    if(!Array.isArray(rows)){
+        document.getElementById("loginHistoryList").innerHTML = "<tr><td colspan='5'>Erreur de chargement</td></tr>";
+        return;
+    }
+    document.getElementById("loginHistoryCount").textContent = rows.length;
+    document.getElementById("loginHistoryList").innerHTML = rows.map(x => `
+        <tr>
+            <td>${x.full_name||"-"}</td>
+            <td>${x.role||"-"}</td>
+            <td>${new Date(x.created_at).toLocaleDateString("fr-FR")}</td>
+            <td>${new Date(x.created_at).toLocaleTimeString("fr-FR")}</td>
+            <td style="font-family:monospace;font-size:0.78rem">${x.ip_address||"-"}</td>
+        </tr>
+    `).join("") || "<tr><td colspan='5'>Aucune connexion</td></tr>";
+}
 async function loadPointageAdmin(){
     const r = await fetch(`${SUPA_URL}/rest/v1/cashier_attendance?order=check_in_time.desc&limit=100`, {headers:{"apikey":SUPA_KEY,"Authorization":`Bearer ${SUPA_KEY}`}});
     const rows = await r.json();
@@ -1302,6 +1329,7 @@ function showSection(el, e) {
     if (id === "transactions") loadGlobalTransactions();
 if (id === "cashiers-wallets") loadAdminCashiersList();
 if (id === "pointage-admin") loadPointageAdmin();
+if (id === "login-history") loadLoginHistory();
     if (id === "loans") loadLoansOverviewAdmin();
     if (id === "receive-transfers") { loadRtSettingsAdmin(); loadRtCapitalAdmin(); loadAllocationFormRtAdmin(); loadValidatorWalletsAdmin(); loadReceiveWalletsAdmin(); }
     if (id === "system-rates") { loadSystemRates(); loadSystemRatesHistory(); }
