@@ -2586,6 +2586,7 @@ async function loadMyMoneyTransactions(){
     const { data, error } = await supabaseClient
         .from("mobile_money_transactions")
         .select("*")
+        .eq("created_by", CASHIER_ID)
         .order("created_at",{ascending:false})
         .limit(20);
 
