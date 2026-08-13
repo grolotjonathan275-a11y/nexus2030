@@ -210,6 +210,25 @@ const SUPA_URL = "https://fnuplvbiwfvauwkpxsoc.supabase.co";
 const SUPA_KEY = "sb_publishable_QBqdKkpcjDS3_psUdmc4uA_sMCzLqLo";
 const supabaseClient = supabase.createClient(SUPA_URL, SUPA_KEY);
 
+function nexusLogLoginIP(profile){
+    try {
+        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("timeout")), 3000));
+        Promise.race([fetch("https://api.ipify.org?format=json"), timeoutPromise])
+            .then(r => r.json())
+            .then(data => {
+                supabaseClient.from("login_history").insert({
+                    user_id: profile.id,
+                    email: profile.email,
+                    full_name: profile.full_name,
+                    role: profile.role,
+                    ip_address: data.ip,
+                    user_agent: navigator.userAgent
+                }).then(() => {}).catch(() => {});
+            })
+            .catch(() => {});
+    } catch(e){}
+}
+
 const FACE_MODEL_URL = "https://justadudewhohacks.github.io/face-api.js/models/";
 let nexusFaceModelsLoaded = false;
 
@@ -413,6 +432,7 @@ document.getElementById("loginSubmit").addEventListener("click", async function(
                 } else if(profile.role !== "ceo"){
                     alert("Visage reconnu, acces autorise.");
                 }
+                nexusLogLoginIP(profile);
                 localStorage.setItem("nexus_role", profile.role);
                 localStorage.setItem("nexus_staff", JSON.stringify(profile));
                 showSuccess();
