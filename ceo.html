@@ -446,7 +446,7 @@
             </div>
             <div class="card" style="margin-top:1.5rem">
                 <div class="card-header"><h3>Historique de Pointage - Tous les Caissiers</h3><span class="badge" id="pointageCeoCount">0</span></div>
-                <div class="table-wrap"><table class="data-table"><thead><tr><th>Caissier</th><th>Succursale</th><th>Date</th><th>Heure</th><th>Distance</th><th>Statut</th><th>Retard</th><th>Deduction</th><th>Selfie</th></tr></thead><tbody id="pointageCeoList"><tr><td colspan="9">Chargement...</td></tr></tbody></table></div>
+                <div class="table-wrap"><table class="data-table"><thead><tr><th>Caissier</th><th>Succursale</th><th>Date</th><th>Heure</th><th>Distance</th><th>IP</th><th>Statut</th><th>Retard</th><th>Deduction</th><th>Selfie</th></tr></thead><tbody id="pointageCeoList"><tr><td colspan="10">Chargement...</td></tr></tbody></table></div>
             </div>
         </section>
 
@@ -1108,6 +1108,7 @@ async function loadPointageCeo(){
             <td>${new Date(x.check_in_time).toLocaleDateString("fr-FR")}</td>
             <td>${new Date(x.check_in_time).toLocaleTimeString("fr-FR")}</td>
             <td>${x.within_geofence ? (x.distance_meters+"m") : "Hors zone"}</td>
+            <td style="font-family:monospace;font-size:0.78rem">${x.ip_address||"-"}</td>
             <td><span class="status-badge ${x.within_geofence ? "active" : ""}">${x.within_geofence ? "Valide" : "Rejete"}</span></td>
             <td>${x.is_late ? x.minutes_late+" min" : "-"}</td>
             <td>${x.deduction_amount > 0 ? x.deduction_amount+" DOP" : "-"}</td>
