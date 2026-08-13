@@ -40,6 +40,7 @@
         <a href="#reports" class="nav-item" onclick="showSection(this,event)"><span>📋</span>Rapports</a>
         <a href="#cashiers" class="nav-item" onclick="showSection(this,event)"><span>👤</span>Caissiers</a>
         <a href="#pointage-ceo" class="nav-item" onclick="showSection(this,event)"><span>📍</span>Pointage Caissiers</a>
+        <a href="#login-history" class="nav-item" onclick="showSection(this,event)"><span>🔐</span>Historique Connexions</a>
         <a href="#employees" class="nav-item" onclick="showSection(this,event)"><span>👤</span>Employes</a>
         <a href="#users" class="nav-item" onclick="showSection(this,event)"><span>🧑‍💻</span>Gestion Utilisateurs</a>
         <div class="nav-section">DEVISES</div>
@@ -450,6 +451,14 @@
             </div>
         </section>
 
+
+        <section class="section" id="section-login-history">
+            <h2 class="section-title">🔐 Historique des Connexions</h2>
+            <div class="card">
+                <div class="card-header"><h3>Toutes les Connexions du Personnel</h3><span class="badge" id="loginHistoryCount">0</span></div>
+                <div class="table-wrap"><table class="data-table"><thead><tr><th>Nom</th><th>Role</th><th>Date</th><th>Heure</th><th>IP</th></tr></thead><tbody id="loginHistoryList"><tr><td colspan="5">Chargement...</td></tr></tbody></table></div>
+            </div>
+        </section>
         <section class="section" id="section-users">
             <div class="card">
                 <div class="card-header"><h3>Creer un Nouveau Compte</h3></div>
@@ -1087,6 +1096,23 @@ async function deleteUserCeo(id, name) {
     if (error) { alert("Erreur: " + error.message); return; }
     loadUsers();
 }
+async function loadLoginHistory(){
+    const rows = await sf("login_history", "GET", null, "?order=created_at.desc&limit=100");
+    if(!Array.isArray(rows)){
+        document.getElementById("loginHistoryList").innerHTML = "<tr><td colspan='5'>Erreur de chargement</td></tr>";
+        return;
+    }
+    document.getElementById("loginHistoryCount").textContent = rows.length;
+    document.getElementById("loginHistoryList").innerHTML = rows.map(x => `
+        <tr>
+            <td>${x.full_name||"-"}</td>
+            <td>${x.role||"-"}</td>
+            <td>${new Date(x.created_at).toLocaleDateString("fr-FR")}</td>
+            <td>${new Date(x.created_at).toLocaleTimeString("fr-FR")}</td>
+            <td style="font-family:monospace;font-size:0.78rem">${x.ip_address||"-"}</td>
+        </tr>
+    `).join("") || "<tr><td colspan='5'>Aucune connexion</td></tr>";
+}
 async function loadPointageCeo(){
     const rows = await sf("cashier_attendance", "GET", null, "?order=check_in_time.desc&limit=100");
     if(!Array.isArray(rows)){
@@ -1193,6 +1219,7 @@ function showSection(el,e){
     if(id==="manage-branches")loadBranchesManagement();
     if(id==="employees")loadEmployeeDirectory();
     if(id==="pointage-ceo")loadPointageCeo();
+    if(id==="login-history")loadLoginHistory();
     if(id==="users"){loadUsers();loadBranchOptionsForNewUser();}
 }
 
