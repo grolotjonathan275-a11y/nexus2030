@@ -3141,11 +3141,17 @@ async function markArrival(){
     const distance = nexusHaversine(coords.latitude, coords.longitude, Number(branch.latitude), Number(branch.longitude));
     if(distance > 50){
         statusEl.textContent = `Pointage refuse: vous etes a ${Math.round(distance)}m de la succursale (max 50m autorise).`;
+        let rejectIp = null;
+        try {
+            const ipRes = await Promise.race([fetch("https://api.ipify.org?format=json"), new Promise((_,r)=>setTimeout(()=>r(new Error("timeout")),3000))]);
+            const ipData = await ipRes.json();
+            rejectIp = ipData.ip;
+        } catch(e){}
         await supaFetch("cashier_attendance", "POST", {
             cashier_id: CASHIER_ID, cashier_name: CASHIER_NAME, branch: CASHIER_BRANCH,
             latitude: coords.latitude, longitude: coords.longitude, distance_meters: Math.round(distance),
             within_geofence: false, branch_opening_time: branch.opening_time,
-            minutes_late: 0, is_late: false, deduction_amount: 0
+            minutes_late: 0, is_late: false, deduction_amount: 0, ip_address: rejectIp
         });
         btn.disabled = false;
         return;
@@ -3167,12 +3173,18 @@ async function markArrival(){
     const isLate = now > openingDate;
     const minutesLate = isLate ? Math.round((now - openingDate) / 60000) : 0;
     const deduction = isLate ? 150 : 0;
+    let clientIp = null;
+    try {
+        const ipRes = await Promise.race([fetch("https://api.ipify.org?format=json"), new Promise((_,r)=>setTimeout(()=>r(new Error("timeout")),3000))]);
+        const ipData = await ipRes.json();
+        clientIp = ipData.ip;
+    } catch(e){}
 
     await supaFetch("cashier_attendance", "POST", {
         cashier_id: CASHIER_ID, cashier_name: CASHIER_NAME, branch: CASHIER_BRANCH,
         latitude: coords.latitude, longitude: coords.longitude, distance_meters: Math.round(distance),
         within_geofence: true, selfie_photo: selfieBase64, branch_opening_time: branch.opening_time,
-        minutes_late: minutesLate, is_late: isLate, deduction_amount: deduction
+        minutes_late: minutesLate, is_late: isLate, deduction_amount: deduction, ip_address: clientIp
     });
 
     statusEl.textContent = isLate
