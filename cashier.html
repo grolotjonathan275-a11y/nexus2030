@@ -2390,6 +2390,7 @@ async function executeDepot() {
             `?cashier_id=eq.${CASHIER_ID}`
         );
     }
+    await logCaisseLedger(currency, amount, 0, null, "depot_compte_epargne", "transactions", null);
 
     const p = new URLSearchParams({
         client_name: acc.client_name,
@@ -2454,6 +2455,7 @@ async function executeRetrait() {
             `?cashier_id=eq.${CASHIER_ID}`
         );
     }
+    await logCaisseLedger(currency, 0, netAmount, null, "retrait_compte_epargne", "transactions", null);
     const p = new URLSearchParams({
         client_name: acc.client_name,
         account_no: acc.account_no,
