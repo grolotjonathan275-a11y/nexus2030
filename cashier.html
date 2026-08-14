@@ -1001,6 +1001,18 @@
                         </div>
                     </div>
                     <div class="card" style="margin-top:1.5rem">
+                        <div class="card-header"><h3>➖ Decaissement</h3></div>
+                        <div style="padding:1.5rem">
+                            <div class="form-grid-2">
+                                <div class="form-group"><label>Montant *</label><input type="number" id="decaisseMontant" placeholder="0.00" min="0"></div>
+                                <div class="form-group"><label>Devise *</label><select id="decaisseDevise"><option value="DOP">🇩🇴 Pesos (DOP)</option></select></div>
+                            </div>
+                            <div class="form-group"><label>Raison *</label><input type="text" id="decaisseRaison" placeholder="Ex: Depot banque, Remis superviseur, Depense..."></div>
+                            <button class="btn-cancel" style="background:#DC2626;color:#fff" onclick="ajouterDecaissement()">➖ Ajouter Decaissement</button>
+                            <div id="decaisseMsg" style="display:none" class="result-box"></div>
+                        </div>
+                    </div>
+                    <div class="card" style="margin-top:1.5rem">
                         <div class="card-header"><h3>Ledger de Caisse (Historique de la Session)</h3><span class="badge" id="ledgerCount">0</span></div>
                         <div class="table-wrap"><table class="data-table"><thead><tr><th>Heure</th><th>Type</th><th>Devise</th><th>Entree</th><th>Sortie</th><th>Taux</th><th>Motif</th></tr></thead><tbody id="ledgerList"><tr><td colspan="7">Chargement...</td></tr></tbody></table></div>
                     </div>
@@ -1266,6 +1278,10 @@ async function loadExchangeRatesCashier(){
     const reapproSel = document.getElementById("reapproDevise");
     if(reapproSel){
         reapproSel.innerHTML = '<option value="DOP">🇩🇴 Pesos (DOP)</option>' + data.map(r => `<option value="${r.currency_code}">${r.flag_emoji} ${r.currency_name} (${r.currency_code})</option>`).join("");
+    }
+    const decaisseSel = document.getElementById("decaisseDevise");
+    if(decaisseSel){
+        decaisseSel.innerHTML = '<option value="DOP">🇩🇴 Pesos (DOP)</option>' + data.map(r => `<option value="${r.currency_code}">${r.flag_emoji} ${r.currency_name} (${r.currency_code})</option>`).join("");
     }
     calcChange();
 }
@@ -3259,6 +3275,51 @@ async function ajouterReapprovisionnement(){
     msg.innerHTML = "✅ Reapprovisionnement ajoute!";
     document.getElementById("reapproMontant").value = "";
     document.getElementById("reapproRef").value = "";
+    await refreshCaisseStats();
+}
+
+async function ajouterDecaissement(){
+    if(!currentCaisseSession){ alert("Aucune session active."); return; }
+    const montant = Number(document.getElementById("decaisseMontant").value);
+    const devise = document.getElementById("decaisseDevise") ? document.getElementById("decaisseDevise").value : currentCaisseSession.currency_code;
+    const raison = document.getElementById("decaisseRaison").value.trim();
+    const msg = document.getElementById("decaisseMsg");
+    if(!montant || montant <= 0){
+        msg.style.display = "block"; msg.className = "result-box error";
+        msg.innerHTML = "Entrez un montant valide.";
+        return;
+    }
+    if(!raison){
+        msg.style.display = "block"; msg.className = "result-box error";
+        msg.innerHTML = "La raison du decaissement est obligatoire.";
+        return;
+    }
+
+    const ledgerRows = await supaFetch("caisse_ledger", "GET", null, `?session_id=eq.${currentCaisseSession.id}&devise=eq.${devise}&order=created_at.asc`);
+    const rows = Array.isArray(ledgerRows) ? ledgerRows : [];
+    const soldeActuel = rows.reduce((s,r) => s + Number(r.entree||0) - Number(r.sortie||0), 0);
+    if(montant > soldeActuel){
+        msg.style.display = "block"; msg.className = "result-box error";
+        msg.innerHTML = `Solde insuffisant en ${devise}. Disponible: ${soldeActuel.toLocaleString("fr-FR")} ${devise}.`;
+        return;
+    }
+
+    const motifText = devise === currentCaisseSession.currency_code ? `Decaissement: ${raison}` : `Decaissement (${devise}): ${raison}`;
+    await supaFetch("caisse_ledger", "POST", {
+        session_id: currentCaisseSession.id, caissier_id: CASHIER_ID, caissier_name: CASHIER_NAME, branch: CASHIER_BRANCH,
+        type_operation: "decaissement", devise: devise, entree: 0, sortie: montant,
+        motif: motifText, status: "completed"
+    });
+    if(devise !== "DOP"){
+        const { data: existingWallet } = await supabaseClient.from("currency_wallets").select("*").eq("cashier_id", CASHIER_ID).eq("currency_code", devise).maybeSingle();
+        if(existingWallet){
+            await supabaseClient.from("currency_wallets").update({ balance: Number(existingWallet.balance) - montant, updated_at: new Date().toISOString() }).eq("id", existingWallet.id);
+        }
+    }
+    msg.style.display = "block"; msg.className = "result-box success";
+    msg.innerHTML = "✅ Decaissement enregistre!";
+    document.getElementById("decaisseMontant").value = "";
+    document.getElementById("decaisseRaison").value = "";
     await refreshCaisseStats();
 }
 
