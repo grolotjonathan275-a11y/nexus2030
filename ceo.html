@@ -518,6 +518,11 @@ Equipe</h3><span class="badge" id="usersCount">0</span></div>
 <div class="card-header"><h3>Historique des Distributions</h3><span class="badge" id="allocCount">0</span></div>
 <div class="table-wrap"><table class="data-table"><thead><tr><th>Date</th><th>Beneficiaire</th><th>Devise</th><th>Montant</th><th>Distribue par</th><th>Notes</th></tr></thead><tbody id="allocHistoryList"><tr><td colspan="6">Chargement...</td></tr></tbody></table></div>
 </div>
+<div class="card" style="margin-top:1.5rem">
+<div class="card-header"><h3>&#128188; Solde Distribue Restant</h3></div>
+<p style="padding:0 1.25rem;margin:0.5rem 0;color:#64748B;font-size:0.85rem">Distribue - Ventes effectuees = Solde restant (les achats effectues sur place par le caissier ne sont pas deduits ici)</p>
+<div class="table-wrap"><table class="data-table"><thead><tr><th>Caissier</th><th>Devise</th><th>Distribue</th><th>Vendu</th><th>Solde Restant</th></tr></thead><tbody id="distribBalanceList"><tr><td colspan="5">Chargement...</td></tr></tbody></table></div>
+</div>
 </section>
 
 <!-- DISTRIBUTION BANCAIRE -->
@@ -1776,6 +1781,35 @@ async function loadAllocationHistoryCeo(){
     document.getElementById("allocCount").textContent = data.length;
     tbody.innerHTML = data.map(a => `
         <tr><td>${new Date(a.created_at).toLocaleString("fr-FR")}</td><td>${a.staff_name}</td><td>${a.currency_code}</td><td>${Number(a.amount).toLocaleString("fr-FR",{minimumFractionDigits:2})}</td><td>${a.allocated_by_name || "-"}</td><td>${a.notes || "-"}</td></tr>`).join("");
+    loadDistributionBalance();
+}
+
+async function loadDistributionBalance(){
+    try{
+        const { data: allocations } = await supabaseClient.from("currency_allocations").select("staff_id,staff_name,currency_code,amount");
+        const { data: ventes } = await supabaseClient.from("exchange_transactions").select("cashier_id,cashier_name,currency_code,foreign_amount").eq("operation_type","vente");
+        const map = {};
+        (allocations||[]).forEach(a => {
+            const key = a.staff_id + "|" + a.currency_code;
+            if(!map[key]) map[key] = { staffName: a.staff_name, currency: a.currency_code, distribue: 0, vendu: 0 };
+            map[key].distribue += Number(a.amount);
+        });
+        (ventes||[]).forEach(v => {
+            const key = v.cashier_id + "|" + v.currency_code;
+            if(!map[key]) map[key] = { staffName: v.cashier_name || "?", currency: v.currency_code, distribue: 0, vendu: 0 };
+            map[key].vendu += Number(v.foreign_amount);
+        });
+        const rows = Object.values(map).filter(r => r.distribue > 0 || r.vendu > 0);
+        rows.sort((a,b) => a.staffName.localeCompare(b.staffName) || a.currency.localeCompare(b.currency));
+        const tbody = document.getElementById("distribBalanceList");
+        if(!tbody) return;
+        if(!rows.length){ tbody.innerHTML = "<tr><td colspan='5'>Aucune donnee.</td></tr>"; return; }
+        tbody.innerHTML = rows.map(r => {
+            const solde = r.distribue - r.vendu;
+            const soldeColor = solde >= 0 ? "#16A34A" : "#DC2626";
+            return `<tr><td>${r.staffName}</td><td>${r.currency}</td><td>${fmtA(r.distribue)}</td><td>${fmtA(r.vendu)}</td><td style="color:${soldeColor};font-weight:700">${fmtA(solde)}</td></tr>`;
+        }).join("");
+    } catch(e){}
 }
 
 // ===== PARAMETRES MONCASH / NATCASH =====
