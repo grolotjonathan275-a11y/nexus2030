@@ -71,6 +71,7 @@ td{padding:0.75rem;border-top:1px solid #F1F5F9;white-space:nowrap}
 <option value="receive">Reception Transferts</option>
 <option value="disashop">Disashop (Recharges/Services)</option>
 <option value="distribution">Distribution Devises (CEO)</option>
+<option value="caisse_mouvements">Mouvements de Caisse (Debut/Reappro/Decaissement)</option>
 </select>
 </div>
 <div class="form-group"><label>Date</label><input type="date" id="detDate"></div>
@@ -317,6 +318,22 @@ const SERVICES = {
             {h:"Notes", v:t=>t.notes || "-"}
         ],
         sumField: t => Number(t.amount)
+    },
+    caisse_mouvements: {
+        label: "Mouvements de Caisse (Debut/Reappro/Decaissement)",
+        table: "caisse_ledger",
+        extraFilter: q => q.in("type_operation",["debut_caisse","reapprovisionnement","decaissement"]),
+        staffCol: "caissier_id",
+        cols: [
+            {h:"Heure", v:t=>fmtDT(t.created_at)},
+            {h:"Caissier", v:t=>t.caissier_name},
+            {h:"Type", v:t=>t.type_operation},
+            {h:"Devise", v:t=>t.devise},
+            {h:"Entree", v:t=>t.entree>0?fmtA(t.entree):"-"},
+            {h:"Sortie", v:t=>t.sortie>0?fmtA(t.sortie):"-"},
+            {h:"Motif", v:t=>t.motif || "-"}
+        ],
+        sumField: t => Number(t.entree||0) - Number(t.sortie||0)
     }
 };
 
