@@ -258,6 +258,34 @@ const SERVICES = {
         ],
         sumField: t => Number(t.amount_dop_net)
     },
+    validationsmm: {
+        label: "Validations MonCash / NatCash",
+        table: "mobile_money_transactions",
+        extraFilter: q => q,
+        staffCol: "validated_by",
+        cols: [
+            {h:"Heure", v:t=>fmtDT(t.created_at)},
+            {h:"Service", v:t=>t.service_type},
+            {h:"Client", v:t=>t.sender_full_name},
+            {h:"Total DOP", v:t=>fmtA(t.total_charged_dop)},
+            {h:"Statut", v:t=>t.status}
+        ],
+        sumField: t => Number(t.total_charged_dop)
+    },
+    validationsrt: {
+        label: "Validations Reception Transferts",
+        table: "receive_transfer_transactions",
+        extraFilter: q => q,
+        staffCol: "validated_by",
+        cols: [
+            {h:"Heure", v:t=>fmtDT(t.created_at)},
+            {h:"Service", v:t=>t.service_type},
+            {h:"Client", v:t=>t.client_name},
+            {h:"Net DOP", v:t=>fmtA(t.amount_dop_net)},
+            {h:"Statut", v:t=>t.status}
+        ],
+        sumField: t => Number(t.amount_dop_net)
+    },
     disashop: {
         label: "Disashop (Recharges/Services)",
         table: "disashop_transactions",
