@@ -446,7 +446,6 @@ async function loadGeneralReport(){
 
     for(const svcKey of Object.keys(SERVICES)){
         const svc = SERVICES[svcKey];
-        const staffFilter = isPrivileged() ? document.getElementById("detStaff").value : null;
     const { data, error } = await fetchServiceData(svcKey, dateStr, staffFilter);
         const rows = data || [];
         lastGeneralData[svcKey] = rows;
