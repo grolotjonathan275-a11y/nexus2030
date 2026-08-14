@@ -3297,8 +3297,17 @@ async function markArrival(){
         btn.disabled = false;
         return;
     }
-    statusEl.textContent = "Recherche de votre succursale...";
 
+    statusEl.textContent = "Ouverture de la camera...";
+    const selfieFile = await nexusPointageSelfie();
+    if(!selfieFile){
+        statusEl.textContent = "Pointage annule: photo requise.";
+        btn.disabled = false;
+        return;
+    }
+    const selfieBase64 = await nexusFileToBase64(selfieFile);
+
+    statusEl.textContent = "Recherche de votre succursale...";
     const branchData = await supaFetch("branches", "GET", null, `?name=eq.${encodeURIComponent(CASHIER_BRANCH)}`);
     if(!branchData || branchData.length === 0 || branchData[0].latitude == null || branchData[0].longitude == null){
         statusEl.textContent = "Erreur: GPS de la succursale non configure. Contactez l'administrateur.";
@@ -3336,15 +3345,7 @@ async function markArrival(){
         return;
     }
 
-    statusEl.textContent = "Prenez une photo de votre visage...";
-    const selfieFile = await nexusPointageSelfie();
-    if(!selfieFile){
-        statusEl.textContent = "Pointage annule: photo requise.";
-        btn.disabled = false;
-        return;
-    }
-    const selfieBase64 = await nexusFileToBase64(selfieFile);
-
+    statusEl.textContent = "Enregistrement en cours...";
     const now = new Date();
     const openingParts = (branch.opening_time || "08:00:00").split(":");
     const openingDate = new Date(now);
@@ -3366,12 +3367,23 @@ async function markArrival(){
         minutes_late: minutesLate, is_late: isLate, deduction_amount: deduction, ip_address: clientIp
     });
 
-    statusEl.textContent = isLate
-        ? `Arrivee enregistree. En retard de ${minutesLate} min - deduction 150 DOP.`
-        : "Arrivee enregistree a l'heure!";
-    btn.disabled = false;
+    if(isLate){
+        statusEl.innerHTML = `<span style="color:#DC2626;font-weight:700">⏰ Arrivee enregistree. En retard de ${minutesLate} min - deduction 150 DOP.</span>`;
+    } else {
+        statusEl.innerHTML = `<span style="color:#16A34A;font-weight:700">🎉 Felicitations! Vous etes arrive(e) a l'heure aujourd'hui.</span>`;
+    }
+    btn.textContent = "✅ Pointage effectue";
+    btn.disabled = true;
     loadPointageHistory();
 }
+function nexusGetCycleStart(){
+    const now = new Date();
+    const cycleStart = new Date(now);
+    cycleStart.setHours(6,0,0,0);
+    if(now < cycleStart){ cycleStart.setDate(cycleStart.getDate() - 1); }
+    return cycleStart;
+}
+
 async function loadPointageHistory(){
     const rows = await supaFetch("cashier_attendance", "GET", null, `?cashier_id=eq.${CASHIER_ID}&order=check_in_time.desc&limit=30`);
     if(!Array.isArray(rows)){ return; }
@@ -3393,6 +3405,23 @@ async function loadPointageHistory(){
             <td>${r.deduction_amount > 0 ? r.deduction_amount + " DOP" : "-"}</td>
         </tr>
     `).join("") || "<tr><td colspan='6'>Aucun pointage</td></tr>";
+
+    const cycleStart = nexusGetCycleStart();
+    const todaysValidPointage = rows.find(r => r.within_geofence && new Date(r.check_in_time) >= cycleStart);
+    const statusEl = document.getElementById("pointageStatus");
+    const btn = document.getElementById("pointageBtn");
+    if(todaysValidPointage){
+        const heure = new Date(todaysValidPointage.check_in_time).toLocaleTimeString("fr-FR");
+        statusEl.innerHTML = todaysValidPointage.is_late
+            ? `<span style="color:#DC2626;font-weight:700">⏰ Deja pointe aujourd'hui a ${heure} - En retard de ${todaysValidPointage.minutes_late} min.</span>`
+            : `<span style="color:#16A34A;font-weight:700">🎉 Felicitations! Deja pointe a l'heure aujourd'hui a ${heure}.</span>`;
+        btn.textContent = "✅ Pointage effectue";
+        btn.disabled = true;
+    } else {
+        statusEl.textContent = "Verification GPS et selfie requise pour marquer votre arrivee.";
+        btn.textContent = "📍 Marquer Arrivee";
+        btn.disabled = false;
+    }
 }
 async function createClientAccount(){
     const firstName=document.getElementById("ncFirstName").value.trim();
