@@ -993,6 +993,7 @@
                         <div style="padding:1.5rem">
                             <div class="form-grid-2">
                                 <div class="form-group"><label>Montant *</label><input type="number" id="reapproMontant" placeholder="0.00" min="0"></div>
+                                <div class="form-group"><label>Devise *</label><select id="reapproDevise"><option value="DOP">🇩🇴 Pesos (DOP)</option></select></div>
                                 <div class="form-group"><label>Reference (optionnel)</label><input type="text" id="reapproRef" placeholder="Ex: Remis par CEO"></div>
                             </div>
                             <button class="btn-confirm" onclick="ajouterReapprovisionnement()">➕ Ajouter Reapprovisionnement</button>
@@ -1262,6 +1263,10 @@ async function loadExchangeRatesCashier(){
     cashierRates = data;
     const sel = document.getElementById("chgCurrency");
     sel.innerHTML = data.map(r => `<option value="${r.currency_code}">${r.flag_emoji} ${r.currency_name} (${r.currency_code})</option>`).join("");
+    const reapproSel = document.getElementById("reapproDevise");
+    if(reapproSel){
+        reapproSel.innerHTML = '<option value="DOP">🇩🇴 Pesos (DOP)</option>' + data.map(r => `<option value="${r.currency_code}">${r.flag_emoji} ${r.currency_name} (${r.currency_code})</option>`).join("");
+    }
     calcChange();
 }
 
@@ -3218,6 +3223,7 @@ async function ouvrirCaisse(){
 async function ajouterReapprovisionnement(){
     if(!currentCaisseSession){ alert("Aucune session active."); return; }
     const montant = Number(document.getElementById("reapproMontant").value);
+    const devise = document.getElementById("reapproDevise") ? document.getElementById("reapproDevise").value : currentCaisseSession.currency_code;
     const ref = document.getElementById("reapproRef").value.trim();
     const msg = document.getElementById("reapproMsg");
     if(!montant || montant <= 0){
@@ -3225,10 +3231,11 @@ async function ajouterReapprovisionnement(){
         msg.innerHTML = "Entrez un montant valide.";
         return;
     }
+    const motifText = devise === currentCaisseSession.currency_code ? "Reapprovisionnement" : `Reapprovisionnement (${devise})`;
     await supaFetch("caisse_ledger", "POST", {
         session_id: currentCaisseSession.id, caissier_id: CASHIER_ID, caissier_name: CASHIER_NAME, branch: CASHIER_BRANCH,
-        type_operation: "reapprovisionnement", devise: currentCaisseSession.currency_code, entree: montant, sortie: 0,
-        motif: "Reapprovisionnement", reference: ref || null, status: "completed"
+        type_operation: "reapprovisionnement", devise: devise, entree: montant, sortie: 0,
+        motif: motifText, reference: ref || null, status: "completed"
     });
     msg.style.display = "block"; msg.className = "result-box success";
     msg.innerHTML = "✅ Reapprovisionnement ajoute!";
