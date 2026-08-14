@@ -45,6 +45,7 @@
             <a href="#history" class="nav-item" onclick="showSection(this,event)"><span>📋</span>Historique</a>
             <a href="#new-client" class="nav-item" onclick="showSection(this,event)"><span>➕</span>Nouveau Client</a>
             <a href="#pointage" class="nav-item" onclick="showSection(this,event)"><span>📍</span>Pointage</a>
+            <a href="#caisse" class="nav-item" onclick="showSection(this,event)"><span>💵</span>Ma Caisse</a>
             <div class="nav-section">CAISSE</div>
             <a href="#wallet" class="nav-item" onclick="showSection(this,event)"><span>👛</span>Mon Wallet</a>
             <a href="#receipts" class="nav-item" onclick="showSection(this,event)"><span>🧾</span>Recus</a>
@@ -962,6 +963,44 @@
                 </div>
             </section>
 
+            <!-- MA CAISSE -->
+            <section class="section" id="section-caisse">
+                <h2 class="section-title">💵 Ma Caisse</h2>
+                <div id="caisseNoSession" class="card">
+                    <div style="padding:1.5rem">
+                        <p style="color:#64748B;margin-bottom:1rem">Aucune session de caisse ouverte. Demarrez votre journee.</p>
+                        <div class="form-grid-2">
+                            <div class="form-group"><label>Fonds Initial *</label><input type="number" id="caisseFondsInitial" placeholder="0.00" min="0"></div>
+                            <div class="form-group"><label>Devise *</label><select id="caisseDevise"><option value="DOP">Pesos (DOP)</option><option value="HTG">Gourdes (HTG)</option><option value="USD">Dollars (USD)</option></select></div>
+                        </div>
+                        <button class="btn-confirm green" onclick="ouvrirCaisse()">💵 Demarrer ma Caisse</button>
+                        <div id="caisseOpenMsg" style="display:none" class="result-box"></div>
+                    </div>
+                </div>
+                <div id="caisseActive" style="display:none">
+                    <div class="stats-grid">
+                        <div class="stat-card"><div class="stat-icon blue">🏦</div><div class="stat-info"><div class="stat-number" id="caisseFondsInitialDisplay">0</div><div class="stat-label">Fonds Initial</div></div></div>
+                        <div class="stat-card"><div class="stat-icon green">➕</div><div class="stat-info"><div class="stat-number" id="caisseReappro">0</div><div class="stat-label">Reapprovisionnements</div></div></div>
+                        <div class="stat-card"><div class="stat-icon orange">💰</div><div class="stat-info"><div class="stat-number" id="caisseSoldeTheorique">0</div><div class="stat-label">Solde Theorique Disponible</div></div></div>
+                    </div>
+                    <div class="card" style="margin-top:1.5rem">
+                        <div class="card-header"><h3>Reapprovisionnement</h3></div>
+                        <div style="padding:1.5rem">
+                            <div class="form-grid-2">
+                                <div class="form-group"><label>Montant *</label><input type="number" id="reapproMontant" placeholder="0.00" min="0"></div>
+                                <div class="form-group"><label>Reference (optionnel)</label><input type="text" id="reapproRef" placeholder="Ex: Remis par CEO"></div>
+                            </div>
+                            <button class="btn-confirm" onclick="ajouterReapprovisionnement()">➕ Ajouter Reapprovisionnement</button>
+                            <div id="reapproMsg" style="display:none" class="result-box"></div>
+                        </div>
+                    </div>
+                    <div class="card" style="margin-top:1.5rem">
+                        <div class="card-header"><h3>Ledger de Caisse (Historique de la Session)</h3><span class="badge" id="ledgerCount">0</span></div>
+                        <div class="table-wrap"><table class="data-table"><thead><tr><th>Heure</th><th>Type</th><th>Devise</th><th>Entree</th><th>Sortie</th><th>Taux</th><th>Motif</th></tr></thead><tbody id="ledgerList"><tr><td colspan="7">Chargement...</td></tr></tbody></table></div>
+                    </div>
+                </div>
+            </section>
+
             <!-- RECUS -->
             <section class="section" id="section-receipts">
                 <div class="card">
@@ -1060,6 +1099,7 @@ function showSection(el, e) {
     if(id === "disashop"){ loadDisaServices(); loadDisaWallets(); loadDisaTransactions(); loadDisaGeneralBalance(); loadDisaRadarChart(); }
     if(id === "banking"){ loadBankWallets(); loadMyBankTransactions(); }
     if(id === "pointage"){ loadPointageHistory(); }
+    if(id === "caisse"){ loadCaisseSession(); }
 }
 
 function showSectionByName(e, id) {
@@ -3110,6 +3150,95 @@ function nexusPointageSelfie(){
         input.click();
     });
 }
+let currentCaisseSession = null;
+
+async function loadCaisseSession(){
+    const rows = await supaFetch("caisse_sessions", "GET", null, `?caissier_id=eq.${CASHIER_ID}&status=eq.open&order=opened_at.desc&limit=1`);
+    if(Array.isArray(rows) && rows.length > 0){
+        currentCaisseSession = rows[0];
+        document.getElementById("caisseNoSession").style.display = "none";
+        document.getElementById("caisseActive").style.display = "block";
+        await refreshCaisseStats();
+    } else {
+        currentCaisseSession = null;
+        document.getElementById("caisseNoSession").style.display = "block";
+        document.getElementById("caisseActive").style.display = "none";
+    }
+}
+
+async function ouvrirCaisse(){
+    const montant = Number(document.getElementById("caisseFondsInitial").value);
+    const devise = document.getElementById("caisseDevise").value;
+    const msg = document.getElementById("caisseOpenMsg");
+    if(!montant || montant <= 0){
+        msg.style.display = "block"; msg.className = "result-box error";
+        msg.innerHTML = "Entrez un montant valide.";
+        return;
+    }
+    const sessionRes = await supaFetch("caisse_sessions", "POST", {
+        caissier_id: CASHIER_ID, caissier_name: CASHIER_NAME, branch: CASHIER_BRANCH,
+        fonds_initial: montant, currency_code: devise, status: "open"
+    });
+    const sessionData = await sessionRes.json();
+    const sessionId = sessionData[0].id;
+    await supaFetch("caisse_ledger", "POST", {
+        session_id: sessionId, caissier_id: CASHIER_ID, caissier_name: CASHIER_NAME, branch: CASHIER_BRANCH,
+        type_operation: "debut_caisse", devise: devise, entree: montant, sortie: 0,
+        motif: "Fonds initial de la journee", status: "completed"
+    });
+    msg.style.display = "block"; msg.className = "result-box success";
+    msg.innerHTML = "✅ Caisse demarree avec succes!";
+    await loadCaisseSession();
+}
+
+async function ajouterReapprovisionnement(){
+    if(!currentCaisseSession){ alert("Aucune session active."); return; }
+    const montant = Number(document.getElementById("reapproMontant").value);
+    const ref = document.getElementById("reapproRef").value.trim();
+    const msg = document.getElementById("reapproMsg");
+    if(!montant || montant <= 0){
+        msg.style.display = "block"; msg.className = "result-box error";
+        msg.innerHTML = "Entrez un montant valide.";
+        return;
+    }
+    await supaFetch("caisse_ledger", "POST", {
+        session_id: currentCaisseSession.id, caissier_id: CASHIER_ID, caissier_name: CASHIER_NAME, branch: CASHIER_BRANCH,
+        type_operation: "reapprovisionnement", devise: currentCaisseSession.currency_code, entree: montant, sortie: 0,
+        motif: "Reapprovisionnement", reference: ref || null, status: "completed"
+    });
+    msg.style.display = "block"; msg.className = "result-box success";
+    msg.innerHTML = "✅ Reapprovisionnement ajoute!";
+    document.getElementById("reapproMontant").value = "";
+    document.getElementById("reapproRef").value = "";
+    await refreshCaisseStats();
+}
+
+async function refreshCaisseStats(){
+    if(!currentCaisseSession) return;
+    const ledgerRows = await supaFetch("caisse_ledger", "GET", null, `?session_id=eq.${currentCaisseSession.id}&order=created_at.asc`);
+    const rows = Array.isArray(ledgerRows) ? ledgerRows : [];
+    document.getElementById("ledgerCount").textContent = rows.length;
+    const fondsInitial = Number(currentCaisseSession.fonds_initial);
+    const reappro = rows.filter(r => r.type_operation === "reapprovisionnement").reduce((s,r) => s + Number(r.entree||0), 0);
+    const totalEntrees = rows.filter(r => r.type_operation !== "debut_caisse" && r.type_operation !== "reapprovisionnement").reduce((s,r) => s + Number(r.entree||0), 0);
+    const totalSorties = rows.reduce((s,r) => s + Number(r.sortie||0), 0);
+    const soldeTheorique = fondsInitial + reappro + totalEntrees - totalSorties;
+    document.getElementById("caisseFondsInitialDisplay").textContent = fondsInitial.toLocaleString("fr-FR");
+    document.getElementById("caisseReappro").textContent = reappro.toLocaleString("fr-FR");
+    document.getElementById("caisseSoldeTheorique").textContent = soldeTheorique.toLocaleString("fr-FR") + " " + currentCaisseSession.currency_code;
+    document.getElementById("ledgerList").innerHTML = rows.map(r => `
+        <tr>
+            <td>${new Date(r.created_at).toLocaleTimeString("fr-FR")}</td>
+            <td>${r.type_operation}</td>
+            <td>${r.devise}</td>
+            <td style="color:#16A34A">${r.entree > 0 ? "+"+Number(r.entree).toLocaleString("fr-FR") : "-"}</td>
+            <td style="color:#DC2626">${r.sortie > 0 ? "-"+Number(r.sortie).toLocaleString("fr-FR") : "-"}</td>
+            <td>${r.taux || "-"}</td>
+            <td>${r.motif || "-"}</td>
+        </tr>
+    `).join("") || "<tr><td colspan='7'>Aucun mouvement</td></tr>";
+}
+
 async function markArrival(){
     const statusEl = document.getElementById("pointageStatus");
     const btn = document.getElementById("pointageBtn");
