@@ -1977,6 +1977,14 @@ async function gcSubmitNewCaisse(){
         type_operation: "debut_caisse", devise: devise, entree: montant, sortie: 0,
         motif: "Fonds initial ouvert par CEO", status: "completed"
     });
+    if(devise !== "DOP"){
+        const { data: existingWallet } = await supabaseClient.from("currency_wallets").select("*").eq("cashier_id", cashierId).eq("currency_code", devise).maybeSingle();
+        if(existingWallet){
+            await supabaseClient.from("currency_wallets").update({ balance: Number(existingWallet.balance) + montant, updated_at: new Date().toISOString() }).eq("id", existingWallet.id);
+        } else {
+            await supabaseClient.from("currency_wallets").insert({ cashier_id: cashierId, currency_code: devise, balance: montant });
+        }
+    }
 
     gcCloseNewCaisseModal();
     await loadGestionCaisses();
@@ -2059,6 +2067,14 @@ async function gcAddReappro(){
         type_operation: "reapprovisionnement", devise: devise, entree: montant, sortie: 0,
         motif: motifText, reference: ref || null, status: "completed"
     });
+    if(devise !== "DOP"){
+        const { data: existingWallet } = await supabaseClient.from("currency_wallets").select("*").eq("cashier_id", gcCurrentCashierId).eq("currency_code", devise).maybeSingle();
+        if(existingWallet){
+            await supabaseClient.from("currency_wallets").update({ balance: Number(existingWallet.balance) + montant, updated_at: new Date().toISOString() }).eq("id", existingWallet.id);
+        } else {
+            await supabaseClient.from("currency_wallets").insert({ cashier_id: gcCurrentCashierId, currency_code: devise, balance: montant });
+        }
+    }
     msg.style.display="block"; msg.className="result-box success"; msg.innerHTML="✅ Reapprovisionnement ajoute!";
     document.getElementById("gcAddAmount").value = "";
     document.getElementById("gcAddRef").value = "";
