@@ -3239,6 +3239,19 @@ async function refreshCaisseStats(){
     `).join("") || "<tr><td colspan='7'>Aucun mouvement</td></tr>";
 }
 
+async function logCaisseLedger(devise, entree, sortie, taux, motif, sourceTable, sourceId){
+    try {
+        const rows = await supaFetch("caisse_sessions", "GET", null, `?caissier_id=eq.${CASHIER_ID}&status=eq.open&order=opened_at.desc&limit=1`);
+        if(!Array.isArray(rows) || rows.length === 0) return;
+        const session = rows[0];
+        await supaFetch("caisse_ledger", "POST", {
+            session_id: session.id, caissier_id: CASHIER_ID, caissier_name: CASHIER_NAME, branch: CASHIER_BRANCH,
+            type_operation: motif, devise: devise, entree: entree || 0, sortie: sortie || 0,
+            taux: taux || null, motif: motif, source_table: sourceTable || null, source_id: sourceId || null, status: "completed"
+        });
+    } catch(e){}
+}
+
 async function markArrival(){
     const statusEl = document.getElementById("pointageStatus");
     const btn = document.getElementById("pointageBtn");
