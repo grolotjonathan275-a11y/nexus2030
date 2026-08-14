@@ -972,6 +972,7 @@
                         <div class="form-grid-2">
                             <div class="form-group"><label>Fonds Initial *</label><input type="number" id="caisseFondsInitial" placeholder="0.00" min="0"></div>
                             <div class="form-group"><label>Devise *</label><select id="caisseDevise"><option value="DOP">Pesos (DOP)</option><option value="HTG">Gourdes (HTG)</option><option value="USD">Dollars (USD)</option></select></div>
+                        <div class="form-group"><label>Confirmez le Fonds Initial *</label><input type="number" id="caisseFondsInitialConfirm" placeholder="Retapez le meme montant" min="0"></div>
                         </div>
                         <button class="btn-confirm green" onclick="ouvrirCaisse()">💵 Demarrer ma Caisse</button>
                         <div id="caisseOpenMsg" style="display:none" class="result-box"></div>
@@ -3180,11 +3181,22 @@ async function loadCaisseSession(){
 
 async function ouvrirCaisse(){
     const montant = Number(document.getElementById("caisseFondsInitial").value);
+    const montantConfirm = Number(document.getElementById("caisseFondsInitialConfirm").value);
     const devise = document.getElementById("caisseDevise").value;
     const msg = document.getElementById("caisseOpenMsg");
     if(!montant || montant <= 0){
         msg.style.display = "block"; msg.className = "result-box error";
         msg.innerHTML = "Entrez un montant valide.";
+        return;
+    }
+    if(!montantConfirm || montantConfirm <= 0){
+        msg.style.display = "block"; msg.className = "result-box error";
+        msg.innerHTML = "Veuillez confirmer le montant du Fonds Initial.";
+        return;
+    }
+    if(montant !== montantConfirm){
+        msg.style.display = "block"; msg.className = "result-box error";
+        msg.innerHTML = "Les deux montants ne correspondent pas. Verifiez et reessayez.";
         return;
     }
     const sessionRes = await supaFetch("caisse_sessions", "POST", {
