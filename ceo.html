@@ -2012,7 +2012,7 @@ async function gcLoadLedger(){
     const tbody = document.getElementById("gcLedgerList");
     if(!rows || !rows.length){ tbody.innerHTML = "<tr><td colspan='7'>Aucun mouvement.</td></tr>"; return; }
     tbody.innerHTML = rows.map(r => {
-        const isManual = r.type_operation === "reapprovisionnement" || r.type_operation === "debut_caisse";
+        const isManual = r.type_operation === "reapprovisionnement" || r.type_operation === "debut_caisse" || r.type_operation === "decaissement";
         const actions = isManual
             ? `<button data-entry="${r.id}" data-entree="${r.entree}" data-sortie="${r.sortie}" data-devise="${r.devise}" onclick="gcOpenEditModal(this.dataset.entry,this.dataset.entree,this.dataset.sortie,this.dataset.devise)" style="border:none;background:none;cursor:pointer;font-size:1rem" title="Modifier">✏️</button> <button data-entry="${r.id}" data-devise="${r.devise}" data-entree="${r.entree}" data-sortie="${r.sortie}" onclick="gcDeleteLedgerEntry(this.dataset.entry,this.dataset.devise,this.dataset.entree,this.dataset.sortie)" style="border:none;background:none;cursor:pointer;font-size:1rem" title="Supprimer">🗑️</button>`
             : "-";
