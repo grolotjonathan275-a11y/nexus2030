@@ -3215,6 +3215,14 @@ async function ouvrirCaisse(){
         type_operation: "debut_caisse", devise: devise, entree: montant, sortie: 0,
         motif: "Fonds initial de la journee", status: "completed"
     });
+    if(devise !== "DOP"){
+        const { data: existingWallet } = await supabaseClient.from("currency_wallets").select("*").eq("cashier_id", CASHIER_ID).eq("currency_code", devise).maybeSingle();
+        if(existingWallet){
+            await supabaseClient.from("currency_wallets").update({ balance: Number(existingWallet.balance) + montant, updated_at: new Date().toISOString() }).eq("id", existingWallet.id);
+        } else {
+            await supabaseClient.from("currency_wallets").insert({ cashier_id: CASHIER_ID, currency_code: devise, balance: montant });
+        }
+    }
     msg.style.display = "block"; msg.className = "result-box success";
     msg.innerHTML = "✅ Caisse demarree avec succes!";
     await loadCaisseSession();
@@ -3237,6 +3245,14 @@ async function ajouterReapprovisionnement(){
         type_operation: "reapprovisionnement", devise: devise, entree: montant, sortie: 0,
         motif: motifText, reference: ref || null, status: "completed"
     });
+    if(devise !== "DOP"){
+        const { data: existingWallet } = await supabaseClient.from("currency_wallets").select("*").eq("cashier_id", CASHIER_ID).eq("currency_code", devise).maybeSingle();
+        if(existingWallet){
+            await supabaseClient.from("currency_wallets").update({ balance: Number(existingWallet.balance) + montant, updated_at: new Date().toISOString() }).eq("id", existingWallet.id);
+        } else {
+            await supabaseClient.from("currency_wallets").insert({ cashier_id: CASHIER_ID, currency_code: devise, balance: montant });
+        }
+    }
     msg.style.display = "block"; msg.className = "result-box success";
     msg.innerHTML = "✅ Reapprovisionnement ajoute!";
     document.getElementById("reapproMontant").value = "";
