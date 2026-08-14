@@ -70,6 +70,7 @@ td{padding:0.75rem;border-top:1px solid #F1F5F9;white-space:nowrap}
 <option value="loans">Prestamo</option>
 <option value="receive">Reception Transferts</option>
 <option value="disashop">Disashop (Recharges/Services)</option>
+<option value="distribution">Distribution Devises (CEO)</option>
 </select>
 </div>
 <div class="form-group"><label>Date</label><input type="date" id="detDate"></div>
@@ -301,6 +302,21 @@ const SERVICES = {
             {h:"Statut", v:t=>t.status}
         ],
         sumField: t => Number(t.amount_dop)
+    },
+    distribution: {
+        label: "Distribution Devises (CEO)",
+        table: "currency_allocations",
+        extraFilter: q => q,
+        staffCol: "staff_id",
+        cols: [
+            {h:"Heure", v:t=>fmtDT(t.created_at)},
+            {h:"Beneficiaire", v:t=>t.staff_name},
+            {h:"Devise", v:t=>t.currency_code},
+            {h:"Montant", v:t=>fmtA(t.amount)},
+            {h:"Distribue par", v:t=>t.allocated_by_name || "-"},
+            {h:"Notes", v:t=>t.notes || "-"}
+        ],
+        sumField: t => Number(t.amount)
     }
 };
 
