@@ -173,6 +173,31 @@
 </div>
 </div>
 </section>
+<div id="gcNewCaisseModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center">
+<div style="background:#fff;border-radius:12px;padding:1.5rem;max-width:400px;width:90%">
+<h3 style="margin-bottom:1rem">💵 Ouvrir une Caisse</h3>
+<p id="gcNewCaisseInfo" style="color:#64748B;margin-bottom:1rem"></p>
+<input type="hidden" id="gcNewCaisseCashierId">
+<div class="form-group"><label>Fonds Initial *</label><input type="number" id="gcNewCaisseAmount" placeholder="0.00" min="0.01" style="width:100%;padding:0.75rem;border-radius:10px;border:1.5px solid #E2E8F0"></div>
+<div class="form-group"><label>Devise *</label><select id="gcNewCaisseDevise" style="width:100%;padding:0.75rem;border-radius:10px;border:1.5px solid #E2E8F0"><option value="DOP">🇩🇴 Pesos (DOP)</option><option value="HTG">🇭🇹 Gourdes (HTG)</option><option value="USD">🇺🇸 Dollars (USD)</option></select></div>
+<div style="display:flex;gap:0.75rem;margin-top:1.5rem">
+<button onclick="gcCloseNewCaisseModal()" style="flex:1;padding:0.75rem;border-radius:10px;border:1.5px solid #E2E8F0;background:#fff;cursor:pointer">Annuler</button>
+<button onclick="gcSubmitNewCaisse()" style="flex:1;padding:0.75rem;border-radius:10px;border:none;background:#16A34A;color:#fff;cursor:pointer;font-weight:700">Ouvrir</button>
+</div>
+</div>
+</div>
+<div id="gcEditModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center">
+<div style="background:#fff;border-radius:12px;padding:1.5rem;max-width:400px;width:90%">
+<h3 style="margin-bottom:1rem">✏️ Modifier le Montant</h3>
+<input type="hidden" id="gcEditEntryId">
+<input type="hidden" id="gcEditIsEntree">
+<div class="form-group"><label>Nouveau Montant *</label><input type="number" id="gcEditAmount" min="0.01" style="width:100%;padding:0.75rem;border-radius:10px;border:1.5px solid #E2E8F0"></div>
+<div style="display:flex;gap:0.75rem;margin-top:1.5rem">
+<button onclick="gcCloseEditModal()" style="flex:1;padding:0.75rem;border-radius:10px;border:1.5px solid #E2E8F0;background:#fff;cursor:pointer">Annuler</button>
+<button onclick="gcSubmitEdit()" style="flex:1;padding:0.75rem;border-radius:10px;border:none;background:#16A34A;color:#fff;cursor:pointer;font-weight:700">Confirmer</button>
+</div>
+</div>
+</div>
 
 <section class="section" id="section-pointage-admin">
 <h2 class="section-title">📍 Pointage Caissiers</h2>
@@ -2610,30 +2635,75 @@ let gcCurrentCashierId = null;
 let gcCurrentSessionDevise = null;
 
 async function loadGestionCaisses(){
-    const { data: sessions, error } = await supabaseClient.from("caisse_sessions").select("*").order("opened_at",{ascending:false}).limit(100);
+    const { data: staff } = await supabaseClient.from("profiles").select("*").in("role",["caissier","agent"]).eq("status","active").order("full_name");
+    const { data: sessions } = await supabaseClient.from("caisse_sessions").select("*").eq("status","open");
     const tbody = document.getElementById("gcSessionsList");
-    if(error || !sessions || !sessions.length){ tbody.innerHTML = "<tr><td colspan='8'>Aucune session.</td></tr>"; document.getElementById("gcCount").textContent = "0"; return; }
-    document.getElementById("gcCount").textContent = sessions.length;
-    tbody.innerHTML = sessions.map(s => {
-        const statusBadge = s.status === "open" ? "<span style='color:#16A34A;font-weight:700'>Ouverte</span>" : "<span style='color:#64748B'>Fermee</span>";
-        return `<tr>
-            <td>${s.caissier_name}</td>
-            <td>${s.branch}</td>
-            <td>${s.currency_code}</td>
-            <td>${Number(s.fonds_initial).toLocaleString("fr-FR",{minimumFractionDigits:2})}</td>
-            <td id="gcSolde_${s.id}">...</td>
-            <td>${statusBadge}</td>
-            <td>${new Date(s.opened_at).toLocaleString("fr-FR")}</td>
-            <td><button data-session="${s.id}" data-cashier="${s.caissier_id}" data-name="${s.caissier_name}" data-devise="${s.currency_code}" onclick="gcOpenDetail(this.dataset.session,this.dataset.cashier,this.dataset.name,this.dataset.devise)" class="btn-ceo-action" style="padding:0.4rem 0.8rem;font-size:0.85rem">Voir</button></td>
-        </tr>`;
+    if(!staff || !staff.length){ tbody.innerHTML = "<tr><td colspan='8'>Aucun caissier.</td></tr>"; document.getElementById("gcCount").textContent = "0"; return; }
+    document.getElementById("gcCount").textContent = staff.length;
+    const sessionByStaff = {};
+    (sessions||[]).forEach(s => { sessionByStaff[s.caissier_id] = s; });
+    tbody.innerHTML = staff.map(p => {
+        const s = sessionByStaff[p.id];
+        if(s){
+            return `<tr>
+                <td>${p.full_name}</td>
+                <td>${s.branch}</td>
+                <td>${s.currency_code}</td>
+                <td>${Number(s.fonds_initial).toLocaleString("fr-FR",{minimumFractionDigits:2})}</td>
+                <td id="gcSolde_${s.id}">...</td>
+                <td><span style="color:#16A34A;font-weight:700">Ouverte</span></td>
+                <td>${new Date(s.opened_at).toLocaleString("fr-FR")}</td>
+                <td><button data-session="${s.id}" data-cashier="${p.id}" data-name="${p.full_name}" data-devise="${s.currency_code}" onclick="gcOpenDetail(this.dataset.session,this.dataset.cashier,this.dataset.name,this.dataset.devise)" class="btn-ceo-action" style="padding:0.4rem 0.8rem;font-size:0.85rem">Voir</button></td>
+            </tr>`;
+        } else {
+            return `<tr>
+                <td>${p.full_name}</td>
+                <td>${p.branch || "-"}</td>
+                <td>-</td><td>-</td><td>-</td>
+                <td><span style="color:#94A3B8">Aucune caisse</span></td>
+                <td>-</td>
+                <td><button data-cashier="${p.id}" data-name="${p.full_name}" onclick="gcOpenNewCaisseModal(this.dataset.cashier,this.dataset.name)" class="btn-ceo-action" style="padding:0.4rem 0.8rem;font-size:0.85rem;background:#16A34A">Ouvrir Caisse</button></td>
+            </tr>`;
+        }
     }).join("");
-
-    for(const s of sessions){
+    for(const s of (sessions||[])){
         const { data: rows } = await supabaseClient.from("caisse_ledger").select("*").eq("session_id", s.id).eq("devise", s.currency_code);
         const total = (rows||[]).reduce((sum,r) => sum + Number(r.entree||0) - Number(r.sortie||0), 0);
         const el = document.getElementById(`gcSolde_${s.id}`);
         if(el) el.textContent = total.toLocaleString("fr-FR",{minimumFractionDigits:2});
     }
+}
+
+function gcOpenNewCaisseModal(cashierId, cashierName){
+    document.getElementById("gcNewCaisseCashierId").value = cashierId;
+    document.getElementById("gcNewCaisseInfo").textContent = `Caissier: ${cashierName}`;
+    document.getElementById("gcNewCaisseAmount").value = "";
+    document.getElementById("gcNewCaisseModal").style.display = "flex";
+}
+
+function gcCloseNewCaisseModal(){
+    document.getElementById("gcNewCaisseModal").style.display = "none";
+}
+
+async function gcSubmitNewCaisse(){
+    const cashierId = document.getElementById("gcNewCaisseCashierId").value;
+    const montant = Number(document.getElementById("gcNewCaisseAmount").value);
+    const devise = document.getElementById("gcNewCaisseDevise").value;
+    if(!montant || montant <= 0){ alert("Entrez un montant valide."); return; }
+    const { data: profile } = await supabaseClient.from("profiles").select("*").eq("id", cashierId).maybeSingle();
+    const { data: sessionData, error: e1 } = await supabaseClient.from("caisse_sessions").insert({
+        caissier_id: cashierId, caissier_name: profile ? profile.full_name : "", branch: profile ? (profile.branch || "Non assigne") : "Non assigne",
+        fonds_initial: montant, currency_code: devise, status: "open"
+    }).select();
+    if(e1){ alert("Erreur: " + e1.message); return; }
+    const sessionId = sessionData[0].id;
+    await supabaseClient.from("caisse_ledger").insert({
+        session_id: sessionId, caissier_id: cashierId, caissier_name: profile ? profile.full_name : "", branch: profile ? (profile.branch || "Non assigne") : "Non assigne",
+        type_operation: "debut_caisse", devise: devise, entree: montant, sortie: 0,
+        motif: "Fonds initial ouvert par Super Admin", status: "completed"
+    });
+    gcCloseNewCaisseModal();
+    await loadGestionCaisses();
 }
 
 async function gcOpenDetail(sessionId, cashierId, cashierName, devise){
@@ -2642,11 +2712,9 @@ async function gcOpenDetail(sessionId, cashierId, cashierName, devise){
     gcCurrentSessionDevise = devise;
     document.getElementById("gcDetailCard").style.display = "block";
     document.getElementById("gcDetailTitle").textContent = `Detail de la Caisse - ${cashierName}`;
-
     const { data: rates } = await supabaseClient.from("exchange_rates").select("*").eq("active", true).order("display_order");
     const sel = document.getElementById("gcAddDevise");
     sel.innerHTML = `<option value="${devise}">${devise} (devise session)</option>` + (rates||[]).filter(r => r.currency_code !== devise).map(r => `<option value="${r.currency_code}">${r.flag_emoji} ${r.currency_name} (${r.currency_code})</option>`).join("");
-
     await gcLoadLedger();
 }
 
@@ -2658,7 +2726,7 @@ async function gcLoadLedger(){
     tbody.innerHTML = rows.map(r => {
         const isManual = r.type_operation === "reapprovisionnement" || r.type_operation === "debut_caisse";
         const actions = isManual
-            ? `<button data-entry="${r.id}" onclick="gcDeleteLedgerEntry(this.dataset.entry)" style="border:none;background:none;cursor:pointer;font-size:1rem" title="Supprimer">🗑️</button>`
+            ? `<button data-entry="${r.id}" data-entree="${r.entree}" data-sortie="${r.sortie}" onclick="gcOpenEditModal(this.dataset.entry,this.dataset.entree,this.dataset.sortie)" style="border:none;background:none;cursor:pointer;font-size:1rem" title="Modifier">✏️</button> <button data-entry="${r.id}" onclick="gcDeleteLedgerEntry(this.dataset.entry)" style="border:none;background:none;cursor:pointer;font-size:1rem" title="Supprimer">🗑️</button>`
             : "-";
         return `<tr>
             <td>${new Date(r.created_at).toLocaleTimeString("fr-FR")}</td>
@@ -2672,6 +2740,31 @@ async function gcLoadLedger(){
     }).join("");
 }
 
+function gcOpenEditModal(entryId, entree, sortie){
+    document.getElementById("gcEditEntryId").value = entryId;
+    const currentVal = Number(entree) > 0 ? Number(entree) : Number(sortie);
+    document.getElementById("gcEditAmount").value = currentVal;
+    document.getElementById("gcEditIsEntree").value = Number(entree) > 0 ? "1" : "0";
+    document.getElementById("gcEditModal").style.display = "flex";
+}
+
+function gcCloseEditModal(){
+    document.getElementById("gcEditModal").style.display = "none";
+}
+
+async function gcSubmitEdit(){
+    const entryId = document.getElementById("gcEditEntryId").value;
+    const newAmount = Number(document.getElementById("gcEditAmount").value);
+    const isEntree = document.getElementById("gcEditIsEntree").value === "1";
+    if(!newAmount || newAmount <= 0){ alert("Entrez un montant valide."); return; }
+    const updateData = isEntree ? { entree: newAmount, sortie: 0 } : { entree: 0, sortie: newAmount };
+    const { error } = await supabaseClient.from("caisse_ledger").update(updateData).eq("id", entryId);
+    if(error){ alert("Erreur: " + error.message); return; }
+    gcCloseEditModal();
+    await gcLoadLedger();
+    await loadGestionCaisses();
+}
+
 async function gcAddReappro(){
     if(!gcCurrentSessionId){ alert("Selectionnez une caisse."); return; }
     const montant = Number(document.getElementById("gcAddAmount").value);
@@ -2679,7 +2772,6 @@ async function gcAddReappro(){
     const ref = document.getElementById("gcAddRef").value.trim();
     const msg = document.getElementById("gcAddMsg");
     if(!montant || montant <= 0){ msg.style.display="block"; msg.className="result-box error"; msg.innerHTML="Entrez un montant valide."; return; }
-
     const motifText = devise === gcCurrentSessionDevise ? "Reapprovisionnement (Admin)" : `Reapprovisionnement Admin (${devise})`;
     await supabaseClient.from("caisse_ledger").insert({
         session_id: gcCurrentSessionId, caissier_id: gcCurrentCashierId, caissier_name: "", branch: "",
