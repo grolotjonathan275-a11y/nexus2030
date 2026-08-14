@@ -3227,13 +3227,29 @@ async function refreshCaisseStats(){
     const rows = Array.isArray(ledgerRows) ? ledgerRows : [];
     document.getElementById("ledgerCount").textContent = rows.length;
     const fondsInitial = Number(currentCaisseSession.fonds_initial);
-    const reappro = rows.filter(r => r.type_operation === "reapprovisionnement").reduce((s,r) => s + Number(r.entree||0), 0);
-    const totalEntrees = rows.filter(r => r.type_operation !== "debut_caisse" && r.type_operation !== "reapprovisionnement").reduce((s,r) => s + Number(r.entree||0), 0);
-    const totalSorties = rows.reduce((s,r) => s + Number(r.sortie||0), 0);
+    const sessionDevise = currentCaisseSession.currency_code;
+    const reappro = rows.filter(r => r.type_operation === "reapprovisionnement" && r.devise === sessionDevise).reduce((s,r) => s + Number(r.entree||0), 0);
+    const totalEntrees = rows.filter(r => r.devise === sessionDevise && r.type_operation !== "debut_caisse" && r.type_operation !== "reapprovisionnement").reduce((s,r) => s + Number(r.entree||0), 0);
+    const totalSorties = rows.filter(r => r.devise === sessionDevise).reduce((s,r) => s + Number(r.sortie||0), 0);
     const soldeTheorique = fondsInitial + reappro + totalEntrees - totalSorties;
     document.getElementById("caisseFondsInitialDisplay").textContent = fondsInitial.toLocaleString("fr-FR");
     document.getElementById("caisseReappro").textContent = reappro.toLocaleString("fr-FR");
-    document.getElementById("caisseSoldeTheorique").textContent = soldeTheorique.toLocaleString("fr-FR") + " " + currentCaisseSession.currency_code;
+    document.getElementById("caisseSoldeTheorique").textContent = soldeTheorique.toLocaleString("fr-FR") + " " + sessionDevise;
+
+    const autresDevises = {};
+    rows.forEach(r => {
+        if(r.devise !== sessionDevise){
+            if(!autresDevises[r.devise]) autresDevises[r.devise] = 0;
+            autresDevises[r.devise] += Number(r.entree||0) - Number(r.sortie||0);
+        }
+    });
+    const autresDevisesEl = document.getElementById("caisseAutresDevises");
+    if(autresDevisesEl){
+        const entries = Object.entries(autresDevises).filter(([k,v]) => v !== 0);
+        autresDevisesEl.innerHTML = entries.length
+            ? entries.map(([code,val]) => `<span style="margin-right:1rem"><b>${code}:</b> ${val.toLocaleString("fr-FR")}</span>`).join("")
+            : "";
+    }
     document.getElementById("ledgerList").innerHTML = rows.map(r => `
         <tr>
             <td>${new Date(r.created_at).toLocaleTimeString("fr-FR")}</td>
