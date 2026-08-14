@@ -191,6 +191,8 @@
 <h3 style="margin-bottom:1rem">✏️ Modifier le Montant</h3>
 <input type="hidden" id="gcEditEntryId">
 <input type="hidden" id="gcEditIsEntree">
+<input type="hidden" id="gcEditDevise">
+<input type="hidden" id="gcEditOldAmount">
 <div class="form-group"><label>Nouveau Montant *</label><input type="number" id="gcEditAmount" min="0.01" style="width:100%;padding:0.75rem;border-radius:10px;border:1.5px solid #E2E8F0"></div>
 <div style="display:flex;gap:0.75rem;margin-top:1.5rem">
 <button onclick="gcCloseEditModal()" style="flex:1;padding:0.75rem;border-radius:10px;border:1.5px solid #E2E8F0;background:#fff;cursor:pointer">Annuler</button>
@@ -2734,7 +2736,7 @@ async function gcLoadLedger(){
     tbody.innerHTML = rows.map(r => {
         const isManual = r.type_operation === "reapprovisionnement" || r.type_operation === "debut_caisse";
         const actions = isManual
-            ? `<button data-entry="${r.id}" data-entree="${r.entree}" data-sortie="${r.sortie}" onclick="gcOpenEditModal(this.dataset.entry,this.dataset.entree,this.dataset.sortie)" style="border:none;background:none;cursor:pointer;font-size:1rem" title="Modifier">✏️</button> <button data-entry="${r.id}" onclick="gcDeleteLedgerEntry(this.dataset.entry)" style="border:none;background:none;cursor:pointer;font-size:1rem" title="Supprimer">🗑️</button>`
+            ? `<button data-entry="${r.id}" data-entree="${r.entree}" data-sortie="${r.sortie}" data-devise="${r.devise}" onclick="gcOpenEditModal(this.dataset.entry,this.dataset.entree,this.dataset.sortie,this.dataset.devise)" style="border:none;background:none;cursor:pointer;font-size:1rem" title="Modifier">✏️</button> <button data-entry="${r.id}" data-devise="${r.devise}" data-entree="${r.entree}" data-sortie="${r.sortie}" onclick="gcDeleteLedgerEntry(this.dataset.entry,this.dataset.devise,this.dataset.entree,this.dataset.sortie)" style="border:none;background:none;cursor:pointer;font-size:1rem" title="Supprimer">🗑️</button>`
             : "-";
         return `<tr>
             <td>${new Date(r.created_at).toLocaleTimeString("fr-FR")}</td>
@@ -2748,11 +2750,13 @@ async function gcLoadLedger(){
     }).join("");
 }
 
-function gcOpenEditModal(entryId, entree, sortie){
+function gcOpenEditModal(entryId, entree, sortie, devise){
     document.getElementById("gcEditEntryId").value = entryId;
     const currentVal = Number(entree) > 0 ? Number(entree) : Number(sortie);
     document.getElementById("gcEditAmount").value = currentVal;
+    document.getElementById("gcEditOldAmount").value = currentVal;
     document.getElementById("gcEditIsEntree").value = Number(entree) > 0 ? "1" : "0";
+    document.getElementById("gcEditDevise").value = devise;
     document.getElementById("gcEditModal").style.display = "flex";
 }
 
@@ -2763,11 +2767,38 @@ function gcCloseEditModal(){
 async function gcSubmitEdit(){
     const entryId = document.getElementById("gcEditEntryId").value;
     const newAmount = Number(document.getElementById("gcEditAmount").value);
+    const oldAmount = Number(document.getElementById("gcEditOldAmount").value);
     const isEntree = document.getElementById("gcEditIsEntree").value === "1";
+    const devise = document.getElementById("gcEditDevise").value;
     if(!newAmount || newAmount <= 0){ alert("Entrez un montant valide."); return; }
+    const diff = newAmount - oldAmount;
+
+    let newWalletBalance = null;
+    let walletRow = null;
+    if(devise !== "DOP" && diff !== 0){
+        const { data: w } = await supabaseClient.from("currency_wallets").select("*").eq("cashier_id", gcCurrentCashierId).eq("currency_code", devise).maybeSingle();
+        walletRow = w;
+        const walletBalance = w ? Number(w.balance) : 0;
+        const change = isEntree ? diff : -diff;
+        newWalletBalance = walletBalance + change;
+        if(newWalletBalance < 0){
+            alert(`Impossible: cela rendrait le solde en ${devise} negatif (solde actuel: ${walletBalance.toLocaleString("fr-FR")} ${devise}).`);
+            return;
+        }
+    }
+
     const updateData = isEntree ? { entree: newAmount, sortie: 0 } : { entree: 0, sortie: newAmount };
     const { error } = await supabaseClient.from("caisse_ledger").update(updateData).eq("id", entryId);
     if(error){ alert("Erreur: " + error.message); return; }
+
+    if(newWalletBalance !== null){
+        if(walletRow){
+            await supabaseClient.from("currency_wallets").update({ balance: newWalletBalance, updated_at: new Date().toISOString() }).eq("id", walletRow.id);
+        } else {
+            await supabaseClient.from("currency_wallets").insert({ cashier_id: gcCurrentCashierId, currency_code: devise, balance: newWalletBalance });
+        }
+    }
+
     gcCloseEditModal();
     await gcLoadLedger();
     await loadGestionCaisses();
@@ -2780,6 +2811,7 @@ async function gcAddReappro(){
     const ref = document.getElementById("gcAddRef").value.trim();
     const msg = document.getElementById("gcAddMsg");
     if(!montant || montant <= 0){ msg.style.display="block"; msg.className="result-box error"; msg.innerHTML="Entrez un montant valide."; return; }
+
     const motifText = devise === gcCurrentSessionDevise ? "Reapprovisionnement (Admin)" : `Reapprovisionnement Admin (${devise})`;
     await supabaseClient.from("caisse_ledger").insert({
         session_id: gcCurrentSessionId, caissier_id: gcCurrentCashierId, caissier_name: "", branch: "",
@@ -2801,10 +2833,30 @@ async function gcAddReappro(){
     await loadGestionCaisses();
 }
 
-async function gcDeleteLedgerEntry(entryId){
+async function gcDeleteLedgerEntry(entryId, devise, entree, sortie){
     if(!confirm("Supprimer ce mouvement de caisse ? Cette action est irreversible.")) return;
+    entree = Number(entree); sortie = Number(sortie);
+
+    let newWalletBalance = null;
+    let walletRow = null;
+    if(devise !== "DOP" && (entree > 0 || sortie > 0)){
+        const { data: w } = await supabaseClient.from("currency_wallets").select("*").eq("cashier_id", gcCurrentCashierId).eq("currency_code", devise).maybeSingle();
+        walletRow = w;
+        const walletBalance = w ? Number(w.balance) : 0;
+        newWalletBalance = walletBalance - entree + sortie;
+        if(newWalletBalance < 0){
+            alert(`Impossible: la suppression rendrait le solde en ${devise} negatif (solde actuel: ${walletBalance.toLocaleString("fr-FR")} ${devise}).`);
+            return;
+        }
+    }
+
     const { error } = await supabaseClient.from("caisse_ledger").delete().eq("id", entryId);
     if(error){ alert("Erreur: " + error.message); return; }
+
+    if(newWalletBalance !== null && walletRow){
+        await supabaseClient.from("currency_wallets").update({ balance: newWalletBalance, updated_at: new Date().toISOString() }).eq("id", walletRow.id);
+    }
+
     await gcLoadLedger();
     await loadGestionCaisses();
 }
