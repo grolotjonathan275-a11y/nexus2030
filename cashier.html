@@ -983,6 +983,10 @@
                         <div class="stat-card"><div class="stat-icon green">➕</div><div class="stat-info"><div class="stat-number" id="caisseReappro">0</div><div class="stat-label">Reapprovisionnements</div></div></div>
                         <div class="stat-card"><div class="stat-icon orange">💰</div><div class="stat-info"><div class="stat-number" id="caisseSoldeTheorique">0</div><div class="stat-label">Solde Theorique Disponible</div></div></div>
                     </div>
+                    <div class="card" id="caisseAutresDevisesCard" style="margin-top:1.5rem;display:none">
+                        <div class="card-header"><h3>💱 Autres Devises en Caisse</h3></div>
+                        <div class="table-wrap"><table class="data-table"><thead><tr><th>Devise</th><th>Solde Net (Session)</th></tr></thead><tbody id="caisseAutresDevises"></tbody></table></div>
+                    </div>
                     <div class="card" style="margin-top:1.5rem">
                         <div class="card-header"><h3>Reapprovisionnement</h3></div>
                         <div style="padding:1.5rem">
@@ -3244,11 +3248,19 @@ async function refreshCaisseStats(){
         }
     });
     const autresDevisesEl = document.getElementById("caisseAutresDevises");
-    if(autresDevisesEl){
+    const autresDevisesCard = document.getElementById("caisseAutresDevisesCard");
+    if(autresDevisesEl && autresDevisesCard){
         const entries = Object.entries(autresDevises).filter(([k,v]) => v !== 0);
-        autresDevisesEl.innerHTML = entries.length
-            ? entries.map(([code,val]) => `<span style="margin-right:1rem"><b>${code}:</b> ${val.toLocaleString("fr-FR")}</span>`).join("")
-            : "";
+        if(entries.length){
+            autresDevisesCard.style.display = "block";
+            autresDevisesEl.innerHTML = entries.map(([code,val]) => {
+                const color = val >= 0 ? "#16A34A" : "#DC2626";
+                return `<tr><td>${code}</td><td style="color:${color};font-weight:700">${val.toLocaleString("fr-FR",{minimumFractionDigits:2})}</td></tr>`;
+            }).join("");
+        } else {
+            autresDevisesCard.style.display = "none";
+            autresDevisesEl.innerHTML = "";
+        }
     }
     document.getElementById("ledgerList").innerHTML = rows.map(r => `
         <tr>
