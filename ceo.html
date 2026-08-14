@@ -516,12 +516,23 @@ Equipe</h3><span class="badge" id="usersCount">0</span></div>
 </div>
 <div class="card" style="margin-top:1.5rem">
 <div class="card-header"><h3>Historique des Distributions</h3><span class="badge" id="allocCount">0</span></div>
-<div class="table-wrap"><table class="data-table"><thead><tr><th>Date</th><th>Beneficiaire</th><th>Devise</th><th>Montant</th><th>Distribue par</th><th>Notes</th></tr></thead><tbody id="allocHistoryList"><tr><td colspan="6">Chargement...</td></tr></tbody></table></div>
+<div class="table-wrap"><table class="data-table"><thead><tr><th>Date</th><th>Beneficiaire</th><th>Devise</th><th>Montant</th><th>Distribue par</th><th>Notes</th><th>Actions</th></tr></thead><tbody id="allocHistoryList"><tr><td colspan="6">Chargement...</td></tr></tbody></table></div>
 </div>
 <div class="card" style="margin-top:1.5rem">
 <div class="card-header"><h3>&#128188; Solde Distribue Restant</h3></div>
 <p style="padding:0 1.25rem;margin:0.5rem 0;color:#64748B;font-size:0.85rem">Distribue - Ventes effectuees = Solde restant (les achats effectues sur place par le caissier ne sont pas deduits ici)</p>
 <div class="table-wrap"><table class="data-table"><thead><tr><th>Caissier</th><th>Devise</th><th>Distribue</th><th>Vendu</th><th>Solde Restant</th></tr></thead><tbody id="distribBalanceList"><tr><td colspan="5">Chargement...</td></tr></tbody></table></div>
+</div>
+<div id="editAllocModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center">
+<div style="background:#fff;border-radius:12px;padding:1.5rem;max-width:400px;width:90%">
+<h3 style="margin-bottom:1rem">&#9999;&#65039; Modifier la Distribution</h3>
+<p id="editAllocInfo" style="color:#64748B;margin-bottom:1rem"></p>
+<div class="form-group"><label>Nouveau Montant *</label><input type="number" id="editAllocAmount" min="0.01" style="width:100%;padding:0.75rem;border-radius:10px;border:1.5px solid #E2E8F0"></div>
+<div style="display:flex;gap:0.75rem;margin-top:1.5rem">
+<button onclick="closeEditAllocModal()" style="flex:1;padding:0.75rem;border-radius:10px;border:1.5px solid #E2E8F0;background:#fff;cursor:pointer">Annuler</button>
+<button onclick="submitEditAlloc()" style="flex:1;padding:0.75rem;border-radius:10px;border:none;background:#16A34A;color:#fff;cursor:pointer;font-weight:700">Confirmer</button>
+</div>
+</div>
 </div>
 </section>
 
@@ -1774,13 +1785,83 @@ async function allocateCurrencyCeo(){
     loadAllocationHistoryCeo();
 }
 
+let editAllocContext = null;
+
+function openEditAllocModal(id, staffId, currencyCode, currentAmount, staffName){
+    editAllocContext = { id, staffId, currencyCode, currentAmount };
+    document.getElementById("editAllocInfo").textContent = `${staffName} - ${currencyCode} - Montant actuel: ${currentAmount.toLocaleString("fr-FR",{minimumFractionDigits:2})}`;
+    document.getElementById("editAllocAmount").value = currentAmount;
+    document.getElementById("editAllocModal").style.display = "flex";
+}
+
+function closeEditAllocModal(){
+    document.getElementById("editAllocModal").style.display = "none";
+    editAllocContext = null;
+}
+
+async function submitEditAlloc(){
+    if(!editAllocContext) return;
+    const newAmount = Number(document.getElementById("editAllocAmount").value);
+    if(!newAmount || newAmount <= 0){ alert("Entrez un montant valide."); return; }
+    const { id, staffId, currencyCode, currentAmount } = editAllocContext;
+    const diff = newAmount - currentAmount;
+
+    const { data: wallet } = await supabaseClient.from("currency_wallets").select("*").eq("cashier_id", staffId).eq("currency_code", currencyCode).maybeSingle();
+    const walletBalance = wallet ? Number(wallet.balance) : 0;
+    const newWalletBalance = walletBalance + diff;
+    if(newWalletBalance < 0){
+        alert(`Impossible: le caissier a deja utilise une partie de ce montant. Solde actuel: ${walletBalance.toLocaleString("fr-FR")} ${currencyCode}, reduction demandee: ${(-diff).toLocaleString("fr-FR")} ${currencyCode}.`);
+        return;
+    }
+
+    const { error: e1 } = await supabaseClient.from("currency_allocations").update({ amount: newAmount }).eq("id", id);
+    if(e1){ alert("Erreur: " + e1.message); return; }
+    if(wallet){
+        await supabaseClient.from("currency_wallets").update({ balance: newWalletBalance, updated_at: new Date().toISOString() }).eq("id", wallet.id);
+    }
+
+    closeEditAllocModal();
+    loadAllocationHistoryCeo();
+}
+
+async function deleteAllocation(id, staffId, currencyCode, amount, staffName){
+    if(!confirm(`Supprimer cette distribution de ${Number(amount).toLocaleString("fr-FR")} ${currencyCode} pour ${staffName} ?`)) return;
+
+    const { data: wallet } = await supabaseClient.from("currency_wallets").select("*").eq("cashier_id", staffId).eq("currency_code", currencyCode).maybeSingle();
+    const walletBalance = wallet ? Number(wallet.balance) : 0;
+    const newWalletBalance = walletBalance - Number(amount);
+    if(newWalletBalance < 0){
+        alert(`Impossible: le caissier a deja utilise une partie de ce montant. Solde actuel: ${walletBalance.toLocaleString("fr-FR")} ${currencyCode}.`);
+        return;
+    }
+
+    const { error: e1 } = await supabaseClient.from("currency_allocations").delete().eq("id", id);
+    if(e1){ alert("Erreur: " + e1.message); return; }
+    if(wallet){
+        await supabaseClient.from("currency_wallets").update({ balance: newWalletBalance, updated_at: new Date().toISOString() }).eq("id", wallet.id);
+    }
+
+    loadAllocationHistoryCeo();
+}
+
 async function loadAllocationHistoryCeo(){
     const { data, error } = await supabaseClient.from("currency_allocations").select("*").order("created_at",{ascending:false}).limit(50);
     const tbody = document.getElementById("allocHistoryList");
     if(error || !data || !data.length){ tbody.innerHTML = "<tr><td colspan='6'>Aucune distribution.</td></tr>"; document.getElementById("allocCount").textContent = "0"; return; }
     document.getElementById("allocCount").textContent = data.length;
     tbody.innerHTML = data.map(a => `
-        <tr><td>${new Date(a.created_at).toLocaleString("fr-FR")}</td><td>${a.staff_name}</td><td>${a.currency_code}</td><td>${Number(a.amount).toLocaleString("fr-FR",{minimumFractionDigits:2})}</td><td>${a.allocated_by_name || "-"}</td><td>${a.notes || "-"}</td></tr>`).join("");
+        <tr>
+            <td>${new Date(a.created_at).toLocaleString("fr-FR")}</td>
+            <td>${a.staff_name}</td>
+            <td>${a.currency_code}</td>
+            <td>${Number(a.amount).toLocaleString("fr-FR",{minimumFractionDigits:2})}</td>
+            <td>${a.allocated_by_name || "-"}</td>
+            <td>${a.notes || "-"}</td>
+            <td style="white-space:nowrap">
+                <button data-id="${a.id}" data-staff="${a.staff_id}" data-currency="${a.currency_code}" data-amount="${a.amount}" data-name="${(a.staff_name||"").replace(/"/g,'&quot;')}" onclick="openEditAllocModal(this.dataset.id,this.dataset.staff,this.dataset.currency,Number(this.dataset.amount),this.dataset.name)" style="border:none;background:none;cursor:pointer;font-size:1rem" title="Modifier">✏️</button>
+                <button data-id="${a.id}" data-staff="${a.staff_id}" data-currency="${a.currency_code}" data-amount="${a.amount}" data-name="${(a.staff_name||"").replace(/"/g,'&quot;')}" onclick="deleteAllocation(this.dataset.id,this.dataset.staff,this.dataset.currency,Number(this.dataset.amount),this.dataset.name)" style="border:none;background:none;cursor:pointer;font-size:1rem" title="Supprimer">🗑️</button>
+            </td>
+        </tr>`).join("");
     loadDistributionBalance();
 }
 
