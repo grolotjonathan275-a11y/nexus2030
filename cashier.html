@@ -2632,6 +2632,7 @@ async function submitMoneyService(){
         alert("Erreur: "+error.message);
         return;
     }
+    await logCaisseLedger("DOP", total, 0, null, currentMoneyService, "mobile_money_transactions", data.id);
 
     const receiptParams=new URLSearchParams({
         id: data.id,
