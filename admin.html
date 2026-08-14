@@ -27,6 +27,7 @@
 <a href="#branches" class="nav-item" onclick="showSection(this,event)"><span>🏢</span>Succursales</a>
 <a href="#employees" class="nav-item" onclick="showSection(this,event)"><span>👤</span>Employes</a>
 <a href="#cashiers-wallets" class="nav-item" onclick="showSection(this,event)"><span>🧑‍💼</span>Caissiers</a>
+<a href="#gestion-caisses" class="nav-item" onclick="showSection(this,event)"><span>💵</span>Gestion des Caisses</a>
 <a href="#pointage-admin" class="nav-item" onclick="showSection(this,event)"><span>📍</span>Pointage Caissiers</a>
 <a href="#login-history" class="nav-item" onclick="showSection(this,event)"><span>🔐</span>Historique Connexions</a>
 <a href="#loans" class="nav-item" onclick="showSection(this,event)"><span>💰</span>Prestamo</a>
@@ -140,6 +141,36 @@
 <thead><tr><th>Caissier</th><th>Succursale</th><th>HTG</th><th>DOP</th><th>USD</th><th>Profit HTG</th><th>Profit DOP</th><th>Profit USD</th><th>Total Jour</th><th>Action</th></tr></thead>
 <tbody id="adminCashiersList"><tr><td colspan="10">Chargement...</td></tr></tbody>
 </table></div>
+</div>
+</section>
+<section class="section" id="section-gestion-caisses">
+<h2 class="section-title">💵 Gestion des Caisses</h2>
+<div class="card">
+<div class="card-header"><h3>Sessions de Caisse - Tous les Caissiers</h3><span class="badge" id="gcCount">0</span></div>
+<div class="table-wrap">
+<table class="data-table">
+<thead><tr><th>Caissier</th><th>Succursale</th><th>Devise</th><th>Fonds Initial</th><th>Solde Theorique</th><th>Statut</th><th>Ouverte le</th><th>Action</th></tr></thead>
+<tbody id="gcSessionsList"><tr><td colspan="8">Chargement...</td></tr></tbody>
+</table>
+</div>
+</div>
+<div class="card" id="gcDetailCard" style="margin-top:1.5rem;display:none">
+<div class="card-header"><h3 id="gcDetailTitle">Detail de la Caisse</h3></div>
+<div style="padding:1.25rem">
+<div class="form-grid-2">
+<div class="form-group"><label>Montant *</label><input type="number" id="gcAddAmount" placeholder="0.00" min="0"></div>
+<div class="form-group"><label>Devise *</label><select id="gcAddDevise"></select></div>
+</div>
+<div class="form-group"><label>Reference (optionnel)</label><input type="text" id="gcAddRef" placeholder="Ex: Correction, ajustement"></div>
+<button class="btn-ceo-action" onclick="gcAddReappro()">➕ Ajouter Reapprovisionnement</button>
+<div id="gcAddMsg" style="display:none" class="result-box"></div>
+</div>
+<div class="table-wrap">
+<table class="data-table">
+<thead><tr><th>Heure</th><th>Type</th><th>Devise</th><th>Entree</th><th>Sortie</th><th>Motif</th><th>Actions</th></tr></thead>
+<tbody id="gcLedgerList"><tr><td colspan="7">Selectionnez une caisse.</td></tr></tbody>
+</table>
+</div>
 </div>
 </section>
 
@@ -1335,6 +1366,7 @@ function showSection(el, e) {
     if (id === "bank-distribution") { loadBankCapital(); loadAllocationFormBankAdmin(); }
     if (id === "promotions") loadPromotions();
     if (id === "news") loadNews();
+    if(id === "gestion-caisses") loadGestionCaisses();
     if (id === "partners") loadPartnerLogos();
     if (id === "contact-info") loadContactInfo();
     if (id === "manage-branches") loadBranchesManagement();
@@ -2571,6 +2603,102 @@ async function deleteAllocation(id, staffId, currencyCode, amount, staffName){
     }
 
     loadAllocationHistory();
+}
+
+let gcCurrentSessionId = null;
+let gcCurrentCashierId = null;
+let gcCurrentSessionDevise = null;
+
+async function loadGestionCaisses(){
+    const { data: sessions, error } = await supabaseClient.from("caisse_sessions").select("*").order("opened_at",{ascending:false}).limit(100);
+    const tbody = document.getElementById("gcSessionsList");
+    if(error || !sessions || !sessions.length){ tbody.innerHTML = "<tr><td colspan='8'>Aucune session.</td></tr>"; document.getElementById("gcCount").textContent = "0"; return; }
+    document.getElementById("gcCount").textContent = sessions.length;
+    tbody.innerHTML = sessions.map(s => {
+        const statusBadge = s.status === "open" ? "<span style='color:#16A34A;font-weight:700'>Ouverte</span>" : "<span style='color:#64748B'>Fermee</span>";
+        return `<tr>
+            <td>${s.caissier_name}</td>
+            <td>${s.branch}</td>
+            <td>${s.currency_code}</td>
+            <td>${Number(s.fonds_initial).toLocaleString("fr-FR",{minimumFractionDigits:2})}</td>
+            <td id="gcSolde_${s.id}">...</td>
+            <td>${statusBadge}</td>
+            <td>${new Date(s.opened_at).toLocaleString("fr-FR")}</td>
+            <td><button data-session="${s.id}" data-cashier="${s.caissier_id}" data-name="${s.caissier_name}" data-devise="${s.currency_code}" onclick="gcOpenDetail(this.dataset.session,this.dataset.cashier,this.dataset.name,this.dataset.devise)" class="btn-ceo-action" style="padding:0.4rem 0.8rem;font-size:0.85rem">Voir</button></td>
+        </tr>`;
+    }).join("");
+
+    for(const s of sessions){
+        const { data: rows } = await supabaseClient.from("caisse_ledger").select("*").eq("session_id", s.id).eq("devise", s.currency_code);
+        const total = (rows||[]).reduce((sum,r) => sum + Number(r.entree||0) - Number(r.sortie||0), 0);
+        const el = document.getElementById(`gcSolde_${s.id}`);
+        if(el) el.textContent = total.toLocaleString("fr-FR",{minimumFractionDigits:2});
+    }
+}
+
+async function gcOpenDetail(sessionId, cashierId, cashierName, devise){
+    gcCurrentSessionId = sessionId;
+    gcCurrentCashierId = cashierId;
+    gcCurrentSessionDevise = devise;
+    document.getElementById("gcDetailCard").style.display = "block";
+    document.getElementById("gcDetailTitle").textContent = `Detail de la Caisse - ${cashierName}`;
+
+    const { data: rates } = await supabaseClient.from("exchange_rates").select("*").eq("active", true).order("display_order");
+    const sel = document.getElementById("gcAddDevise");
+    sel.innerHTML = `<option value="${devise}">${devise} (devise session)</option>` + (rates||[]).filter(r => r.currency_code !== devise).map(r => `<option value="${r.currency_code}">${r.flag_emoji} ${r.currency_name} (${r.currency_code})</option>`).join("");
+
+    await gcLoadLedger();
+}
+
+async function gcLoadLedger(){
+    if(!gcCurrentSessionId) return;
+    const { data: rows } = await supabaseClient.from("caisse_ledger").select("*").eq("session_id", gcCurrentSessionId).order("created_at",{ascending:true});
+    const tbody = document.getElementById("gcLedgerList");
+    if(!rows || !rows.length){ tbody.innerHTML = "<tr><td colspan='7'>Aucun mouvement.</td></tr>"; return; }
+    tbody.innerHTML = rows.map(r => {
+        const isManual = r.type_operation === "reapprovisionnement" || r.type_operation === "debut_caisse";
+        const actions = isManual
+            ? `<button data-entry="${r.id}" onclick="gcDeleteLedgerEntry(this.dataset.entry)" style="border:none;background:none;cursor:pointer;font-size:1rem" title="Supprimer">🗑️</button>`
+            : "-";
+        return `<tr>
+            <td>${new Date(r.created_at).toLocaleTimeString("fr-FR")}</td>
+            <td>${r.type_operation}</td>
+            <td>${r.devise}</td>
+            <td style="color:#16A34A">${r.entree > 0 ? "+"+Number(r.entree).toLocaleString("fr-FR") : "-"}</td>
+            <td style="color:#DC2626">${r.sortie > 0 ? "-"+Number(r.sortie).toLocaleString("fr-FR") : "-"}</td>
+            <td>${r.motif || "-"}</td>
+            <td>${actions}</td>
+        </tr>`;
+    }).join("");
+}
+
+async function gcAddReappro(){
+    if(!gcCurrentSessionId){ alert("Selectionnez une caisse."); return; }
+    const montant = Number(document.getElementById("gcAddAmount").value);
+    const devise = document.getElementById("gcAddDevise").value;
+    const ref = document.getElementById("gcAddRef").value.trim();
+    const msg = document.getElementById("gcAddMsg");
+    if(!montant || montant <= 0){ msg.style.display="block"; msg.className="result-box error"; msg.innerHTML="Entrez un montant valide."; return; }
+
+    const motifText = devise === gcCurrentSessionDevise ? "Reapprovisionnement (Admin)" : `Reapprovisionnement Admin (${devise})`;
+    await supabaseClient.from("caisse_ledger").insert({
+        session_id: gcCurrentSessionId, caissier_id: gcCurrentCashierId, caissier_name: "", branch: "",
+        type_operation: "reapprovisionnement", devise: devise, entree: montant, sortie: 0,
+        motif: motifText, reference: ref || null, status: "completed"
+    });
+    msg.style.display="block"; msg.className="result-box success"; msg.innerHTML="✅ Reapprovisionnement ajoute!";
+    document.getElementById("gcAddAmount").value = "";
+    document.getElementById("gcAddRef").value = "";
+    await gcLoadLedger();
+    await loadGestionCaisses();
+}
+
+async function gcDeleteLedgerEntry(entryId){
+    if(!confirm("Supprimer ce mouvement de caisse ? Cette action est irreversible.")) return;
+    const { error } = await supabaseClient.from("caisse_ledger").delete().eq("id", entryId);
+    if(error){ alert("Erreur: " + error.message); return; }
+    await gcLoadLedger();
+    await loadGestionCaisses();
 }
 
 async function loadAllocationHistory(){
