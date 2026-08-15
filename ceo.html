@@ -1947,6 +1947,16 @@ let gcCurrentSessionDevise = null;
 async function loadGestionCaisses(){
     const { data: staff } = await supabaseClient.from("profiles").select("*").in("role",["caissier","agent"]).eq("status","active").order("full_name");
     const { data: sessions } = await supabaseClient.from("caisse_sessions").select("*").eq("status","open");
+    const nexusToday = new Date();
+    const staleSessions = (sessions||[]).filter(s => {
+        const opened = new Date(s.opened_at);
+        return !(opened.getFullYear() === nexusToday.getFullYear() && opened.getMonth() === nexusToday.getMonth() && opened.getDate() === nexusToday.getDate());
+    });
+    for(const s of staleSessions){
+        await supabaseClient.from("caisse_sessions").update({ status: "closed", closed_at: new Date().toISOString() }).eq("id", s.id);
+        const idx = sessions.indexOf(s);
+        if(idx > -1) sessions.splice(idx, 1);
+    }
     const tbody = document.getElementById("gcSessionsList");
     if(!staff || !staff.length){ tbody.innerHTML = "<tr><td colspan='8'>Aucun caissier.</td></tr>"; document.getElementById("gcCount").textContent = "0"; return; }
     document.getElementById("gcCount").textContent = staff.length;
