@@ -3197,8 +3197,18 @@ function nexusPointageSelfie(){
 }
 let currentCaisseSession = null;
 
+function nexusIsSessionFromToday(openedAt){
+    const today = new Date();
+    const opened = new Date(openedAt);
+    return opened.getFullYear() === today.getFullYear() && opened.getMonth() === today.getMonth() && opened.getDate() === today.getDate();
+}
+
 async function loadCaisseSession(){
     const rows = await supaFetch("caisse_sessions", "GET", null, `?caissier_id=eq.${CASHIER_ID}&status=eq.open&order=opened_at.desc&limit=1`);
+    if(Array.isArray(rows) && rows.length > 0 && !nexusIsSessionFromToday(rows[0].opened_at)){
+        await supaFetch("caisse_sessions", "PATCH", { status: "closed", closed_at: new Date().toISOString() }, `?id=eq.${rows[0].id}`);
+        rows.length = 0;
+    }
     if(Array.isArray(rows) && rows.length > 0){
         currentCaisseSession = rows[0];
         document.getElementById("caisseNoSession").style.display = "none";
