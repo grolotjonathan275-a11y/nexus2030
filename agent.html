@@ -1778,6 +1778,7 @@ async function acceptRtNegotiation(id, finalAmountHtg){
     } else if(lastValidatorId){
         await sf("validateur_reception_balances", "POST", { validator_id: lastValidatorId, validator_name: lastValidatorName, service_type: tx.service_type, balance_htg: finalAmountHtg });
     }
+    await sf("validateur_balances_ledger", "POST", { validator_id: lastValidatorId, validator_name: lastValidatorName, balance_type: "reception", service_type: tx.service_type, entree: finalAmountHtg, sortie: 0, motif: "Validation Reception acceptee", source_table: "receive_transfer_transactions", source_id: id });
 
     await sf("receive_transfer_negotiations", "POST", {
         transaction_id: id, proposed_by: "caissier", proposed_by_id: AGENT_ID, proposed_by_name: AGENT_NAME,
