@@ -541,6 +541,7 @@ async function processTransaction(id,newStatus){
             } else {
                 await supabaseClient.from("validateur_envoi_balances").insert({ validator_id: currentValidatorId, validator_name: currentValidatorName, service_type: txData.service_type, balance_htg: newBal });
             }
+            await supabaseClient.from("validateur_balances_ledger").insert({ validator_id: currentValidatorId, validator_name: currentValidatorName, balance_type: "envoi", service_type: txData.service_type, entree: 0, sortie: Number(txData.amount_htg), motif: `Approuve: ${labels[newStatus]}`, source_table: "mobile_money_transactions", source_id: id });
         }
     }
 
