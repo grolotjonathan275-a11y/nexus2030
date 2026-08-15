@@ -325,7 +325,7 @@
 </div>
 <div class="card" style="margin-top:1.5rem">
 <div class="card-header"><h3>📜 Historique des Mouvements</h3><span class="badge" id="vlCount">0</span></div>
-<div class="table-wrap"><table class="data-table"><thead><tr><th>Heure</th><th>Validateur</th><th>Type</th><th>Service</th><th>Entree</th><th>Sortie</th><th>Motif</th></tr></thead><tbody id="vlList"><tr><td colspan="7">Chargement...</td></tr></tbody></table></div>
+<div class="table-wrap"><table class="data-table"><thead><tr><th>Heure</th><th>Validateur</th><th>Type</th><th>Service</th><th>Entree</th><th>Sortie</th><th>Motif</th><th>Actions</th></tr></thead><tbody id="vlList"><tr><td colspan="8">Chargement...</td></tr></tbody></table></div>
 </div>
 </section>
 
@@ -1250,7 +1250,7 @@ async function loadValidatorBalances(){
     const vlTbody = document.getElementById("vlList");
     if(vlTbody){
         document.getElementById("vlCount").textContent = vlData ? vlData.length : 0;
-        if(!vlData || !vlData.length){ vlTbody.innerHTML = "<tr><td colspan='7'>Aucun mouvement.</td></tr>"; }
+        if(!vlData || !vlData.length){ vlTbody.innerHTML = "<tr><td colspan='8'>Aucun mouvement.</td></tr>"; }
         else {
             vlTbody.innerHTML = vlData.map(v => {
                 const typeLabel = v.balance_type === "envoi" ? "➡️ Envoi" : "⬅️ Reception";
@@ -1263,10 +1263,52 @@ async function loadValidatorBalances(){
                     <td style="color:#16A34A">${v.entree > 0 ? "+"+fmtA(v.entree) : "-"}</td>
                     <td style="color:#DC2626">${v.sortie > 0 ? "-"+fmtA(v.sortie) : "-"}</td>
                     <td>${v.motif || "-"}</td>
+                    <td style="white-space:nowrap"><button data-id="${v.id}" data-vid="${v.validator_id}" data-btype="${v.balance_type}" data-svc="${v.service_type}" data-entree="${v.entree}" data-sortie="${v.sortie}" onclick="vlEditEntry(this.dataset.id,this.dataset.vid,this.dataset.btype,this.dataset.svc,this.dataset.entree,this.dataset.sortie)" style="border:none;background:none;cursor:pointer;font-size:1rem" title="Modifier">✏️</button> <button data-id="${v.id}" data-vid="${v.validator_id}" data-btype="${v.balance_type}" data-svc="${v.service_type}" data-entree="${v.entree}" data-sortie="${v.sortie}" onclick="vlDeleteEntry(this.dataset.id,this.dataset.vid,this.dataset.btype,this.dataset.svc,this.dataset.entree,this.dataset.sortie)" style="border:none;background:none;cursor:pointer;font-size:1rem" title="Supprimer">🗑️</button></td>
                 </tr>`;
             }).join("");
         }
     }
+}
+async function vlEditEntry(id, validatorId, balanceType, serviceType, entree, sortie){
+    entree = Number(entree); sortie = Number(sortie);
+    const isEntree = entree > 0;
+    const oldAmount = isEntree ? entree : sortie;
+    const newVal = prompt("Nouveau montant (HTG):", oldAmount);
+    if(newVal === null) return;
+    const newAmount = Number(newVal);
+    if(isNaN(newAmount) || newAmount < 0){ alert("Montant invalide."); return; }
+    const diff = newAmount - oldAmount;
+    const table = balanceType === "envoi" ? "validateur_envoi_balances" : "validateur_reception_balances";
+    const { data: bal } = await supabaseClient.from(table).select("*").eq("validator_id", validatorId).eq("service_type", serviceType).maybeSingle();
+    const currentBal = bal ? Number(bal.balance_htg) : 0;
+    const change = isEntree ? diff : -diff;
+    const newBal = currentBal + change;
+    if(newBal < 0){ alert(`Impossible: le solde deviendrait negatif (${fmtA(currentBal)} HTG actuellement).`); return; }
+    const updateData = isEntree ? { entree: newAmount, sortie: 0 } : { entree: 0, sortie: newAmount };
+    const { error } = await supabaseClient.from("validateur_balances_ledger").update(updateData).eq("id", id);
+    if(error){ alert("Erreur: " + error.message); return; }
+    if(bal){
+        await supabaseClient.from(table).update({ balance_htg: newBal, updated_at: new Date().toISOString() }).eq("id", bal.id);
+    } else {
+        await supabaseClient.from(table).insert({ validator_id: validatorId, validator_name: "", service_type: serviceType, balance_htg: newBal });
+    }
+    await loadValidatorBalances();
+}
+
+async function vlDeleteEntry(id, validatorId, balanceType, serviceType, entree, sortie){
+    if(!confirm("Supprimer ce mouvement ? Cette action est irreversible.")) return;
+    entree = Number(entree); sortie = Number(sortie);
+    const table = balanceType === "envoi" ? "validateur_envoi_balances" : "validateur_reception_balances";
+    const { data: bal } = await supabaseClient.from(table).select("*").eq("validator_id", validatorId).eq("service_type", serviceType).maybeSingle();
+    const currentBal = bal ? Number(bal.balance_htg) : 0;
+    const newBal = currentBal - entree + sortie;
+    if(newBal < 0){ alert(`Impossible: la suppression rendrait le solde negatif (${fmtA(currentBal)} HTG actuellement).`); return; }
+    const { error } = await supabaseClient.from("validateur_balances_ledger").delete().eq("id", id);
+    if(error){ alert("Erreur: " + error.message); return; }
+    if(bal){
+        await supabaseClient.from(table).update({ balance_htg: newBal, updated_at: new Date().toISOString() }).eq("id", bal.id);
+    }
+    await loadValidatorBalances();
 }
 
 async function veAddBalance(){
