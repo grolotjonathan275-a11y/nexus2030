@@ -1040,13 +1040,22 @@
             <!-- RECUS -->
             <section class="section" id="section-receipts">
                 <div class="card">
-                    <div class="card-header"><h3>🧾 Recus Imprimes</h3></div>
-                    <div style="padding:1rem;color:#64748B;text-align:center;">
-                        <p>Les recus sont generes automatiquement apres chaque transaction.</p>
-                        <p style="margin-top:0.5rem">Utilisez les boutons dans l'historique pour reimprimer.</p>
+                    <div class="card-header"><h3>🧾 Mes Recus</h3></div>
+                    <div style="display:flex;gap:0.5rem;padding:1rem 1rem 0 1rem">
+                        <button id="recEnvoyerTabBtn" class="btn-confirm" onclick="switchReceiptsTab('envoyer')" style="flex:1">📤 Recu Envoyer</button>
+                        <button id="recRecevoirTabBtn" class="btn-cancel" onclick="switchReceiptsTab('recevoir')" style="flex:1">📥 Recu Recevoir</button>
+                    </div>
+                    <div id="recEnvoyerView" style="padding:1rem">
+                        <div class="table-wrap"><table class="data-table"><thead><tr><th>Heure</th><th>Service</th><th>Client</th><th>Montant DOP</th><th>Statut</th></tr></thead><tbody id="recEnvoyerList"><tr><td colspan="5">Chargement...</td></tr></tbody></table></div>
+                    </div>
+                    <div id="recRecevoirView" style="padding:1rem;display:none">
+                        <div class="table-wrap"><table class="data-table"><thead><tr><th>Heure Validation</th><th>Service</th><th>Client</th><th>Valide par</th><th>Recu</th></tr></thead><tbody id="recRecevoirList"><tr><td colspan="5">Chargement...</td></tr></tbody></table></div>
                     </div>
                 </div>
             </section>
+            <div id="receiptPhotoLightbox" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);z-index:9999;align-items:center;justify-content:center" onclick="closeReceiptLightbox()">
+                <img id="receiptPhotoLightboxImg" style="max-width:90%;max-height:90%;border-radius:8px">
+            </div>
 
             <!-- MON PROFIL -->
             <section class="section" id="section-profile">
@@ -1136,6 +1145,7 @@ function showSection(el, e) {
     if(id === "banking"){ loadBankWallets(); loadMyBankTransactions(); }
     if(id === "pointage"){ loadPointageHistory(); }
     if(id === "caisse"){ loadCaisseSession(); }
+    if(id === "receipts"){ loadReceiptsEnvoyer(); }
 }
 
 function showSectionByName(e, id) {
@@ -3270,6 +3280,50 @@ async function caisseViewArchiveDetail(sessionId, devise){
 function caisseArchiveBackToList(){
     document.getElementById("caisseArchiveListView").style.display = "block";
     document.getElementById("caisseArchiveDetailView").style.display = "none";
+}
+
+function switchReceiptsTab(tab){
+    document.getElementById("recEnvoyerView").style.display = tab === "envoyer" ? "block" : "none";
+    document.getElementById("recRecevoirView").style.display = tab === "recevoir" ? "block" : "none";
+    document.getElementById("recEnvoyerTabBtn").className = tab === "envoyer" ? "btn-confirm" : "btn-cancel";
+    document.getElementById("recRecevoirTabBtn").className = tab === "recevoir" ? "btn-confirm" : "btn-cancel";
+    if(tab === "envoyer") loadReceiptsEnvoyer(); else loadReceiptsRecevoir();
+}
+const RECEIPTS_STATUS_LABELS = {pending_validation:"En attente", approved:"Approuve", rejected:"Rejete", wrong_number:"Numero faux"};
+async function loadReceiptsEnvoyer(){
+    const rows = await supaFetch("mobile_money_transactions", "GET", null, `?created_by=eq.${CASHIER_ID}&order=created_at.desc&limit=50`);
+    const list = Array.isArray(rows) ? rows : [];
+    const tbody = document.getElementById("recEnvoyerList");
+    if(!list.length){ tbody.innerHTML = "<tr><td colspan='5'>Aucun recu.</td></tr>"; return; }
+    tbody.innerHTML = list.map(t => `
+        <tr>
+            <td>${new Date(t.created_at).toLocaleString("fr-FR")}</td>
+            <td>${t.service_type === "moncash" ? "📱 MonCash" : "💳 NatCash"}</td>
+            <td>${t.sender_full_name}</td>
+            <td>${Number(t.total_charged_dop).toLocaleString("fr-FR",{minimumFractionDigits:2})}</td>
+            <td>${RECEIPTS_STATUS_LABELS[t.status] || t.status}</td>
+        </tr>`).join("");
+}
+async function loadReceiptsRecevoir(){
+    const rows = await supaFetch("mobile_money_transactions", "GET", null, `?created_by=eq.${CASHIER_ID}&status=eq.approved&order=validated_at.desc&limit=50`);
+    const list = Array.isArray(rows) ? rows : [];
+    const tbody = document.getElementById("recRecevoirList");
+    if(!list.length){ tbody.innerHTML = "<tr><td colspan='5'>Aucun recu.</td></tr>"; return; }
+    tbody.innerHTML = list.map(t => `
+        <tr>
+            <td>${t.validated_at ? new Date(t.validated_at).toLocaleString("fr-FR") : "-"}</td>
+            <td>${t.service_type === "moncash" ? "📱 MonCash" : "💳 NatCash"}</td>
+            <td>${t.sender_full_name}</td>
+            <td>${t.validated_by_name || "-"}</td>
+            <td>${t.confirmation_photo ? `<button data-src="${t.confirmation_photo}" onclick="openReceiptLightbox(this.dataset.src)" class="btn-confirm" style="padding:0.3rem 0.7rem;font-size:0.8rem">🖼️ Voir</button>` : "-"}</td>
+        </tr>`).join("");
+}
+function openReceiptLightbox(src){
+    document.getElementById("receiptPhotoLightboxImg").src = src;
+    document.getElementById("receiptPhotoLightbox").style.display = "flex";
+}
+function closeReceiptLightbox(){
+    document.getElementById("receiptPhotoLightbox").style.display = "none";
 }
 
 function nexusIsSessionFromToday(openedAt){
