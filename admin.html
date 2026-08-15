@@ -323,6 +323,10 @@
 </div>
 <div class="table-wrap"><table class="data-table"><thead><tr><th>Validateur</th><th>Service</th><th>Balance HTG</th><th>Actions</th></tr></thead><tbody id="vrList"><tr><td colspan="4">Chargement...</td></tr></tbody></table></div>
 </div>
+<div class="card" style="margin-top:1.5rem">
+<div class="card-header"><h3>📜 Historique des Mouvements</h3><span class="badge" id="vlCount">0</span></div>
+<div class="table-wrap"><table class="data-table"><thead><tr><th>Heure</th><th>Validateur</th><th>Type</th><th>Service</th><th>Entree</th><th>Sortie</th><th>Motif</th></tr></thead><tbody id="vlList"><tr><td colspan="7">Chargement...</td></tr></tbody></table></div>
+</div>
 </section>
 
 <section class="section" id="section-system-rates">
@@ -1239,6 +1243,27 @@ async function loadValidatorBalances(){
             vrTbody.innerHTML = vrData.map(v => {
                 const color = Number(v.balance_htg) >= 0 ? "#16A34A" : "#DC2626";
                 return `<tr><td>${v.validator_name||"-"}</td><td>${RT_SERVICE_LABELS_A[v.service_type]||v.service_type}</td><td style="color:${color};font-weight:700">${fmtA(v.balance_htg)} HTG</td><td><button data-id="${v.id}" data-amount="${v.balance_htg}" data-name="${v.validator_name}" onclick="vrEditBalance(this.dataset.id,this.dataset.amount,this.dataset.name)" style="border:none;background:none;cursor:pointer;font-size:1rem" title="Modifier">✏️</button> <button data-id="${v.id}" onclick="vrDeleteBalance(this.dataset.id)" style="border:none;background:none;cursor:pointer;font-size:1rem" title="Supprimer">🗑️</button></td></tr>`;
+            }).join("");
+        }
+    }
+    const { data: vlData } = await supabaseClient.from("validateur_balances_ledger").select("*").order("created_at",{ascending:false}).limit(100);
+    const vlTbody = document.getElementById("vlList");
+    if(vlTbody){
+        document.getElementById("vlCount").textContent = vlData ? vlData.length : 0;
+        if(!vlData || !vlData.length){ vlTbody.innerHTML = "<tr><td colspan='7'>Aucun mouvement.</td></tr>"; }
+        else {
+            vlTbody.innerHTML = vlData.map(v => {
+                const typeLabel = v.balance_type === "envoi" ? "➡️ Envoi" : "⬅️ Reception";
+                const svcLabel = RT_SERVICE_LABELS_A[v.service_type] || v.service_type;
+                return `<tr>
+                    <td>${new Date(v.created_at).toLocaleString("fr-FR")}</td>
+                    <td>${v.validator_name||"-"}</td>
+                    <td>${typeLabel}</td>
+                    <td>${svcLabel}</td>
+                    <td style="color:#16A34A">${v.entree > 0 ? "+"+fmtA(v.entree) : "-"}</td>
+                    <td style="color:#DC2626">${v.sortie > 0 ? "-"+fmtA(v.sortie) : "-"}</td>
+                    <td>${v.motif || "-"}</td>
+                </tr>`;
             }).join("");
         }
     }
