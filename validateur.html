@@ -74,6 +74,13 @@
                 <div class="kpi-card blue"><div class="kpi-icon">💵</div><div class="kpi-info"><div class="kpi-number" id="ovVolumeToday">0</div><div class="kpi-label">Volume DOP aujourd'hui</div></div></div>
             </div>
             <div class="card" style="margin-bottom:1.5rem">
+                <div class="card-header"><h3>💰 Mes Balances Envoi (HTG)</h3></div>
+                <div class="kpi-grid" style="padding:1.25rem">
+                    <div class="kpi-card orange"><div class="kpi-icon">📱</div><div class="kpi-info"><div class="kpi-number" id="ovBalMoncash">0</div><div class="kpi-label">Balance MonCash (HTG)</div></div></div>
+                    <div class="kpi-card blue"><div class="kpi-icon">💳</div><div class="kpi-info"><div class="kpi-number" id="ovBalNatcash">0</div><div class="kpi-label">Balance NatCash (HTG)</div></div></div>
+                </div>
+            </div>
+            <div class="card" style="margin-bottom:1.5rem">
                 <div class="card-header"><h3>📊 Mes Validations (7 derniers jours)</h3></div>
                 <div style="padding:1.25rem;height:260px"><canvas id="nexusVolumeChartValidateur"></canvas></div>
             </div>
@@ -320,6 +327,15 @@ async function loadOverview(){
     document.getElementById("ovApprovedToday").textContent=approvedToday.length;
     document.getElementById("ovRejectedToday").textContent=rejectedToday.length;
     document.getElementById("ovVolumeToday").textContent=fmtA(volumeToday);
+    const { data: myBalances } = await supabaseClient.from("validateur_envoi_balances").select("*").eq("validator_id", currentValidatorId);
+    const balMc = myBalances ? myBalances.find(b => b.service_type === "moncash") : null;
+    const balNc = myBalances ? myBalances.find(b => b.service_type === "natcash") : null;
+    const bcMcVal = balMc ? Number(balMc.balance_htg) : 0;
+    const bcNcVal = balNc ? Number(balNc.balance_htg) : 0;
+    const bcMcEl = document.getElementById("ovBalMoncash");
+    const bcNcEl = document.getElementById("ovBalNatcash");
+    if(bcMcEl){ bcMcEl.textContent = fmtA(bcMcVal) + " HTG"; bcMcEl.style.color = bcMcVal >= 0 ? "" : "#DC2626"; }
+    if(bcNcEl){ bcNcEl.textContent = fmtA(bcNcVal) + " HTG"; bcNcEl.style.color = bcNcVal >= 0 ? "" : "#DC2626"; }
 
     document.getElementById("recentPending").innerHTML=pending.slice(0,5).map(t=>`
         <tr>
