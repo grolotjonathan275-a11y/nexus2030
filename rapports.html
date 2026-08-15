@@ -72,6 +72,7 @@ td{padding:0.75rem;border-top:1px solid #F1F5F9;white-space:nowrap}
 <option value="disashop">Disashop (Recharges/Services)</option>
 <option value="distribution">Distribution Devises (CEO)</option>
 <option value="caisse_mouvements">Mouvements de Caisse (Debut/Reappro/Decaissement)</option>
+<option value="validateur_ledger">Balances Validateurs (Envoi/Reception)</option>
 </select>
 </div>
 <div class="form-group"><label>Date</label><input type="date" id="detDate"></div>
@@ -333,6 +334,22 @@ const SERVICES = {
             {h:"Caissier", v:t=>t.caissier_name},
             {h:"Type", v:t=>t.type_operation},
             {h:"Devise", v:t=>t.devise},
+            {h:"Entree", v:t=>t.entree>0?fmtA(t.entree):"-"},
+            {h:"Sortie", v:t=>t.sortie>0?fmtA(t.sortie):"-"},
+            {h:"Motif", v:t=>t.motif || "-"}
+        ],
+        sumField: t => Number(t.entree||0) - Number(t.sortie||0)
+    },
+    validateur_ledger: {
+        label: "Balances Validateurs (Envoi/Reception)",
+        table: "validateur_balances_ledger",
+        extraFilter: q => q,
+        staffCol: "validator_id",
+        cols: [
+            {h:"Heure", v:t=>fmtDT(t.created_at)},
+            {h:"Validateur", v:t=>t.validator_name},
+            {h:"Type", v:t=>t.balance_type==="envoi"?"Envoi":"Reception"},
+            {h:"Service", v:t=>t.service_type},
             {h:"Entree", v:t=>t.entree>0?fmtA(t.entree):"-"},
             {h:"Sortie", v:t=>t.sortie>0?fmtA(t.sortie):"-"},
             {h:"Motif", v:t=>t.motif || "-"}
