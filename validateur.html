@@ -507,7 +507,7 @@ async function loadPending(){
                     <div><span style="color:#64748B">Heure:</span> <strong>${fmtT(t.created_at)}, ${fmt(t.created_at)}</strong></div>
                 </div>
                 <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
-                    <button class="btn-approve" style="background:#10B981" onclick="processTransaction('${t.id}','approved')">✅ Approuve</button>
+                    <button class="btn-approve" style="background:#10B981" onclick="openApprovalPhotoModal('${t.id}','${t.service_type}')">✅ Approuve</button>
                     <button class="btn-approve" style="background:#DC2626" onclick="processTransaction('${t.id}','rejected')">❌ Rejete</button>
                     <button class="btn-approve" style="background:#F59E0B" onclick="processTransaction('${t.id}','wrong_number')">⚠️ Numero Faux</button>
                 </div>
@@ -516,13 +516,17 @@ async function loadPending(){
     }).join("");
 }
 
-async function processTransaction(id,newStatus){
+async function processTransaction(id,newStatus,photoBase64){
     const labels={approved:"approuver",rejected:"rejeter",wrong_number:"marquer comme numero faux"};
-    if(!confirm(`Confirmer: ${labels[newStatus]} cette transaction?`))return;
-
+    if(newStatus !== "approved" && !confirm(`Confirmer: ${labels[newStatus]} cette transaction?`))return;
+    const updateData = {status:newStatus, validated_by: currentValidatorId, validated_at: new Date().toISOString()};
+    if(newStatus === "approved"){
+        updateData.validated_by_name = currentValidatorName;
+        if(photoBase64) updateData.confirmation_photo = photoBase64;
+    }
     const { error } = await supabaseClient
         .from("mobile_money_transactions")
-        .update({status:newStatus, validated_by: currentValidatorId, validated_at: new Date().toISOString()})
+        .update(updateData)
         .eq("id",id);
 
     if(error){
@@ -676,11 +680,150 @@ setInterval(()=>{
     if(activeSection && activeSection.id==="section-pending")loadPending();
     if(activeSection && activeSection.id==="section-overview")loadOverview();
 },30000);
+let approvalPhotoTxId = null;
+function openApprovalPhotoModal(id, serviceType){
+    approvalPhotoTxId = id;
+    const label = serviceType === "moncash" ? "Soumettez le recu de confirmation Digicel" : "Soumettez le recu de confirmation Natcom";
+    document.getElementById("approvalPhotoServiceLabel").textContent = label;
+    document.getElementById("approvalPhotoStepChoose").style.display = "block";
+    document.getElementById("approvalPhotoStepAnalyzing").style.display = "none";
+    document.getElementById("approvalPhotoStepRetry").style.display = "none";
+    document.getElementById("approvalPhotoStepSuccess").style.display = "none";
+    document.getElementById("approvalPhotoModal").style.display = "flex";
+}
+function closeApprovalPhotoModal(){
+    document.getElementById("approvalPhotoModal").style.display = "none";
+    approvalPhotoTxId = null;
+}
+function nexusFileToBase64(file){
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+}
+function nexusComputeSharpness(imgEl){
+    const canvas = document.createElement("canvas");
+    const maxDim = 300;
+    const w = imgEl.naturalWidth || imgEl.width, h = imgEl.naturalHeight || imgEl.height;
+    const scale = Math.min(1, maxDim / Math.max(w,h));
+    canvas.width = Math.max(1, Math.round(w*scale));
+    canvas.height = Math.max(1, Math.round(h*scale));
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(imgEl, 0, 0, canvas.width, canvas.height);
+    const imgData = ctx.getImageData(0,0,canvas.width,canvas.height);
+    const W = canvas.width, H = canvas.height;
+    const gray = new Float32Array(W*H);
+    for(let i=0;i<W*H;i++){
+        const r=imgData.data[i*4], g=imgData.data[i*4+1], b=imgData.data[i*4+2];
+        gray[i] = 0.299*r+0.587*g+0.114*b;
+    }
+    let sum=0, sumSq=0, count=0;
+    for(let y=1;y<H-1;y++){
+        for(let x=1;x<W-1;x++){
+            const idx = y*W+x;
+            const lap = gray[idx-1]+gray[idx+1]+gray[idx-W]+gray[idx+W]-4*gray[idx];
+            sum += lap; sumSq += lap*lap; count++;
+        }
+    }
+    if(count === 0) return 0;
+    const mean = sum/count;
+    return (sumSq/count) - mean*mean;
+}
+async function handleApprovalPhotoFile(file){
+    if(!file) return;
+    if(file.size > 5*1024*1024){ alert("Photo trop volumineuse (max 5 Mo)."); return; }
+    document.getElementById("approvalPhotoStepChoose").style.display = "none";
+    document.getElementById("approvalPhotoStepRetry").style.display = "none";
+    document.getElementById("approvalPhotoStepAnalyzing").style.display = "block";
+    const bar = document.getElementById("approvalPhotoProgressBar");
+    bar.style.width = "0%";
+    const startTime = Date.now();
+    const progressInterval = setInterval(() => {
+        const elapsed = Date.now() - startTime;
+        const pct = Math.min(95, (elapsed / 1800) * 100);
+        bar.style.width = pct + "%";
+    }, 80);
+    const maxTimeout = new Promise((_, reject) => setTimeout(() => reject(new Error("timeout")), 10000));
+    try {
+        await Promise.race([maxTimeout, (async () => {
+            const dataUrl = await nexusFileToBase64(file);
+            const img = new Image();
+            const sharpness = await new Promise((resolve, reject) => {
+                img.onload = () => { try { resolve(nexusComputeSharpness(img)); } catch(e){ reject(e); } };
+                img.onerror = reject;
+                img.src = dataUrl;
+            });
+            const elapsedSoFar = Date.now() - startTime;
+            const minDelay = 1200;
+            if(elapsedSoFar < minDelay){ await new Promise(r => setTimeout(r, minDelay - elapsedSoFar)); }
+            clearInterval(progressInterval);
+            bar.style.width = "100%";
+            const SHARPNESS_THRESHOLD = 15;
+            if(sharpness >= SHARPNESS_THRESHOLD){
+                document.getElementById("approvalPhotoStepAnalyzing").style.display = "none";
+                document.getElementById("approvalPhotoStepSuccess").style.display = "block";
+                await processTransaction(approvalPhotoTxId, "approved", dataUrl);
+                setTimeout(() => { closeApprovalPhotoModal(); }, 900);
+            } else {
+                document.getElementById("approvalPhotoStepAnalyzing").style.display = "none";
+                document.getElementById("approvalPhotoStepRetry").style.display = "block";
+            }
+        })()]);
+    } catch(e){
+        clearInterval(progressInterval);
+        document.getElementById("approvalPhotoStepAnalyzing").style.display = "none";
+        document.getElementById("approvalPhotoStepRetry").style.display = "block";
+    }
+}
+document.addEventListener("DOMContentLoaded", () => {
+    const camInput = document.getElementById("approvalPhotoCamera");
+    const galInput = document.getElementById("approvalPhotoGallery");
+    if(camInput) camInput.onchange = () => handleApprovalPhotoFile(camInput.files[0]);
+    if(galInput) galInput.onchange = () => handleApprovalPhotoFile(galInput.files[0]);
+});
 </script>
 
 <script src="assets/js/theme-switcher.js"></script>
 <script src="assets/js/enhancements.js"></script>
 <script src="assets/js/globalsearch.js"></script>
 <script src="assets/js/validator-alerts.js"></script>
+<div id="approvalPhotoModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:9999;align-items:center;justify-content:center">
+<div style="background:#fff;border-radius:14px;padding:1.75rem;max-width:420px;width:92%;text-align:center;box-shadow:0 20px 50px rgba(0,0,0,0.3)">
+<div id="approvalPhotoStepChoose">
+<h3 style="margin-bottom:0.5rem">📸 Photo de Confirmation</h3>
+<p id="approvalPhotoServiceLabel" style="color:#64748B;margin-bottom:1.25rem;font-size:0.9rem"></p>
+<div style="display:flex;flex-direction:column;gap:0.75rem">
+<button onclick="document.getElementById('approvalPhotoCamera').click()" style="padding:0.9rem;border-radius:10px;border:none;background:#10B981;color:#fff;font-weight:700;cursor:pointer;font-size:1rem">📷 Prendre une photo</button>
+<button onclick="document.getElementById('approvalPhotoGallery').click()" style="padding:0.9rem;border-radius:10px;border:1.5px solid #E2E8F0;background:#fff;cursor:pointer;font-size:1rem">🖼️ Choisir depuis la galerie</button>
+<button onclick="closeApprovalPhotoModal()" style="padding:0.7rem;border-radius:10px;border:none;background:none;color:#64748B;cursor:pointer">Annuler</button>
+</div>
+<input type="file" id="approvalPhotoCamera" accept="image/*" capture="environment" style="display:none">
+<input type="file" id="approvalPhotoGallery" accept="image/*" style="display:none">
+</div>
+<div id="approvalPhotoStepAnalyzing" style="display:none">
+<h3 style="margin-bottom:1rem">🔎 Analyse en cours...</h3>
+<div style="width:100%;height:10px;background:#E2E8F0;border-radius:10px;overflow:hidden;margin-bottom:1rem">
+<div id="approvalPhotoProgressBar" style="width:0%;height:100%;background:#10B981;transition:width 0.15s linear"></div>
+</div>
+<p style="color:#64748B;font-size:0.85rem">Verification de la clarte de la photo...</p>
+</div>
+<div id="approvalPhotoStepRetry" style="display:none">
+<div style="font-size:3rem;margin-bottom:0.5rem">⚠️</div>
+<h3 style="margin-bottom:0.5rem;color:#DC2626">Photo pas assez claire</h3>
+<p style="color:#64748B;margin-bottom:1.25rem;font-size:0.9rem">Tanpri fe foto a pi klè, evite flou, epi reprann li.</p>
+<div style="display:flex;flex-direction:column;gap:0.75rem">
+<button onclick="document.getElementById('approvalPhotoCamera').click()" style="padding:0.9rem;border-radius:10px;border:none;background:#10B981;color:#fff;font-weight:700;cursor:pointer;font-size:1rem">📷 Reprendre la photo</button>
+<button onclick="document.getElementById('approvalPhotoGallery').click()" style="padding:0.9rem;border-radius:10px;border:1.5px solid #E2E8F0;background:#fff;cursor:pointer;font-size:1rem">🖼️ Choisir une autre photo</button>
+<button onclick="closeApprovalPhotoModal()" style="padding:0.7rem;border-radius:10px;border:none;background:none;color:#64748B;cursor:pointer">Annuler</button>
+</div>
+</div>
+<div id="approvalPhotoStepSuccess" style="display:none">
+<div style="font-size:3rem;margin-bottom:0.5rem">✅</div>
+<h3 style="color:#16A34A">Validation reussie!</h3>
+</div>
+</div>
+</div>
 </body>
 </html>
