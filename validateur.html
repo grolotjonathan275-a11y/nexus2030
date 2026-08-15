@@ -506,7 +506,7 @@ async function processTransaction(id,newStatus){
 
     const { error } = await supabaseClient
         .from("mobile_money_transactions")
-        .update({status:newStatus})
+        .update({status:newStatus, validated_by: currentValidatorId, validated_at: new Date().toISOString()})
         .eq("id",id);
 
     if(error){
