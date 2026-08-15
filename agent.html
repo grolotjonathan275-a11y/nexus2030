@@ -1771,6 +1771,13 @@ async function acceptRtNegotiation(id, finalAmountHtg){
     } else if(lastValidatorId){
         await sf("validator_wallets", "POST", { validator_id: lastValidatorId, validator_name: lastValidatorName, service_type: tx.service_type, balance_htg: finalAmountHtg });
     }
+    const walletVRArr = await sf("validateur_reception_balances", "GET", null, `?validator_id=eq.${lastValidatorId}&service_type=eq.${tx.service_type}`);
+    const walletVR = walletVRArr && walletVRArr[0];
+    if(walletVR){
+        await sf("validateur_reception_balances", "PATCH", { balance_htg: Number(walletVR.balance_htg) + finalAmountHtg, updated_at: new Date().toISOString() }, `?id=eq.${walletVR.id}`);
+    } else if(lastValidatorId){
+        await sf("validateur_reception_balances", "POST", { validator_id: lastValidatorId, validator_name: lastValidatorName, service_type: tx.service_type, balance_htg: finalAmountHtg });
+    }
 
     await sf("receive_transfer_negotiations", "POST", {
         transaction_id: id, proposed_by: "caissier", proposed_by_id: AGENT_ID, proposed_by_name: AGENT_NAME,
