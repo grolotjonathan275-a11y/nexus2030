@@ -439,7 +439,7 @@ async function loadDetailedReport(){
     if(!dateStr){ alert("Selectionnez une date."); return; }
 
     const svc = SERVICES[svcKey];
-    document.getElementById("detTitle").textContent = svc.label + " - " + new Date(dateStr).toLocaleDateString("fr-FR");
+    document.getElementById("detTitle").textContent = svc.label + " - " + new Date(dateStr + "T00:00:00").toLocaleDateString("fr-FR");
     document.getElementById("detBody").innerHTML = "<tr><td style='padding:1.5rem;text-align:center'>Chargement...</td></tr>";
 
     const staffFilter = isPrivileged() ? document.getElementById("detStaff").value : null;
@@ -517,7 +517,7 @@ async function loadGeneralReport(){
         <div style="text-align:center;margin-bottom:1.5rem;border-bottom:2px solid #000;padding-bottom:1rem">
             <h1 style="font-size:1.4rem">NEXUS CASA DE CAMBIO</h1>
             <p style="font-size:0.9rem">Rapport General d'Activite</p>
-            <p style="font-size:0.9rem;font-weight:700">${new Date(dateStr).toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long",year:"numeric"})}</p>
+            <p style="font-size:0.9rem;font-weight:700">${new Date(dateStr + "T00:00:00").toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long",year:"numeric"})}</p>
             <p style="font-size:0.75rem;color:#666">Genere par: ${currentUser.name} (${currentUser.role})</p><p style="font-size:0.75rem;color:#666">Personnel filtre: ${staffLabel}</p>
         </div>`;
 
