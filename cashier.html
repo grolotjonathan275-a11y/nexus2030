@@ -3657,6 +3657,12 @@ document.addEventListener("DOMContentLoaded", async () => {
             if(activeSection && activeSection.id === "section-receive"){ loadRtTransactions(); loadRtNegotiations(); }
         })
         .subscribe();
+    supabaseClient.channel("cashier-realtime-caisse")
+        .on("postgres_changes", { event: "*", schema: "public", table: "caisse_ledger", filter: `caissier_id=eq.${CASHIER_ID}` }, () => {
+            const activeSection = document.querySelector(".section.active");
+            if(activeSection && activeSection.id === "section-caisse" && currentCaisseSession){ refreshCaisseStats(); }
+        })
+        .subscribe();
 });
 </script>
 
