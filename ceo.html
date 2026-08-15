@@ -435,7 +435,7 @@
         <section class="section" id="section-gestion-caisses">
             <h2 class="section-title">💵 Gestion des Caisses</h2>
             <div class="card">
-                <div class="card-header"><h3>Sessions de Caisse - Tous les Caissiers</h3><span class="badge" id="gcCount">0</span></div>
+                <div class="card-header" style="display:flex;justify-content:space-between;align-items:center"><h3>Sessions de Caisse - Tous les Caissiers</h3><div style="display:flex;align-items:center;gap:0.5rem"><span class="badge" id="gcCount">0</span><button class="btn-ceo-action" style="padding:0.4rem 0.8rem;font-size:0.85rem" onclick="gcOpenArchiveModal()">📁 Archives</button></div></div>
                 <div class="table-wrap">
                     <table class="data-table">
                         <thead><tr><th>Caissier</th><th>Succursale</th><th>Devise</th><th>Fonds Initial</th><th>Solde Theorique</th><th>Statut</th><th>Ouverte le</th><th>Action</th></tr></thead>
@@ -462,6 +462,17 @@
                 </div>
             </div>
         </section>
+<div id="gcArchiveModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center">
+<div style="background:#fff;border-radius:12px;padding:1.5rem;max-width:700px;width:95%;max-height:80vh;overflow-y:auto">
+<h3 style="margin-bottom:1rem">📁 Archives des Caisses</h3>
+<div style="display:flex;gap:0.75rem;align-items:flex-end;margin-bottom:1rem">
+<div class="form-group" style="flex:1;margin:0"><label>Date *</label><input type="date" id="gcArchiveDate" style="width:100%;padding:0.75rem;border-radius:10px;border:1.5px solid #E2E8F0"></div>
+<button class="btn-ceo-action" onclick="gcSearchArchive()">🔍 Rechercher</button>
+</div>
+<div class="table-wrap"><table class="data-table"><thead><tr><th>Caissier</th><th>Succursale</th><th>Devise</th><th>Fonds Initial</th><th>Statut</th><th>Heure</th><th>Action</th></tr></thead><tbody id="gcArchiveList"><tr><td colspan="7">Choisissez une date.</td></tr></tbody></table></div>
+<button onclick="gcCloseArchiveModal()" style="margin-top:1rem;width:100%;padding:0.75rem;border-radius:10px;border:1.5px solid #E2E8F0;background:#fff;cursor:pointer">Fermer</button>
+</div>
+</div>
 <div id="gcNewCaisseModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center">
 <div style="background:#fff;border-radius:12px;padding:1.5rem;max-width:400px;width:90%">
 <h3 style="margin-bottom:1rem">💵 Ouvrir une Caisse</h3>
@@ -2184,6 +2195,40 @@ async function gcDeleteLedgerEntry(entryId, devise, entree, sortie){
 
     await gcLoadLedger();
     await loadGestionCaisses();
+}
+
+function gcOpenArchiveModal(){
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    document.getElementById("gcArchiveDate").value = yesterday.toISOString().split("T")[0];
+    document.getElementById("gcArchiveModal").style.display = "flex";
+    gcSearchArchive();
+}
+
+function gcCloseArchiveModal(){
+    document.getElementById("gcArchiveModal").style.display = "none";
+}
+
+async function gcSearchArchive(){
+    const dateStr = document.getElementById("gcArchiveDate").value;
+    if(!dateStr) return;
+    const start = new Date(dateStr + "T00:00:00").toISOString();
+    const end = new Date(dateStr + "T23:59:59.999").toISOString();
+    const { data: sessions } = await supabaseClient.from("caisse_sessions").select("*").gte("opened_at", start).lte("opened_at", end).order("opened_at",{ascending:false});
+    const tbody = document.getElementById("gcArchiveList");
+    if(!sessions || !sessions.length){ tbody.innerHTML = "<tr><td colspan='7'>Aucune session pour cette date.</td></tr>"; return; }
+    tbody.innerHTML = sessions.map(s => {
+        const statusLabel = s.status === "closed" ? "<span style='color:#64748B'>Fermee</span>" : "<span style='color:#16A34A;font-weight:700'>Ouverte</span>";
+        return `<tr>
+            <td>${s.caissier_name}</td>
+            <td>${s.branch}</td>
+            <td>${s.currency_code}</td>
+            <td>${Number(s.fonds_initial).toLocaleString("fr-FR",{minimumFractionDigits:2})}</td>
+            <td>${statusLabel}</td>
+            <td>${new Date(s.opened_at).toLocaleTimeString("fr-FR")}</td>
+            <td><button data-session="${s.id}" data-cashier="${s.caissier_id}" data-name="${s.caissier_name}" data-devise="${s.currency_code}" onclick="gcOpenDetail(this.dataset.session,this.dataset.cashier,this.dataset.name,this.dataset.devise); gcCloseArchiveModal();" class="btn-ceo-action" style="padding:0.3rem 0.7rem;font-size:0.8rem">Voir</button></td>
+        </tr>`;
+    }).join("");
 }
 
 async function loadAllocationHistoryCeo(){
