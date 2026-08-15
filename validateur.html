@@ -514,6 +514,20 @@ async function processTransaction(id,newStatus){
         return;
     }
 
+    if(newStatus === "approved"){
+        const { data: txData } = await supabaseClient.from("mobile_money_transactions").select("service_type,amount_htg").eq("id",id).maybeSingle();
+        if(txData){
+            const { data: bal } = await supabaseClient.from("validateur_envoi_balances").select("*").eq("validator_id", currentValidatorId).eq("service_type", txData.service_type).maybeSingle();
+            const currentBal = bal ? Number(bal.balance_htg) : 0;
+            const newBal = currentBal - Number(txData.amount_htg);
+            if(bal){
+                await supabaseClient.from("validateur_envoi_balances").update({ balance_htg: newBal, updated_at: new Date().toISOString() }).eq("id", bal.id);
+            } else {
+                await supabaseClient.from("validateur_envoi_balances").insert({ validator_id: currentValidatorId, validator_name: currentValidatorName, service_type: txData.service_type, balance_htg: newBal });
+            }
+        }
+    }
+
     alert("✅ Transaction mise a jour.");
     loadPending();
     loadOverview();
