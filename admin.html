@@ -3395,7 +3395,19 @@ async function deleteBranch(id){
     loadBranchesManagement();
 }
 
-document.addEventListener("DOMContentLoaded", loadDashboard);
+async function loadCurrentAdminIdentity(){
+    try{
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if(!session) return;
+        const { data: profile } = await supabaseClient.from("profiles").select("full_name").eq("id", session.user.id).maybeSingle();
+        const name = profile && profile.full_name ? profile.full_name.trim() : "";
+        const initials = name ? name.split(/\s+/).map(w => w[0]).join("").substring(0,2).toUpperCase() : "?";
+        const el = document.querySelector(".admin-avatar");
+        if(el) el.textContent = initials;
+        if(el && name) el.title = name;
+    } catch(e){}
+}
+document.addEventListener("DOMContentLoaded", () => { loadDashboard(); loadCurrentAdminIdentity(); });
 </script>
 
 <script src="assets/js/theme-switcher.js"></script>
