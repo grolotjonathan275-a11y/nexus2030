@@ -1439,7 +1439,6 @@ async function decideLoanAdmin(loanId, decision){
 
 async function loadLoginHistory(){
     const r = await fetch(`${SUPA_URL}/rest/v1/login_history?order=created_at.desc&limit=100`, {headers:{"apikey":SUPA_KEY,"Authorization":`Bearer ${SUPA_KEY}`}});
-if(id === "validator-balances") loadValidatorBalances();
     const rows = await r.json();
     if(!Array.isArray(rows)){
         document.getElementById("loginHistoryList").innerHTML = "<tr><td colspan='5'>Erreur de chargement</td></tr>";
@@ -1528,6 +1527,7 @@ function showSection(el, e) {
     if (id === "promotions") loadPromotions();
     if (id === "news") loadNews();
     if(id === "gestion-caisses") loadGestionCaisses();
+    if(id === "validator-balances") loadValidatorBalances();
     if (id === "partners") loadPartnerLogos();
     if (id === "contact-info") loadContactInfo();
     if (id === "manage-branches") loadBranchesManagement();
