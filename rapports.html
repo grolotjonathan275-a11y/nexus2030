@@ -265,8 +265,10 @@ const SERVICES = {
         table: "mobile_money_transactions",
         extraFilter: q => q,
         staffCol: "validated_by",
+        dateCol: "validated_at",
         cols: [
-            {h:"Heure", v:t=>fmtDT(t.created_at)},
+            {h:"Heure Validation", v:t=>fmtDT(t.validated_at)},
+            {h:"Heure Soumission", v:t=>fmtDT(t.created_at)},
             {h:"Service", v:t=>t.service_type},
             {h:"Client", v:t=>t.sender_full_name},
             {h:"Total DOP", v:t=>fmtA(t.total_charged_dop)},
@@ -279,8 +281,10 @@ const SERVICES = {
         table: "receive_transfer_transactions",
         extraFilter: q => q,
         staffCol: "validated_by",
+        dateCol: "validated_at",
         cols: [
-            {h:"Heure", v:t=>fmtDT(t.created_at)},
+            {h:"Heure Validation", v:t=>fmtDT(t.validated_at)},
+            {h:"Heure Soumission", v:t=>fmtDT(t.created_at)},
             {h:"Service", v:t=>t.service_type},
             {h:"Client", v:t=>t.client_name},
             {h:"Net DOP", v:t=>fmtA(t.amount_dop_net)},
@@ -340,7 +344,8 @@ const SERVICES = {
 async function fetchServiceData(svcKey, dateStr, staffIdOverride){
     const svc = SERVICES[svcKey];
     const { start, end } = dayRange(dateStr);
-    let q = supabaseClient.from(svc.table).select("*").gte("created_at", start).lte("created_at", end).order("created_at",{ascending:true});
+    const dateCol = svc.dateCol || "created_at";
+    let q = supabaseClient.from(svc.table).select("*").gte(dateCol, start).lte(dateCol, end).order(dateCol,{ascending:true});
     q = svc.extraFilter(q);
     if(!isPrivileged()){
         q = q.eq(svc.staffCol, currentUser.id);
