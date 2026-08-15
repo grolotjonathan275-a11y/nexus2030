@@ -118,6 +118,18 @@ const supabaseClient = supabase.createClient(SUPA_URL, SUPA_KEY);
 let currentUser = null; // {id, name, role}
 
 function fmtA(n){ return Number(n||0).toLocaleString("fr-FR",{minimumFractionDigits:2}); }
+function computeTotalStr(svc, data){
+    if(svc.currencyField){
+        const byC = {};
+        data.forEach(t => {
+            const c = t[svc.currencyField] || "?";
+            byC[c] = (byC[c]||0) + (svc.sumField(t)||0);
+        });
+        const entries = Object.entries(byC);
+        return entries.length ? entries.map(([c,v]) => `${fmtA(v)} ${c}`).join(", ") : "0";
+    }
+    return fmtA(data.reduce((s,t) => s + (svc.sumField(t)||0), 0));
+}
 function fmtDT(d){ return d ? new Date(d).toLocaleString("fr-FR") : "-"; }
 
 function switchTab(name){
@@ -314,6 +326,7 @@ const SERVICES = {
         table: "currency_allocations",
         extraFilter: q => q,
         staffCol: "staff_id",
+        currencyField: "currency_code",
         cols: [
             {h:"Heure", v:t=>fmtDT(t.created_at)},
             {h:"Beneficiaire", v:t=>t.staff_name},
@@ -329,6 +342,7 @@ const SERVICES = {
         table: "caisse_ledger",
         extraFilter: q => q.in("type_operation",["debut_caisse","reapprovisionnement","decaissement"]),
         staffCol: "caissier_id",
+        currencyField: "devise",
         cols: [
             {h:"Heure", v:t=>fmtDT(t.created_at)},
             {h:"Caissier", v:t=>t.caissier_name},
@@ -389,11 +403,11 @@ function exportDetailedExcel(){
         svc.cols.forEach(c => { row[c.h] = c.v(t); });
         return row;
     });
-    const total = lastDetailedData.reduce((s,t) => s + (svc.sumField(t)||0), 0);
+    const totalStr = computeTotalStr(svc, lastDetailedData);
     rows.push({});
     const totalRow = {};
     totalRow[svc.cols[0].h] = "TOTAL";
-    totalRow[svc.cols[svc.cols.length-1].h] = fmtA(total);
+    totalRow[svc.cols[svc.cols.length-1].h] = totalStr;
     rows.push(totalRow);
 
     const ws = XLSX.utils.json_to_sheet(rows);
@@ -410,7 +424,7 @@ function printDetailedReport(){
         return;
     }
     const svc = SERVICES[lastDetailedSvcKey];
-    const total = lastDetailedData.reduce((s,t) => s + (svc.sumField(t)||0), 0);
+    const totalStr = computeTotalStr(svc, lastDetailedData);
 
     const tableRows = lastDetailedData.map(t => "<tr>" + svc.cols.map(c=>`<td style="padding:4px 6px;border:1px solid #ccc;font-size:0.75rem">${c.v(t)}</td>`).join("") + "</tr>").join("");
 
@@ -422,7 +436,7 @@ function printDetailedReport(){
             <p style="font-size:0.75rem;color:#666">Genere par: ${currentUser.name} (${currentUser.role})</p><p style="font-size:0.75rem;color:#666">Personnel filtre: ${lastDetailedStaffLabel}</p>
         </div>
         <div style="margin-bottom:1.25rem">
-            <h3 style="font-size:0.95rem;background:#F1F5F9;padding:0.5rem;border-radius:4px">${svc.label} (${lastDetailedData.length} transaction(s) - Total: ${fmtA(total)})</h3>
+            <h3 style="font-size:0.95rem;background:#F1F5F9;padding:0.5rem;border-radius:4px">${svc.label} (${lastDetailedData.length} transaction(s) - Total: ${totalStr})</h3>
             <table style="width:100%;border-collapse:collapse;margin-top:0.35rem">
                 <thead><tr>${svc.cols.map(c=>`<th style="padding:4px 6px;border:1px solid #ccc;background:#F8FAFC;font-size:0.72rem;text-align:left">${c.h}</th>`).join("")}</tr></thead>
                 <tbody>${tableRows}</tbody>
@@ -462,9 +476,9 @@ async function loadDetailedReport(){
 
     document.getElementById("detBody").innerHTML = data.map(t => "<tr>" + svc.cols.map(c=>`<td>${c.v(t)}</td>`).join("") + "</tr>").join("");
 
-    const total = data.reduce((s,t) => s + (svc.sumField(t)||0), 0);
+    const totalStr = computeTotalStr(svc, data);
     document.getElementById("detSummary").style.display = "flex";
-    document.getElementById("detSummary").innerHTML = `<div>Total transactions: <strong>${data.length}</strong></div><div>Volume total: <strong>${fmtA(total)}</strong></div>`;
+    document.getElementById("detSummary").innerHTML = `<div>Total transactions: <strong>${data.length}</strong></div><div>Volume total: <strong>${totalStr}</strong></div>`;
 }
 
 let lastGeneralData = null;
@@ -487,12 +501,12 @@ function exportGeneralExcel(){
         if(rows.length === 0){
             rows.push({ Info: "Aucune transaction" });
         }
-        const total = (lastGeneralData[svcKey] || []).reduce((s,t) => s + (svc.sumField(t)||0), 0);
+        const totalStr = computeTotalStr(svc, (lastGeneralData[svcKey] || []));
         if(rows.length && rows[0].Info === undefined){
             rows.push({});
             const totalRow = {};
             totalRow[svc.cols[0].h] = "TOTAL";
-            totalRow[svc.cols[svc.cols.length-1].h] = fmtA(total);
+            totalRow[svc.cols[svc.cols.length-1].h] = totalStr;
             rows.push(totalRow);
         }
         const ws = XLSX.utils.json_to_sheet(rows);
@@ -534,7 +548,7 @@ async function loadGeneralReport(){
         lastGeneralData[svcKey] = rows;
         grandTotalTxns += rows.length;
 
-        const total = rows.reduce((s,t) => s + (svc.sumField(t)||0), 0);
+        const totalStr = computeTotalStr(svc, rows);
 
         const tableRows = rows.length
             ? rows.map(t => "<tr>" + svc.cols.map(c=>`<td style="padding:4px 6px;border:1px solid #ccc;font-size:0.75rem">${c.v(t)}</td>`).join("") + "</tr>").join("")
@@ -542,7 +556,7 @@ async function loadGeneralReport(){
 
         const sectionHtml = `
             <div style="margin-bottom:1.25rem">
-                <h3 style="font-size:0.95rem;background:#F1F5F9;padding:0.5rem;border-radius:4px">${svc.label} (${rows.length} transaction(s) - Total: ${fmtA(total)})</h3>
+                <h3 style="font-size:0.95rem;background:#F1F5F9;padding:0.5rem;border-radius:4px">${svc.label} (${rows.length} transaction(s) - Total: ${totalStr})</h3>
                 <table style="width:100%;border-collapse:collapse;margin-top:0.35rem">
                     <thead><tr>${svc.cols.map(c=>`<th style="padding:4px 6px;border:1px solid #ccc;background:#F8FAFC;font-size:0.72rem;text-align:left">${c.h}</th>`).join("")}</tr></thead>
                     <tbody>${tableRows}</tbody>
@@ -550,7 +564,7 @@ async function loadGeneralReport(){
             </div>`;
 
         printHtml += sectionHtml;
-        screenHtml += `<div class="card"><div class="card-header"><h3>${svc.label}</h3><span style="color:#64748B;font-size:0.85rem">${rows.length} txn(s) - ${fmtA(total)}</span></div><div class="table-wrap">${tableRows==="" ? "" : "<table><thead><tr>"+svc.cols.map(c=>`<th>${c.h}</th>`).join("")+"</tr></thead><tbody>"+tableRows+"</tbody></table>"}</div></div>`;
+        screenHtml += `<div class="card"><div class="card-header"><h3>${svc.label}</h3><span style="color:#64748B;font-size:0.85rem">${rows.length} txn(s) - ${totalStr}</span></div><div class="table-wrap">${tableRows==="" ? "" : "<table><thead><tr>"+svc.cols.map(c=>`<th>${c.h}</th>`).join("")+"</tr></thead><tbody>"+tableRows+"</tbody></table>"}</div></div>`;
     }
 
     printHtml += `<div style="margin-top:1rem;border-top:2px solid #000;padding-top:0.75rem;font-weight:700">Total general: ${grandTotalTxns} transaction(s) toutes categories confondues</div>`;
