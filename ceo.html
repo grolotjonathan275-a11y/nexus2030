@@ -49,6 +49,7 @@
 <a href="#loans" class="nav-item" onclick="showSection(this,event)"><span>💰</span>Prestamo</a>
         <a href="#bank-distribution" class="nav-item" onclick="showSection(this,event)"><span>🏦</span>Distribution Bancaire</a>
 <a href="#receive-transfers" class="nav-item" onclick="showSection(this,event)"><span>🔄</span>Reception Transferts</a>
+<a href="#validator-balances" class="nav-item" onclick="showSection(this,event)"><span>💰</span>Balances Validateurs</a>
 <a href="rapports.html" class="nav-item"><span>📊</span>Rapports</a>
 <a href="#system-rates" class="nav-item" onclick="showSection(this,event)"><span>⚙️</span>Taux Systeme</a>
 <a href="#wisecard-admin" class="nav-item" onclick="showSection(this,event)"><span>💳</span>Carte Debit Wise</a>
@@ -718,6 +719,37 @@ Equipe</h3><span class="badge" id="usersCount">0</span></div>
 <div class="table-wrap"><table class="data-table"><thead><tr><th>Date</th><th>Beneficiaire</th><th>Service</th><th>Montant</th><th>Notes</th></tr></thead><tbody id="rtAllocHistoryList"><tr><td colspan="5">Chargement...</td></tr></tbody></table></div>
 </div>
 </section>
+<section class="section" id="section-validator-balances">
+<h2 class="section-title">💰 Balances Validateurs</h2>
+<div class="card" style="margin-bottom:1.5rem">
+<div class="card-header"><h3>➡️ Balance Envoi (MonCash/NatCash)</h3></div>
+<p style="padding:0 1.25rem;margin:0.5rem 0;color:#64748B;font-size:0.85rem">Diminue automatiquement quand le validateur approuve une transaction d'envoi.</p>
+<div style="padding:1.25rem">
+<div class="form-grid-2">
+<div class="form-group"><label>Validateur *</label><select id="veStaff" style="width:100%;padding:0.75rem;border-radius:10px;border:1.5px solid #E2E8F0"></select></div>
+<div class="form-group"><label>Service *</label><select id="veService" style="width:100%;padding:0.75rem;border-radius:10px;border:1.5px solid #E2E8F0"><option value="moncash">MonCash</option><option value="natcash">NatCash</option></select></div>
+</div>
+<div class="form-group"><label>Montant (HTG) *</label><input type="number" id="veAmount" placeholder="0.00" min="0.01" style="width:100%;padding:0.75rem;border-radius:10px;border:1.5px solid #E2E8F0"></div>
+<button class="btn-ceo-action" onclick="veAddBalance()">➕ Ajouter Balance</button>
+<div id="veMsg" style="display:none" class="result-box"></div>
+</div>
+<div class="table-wrap"><table class="data-table"><thead><tr><th>Validateur</th><th>Service</th><th>Balance HTG</th><th>Actions</th></tr></thead><tbody id="veList"><tr><td colspan="4">Chargement...</td></tr></tbody></table></div>
+</div>
+<div class="card" style="margin-top:1.5rem">
+<div class="card-header"><h3>⬅️ Balance Reception (5 services)</h3></div>
+<p style="padding:0 1.25rem;margin:0.5rem 0;color:#64748B;font-size:0.85rem">Augmente automatiquement quand le validateur valide une reception.</p>
+<div style="padding:1.25rem">
+<div class="form-grid-2">
+<div class="form-group"><label>Validateur *</label><select id="vrStaff" style="width:100%;padding:0.75rem;border-radius:10px;border:1.5px solid #E2E8F0"></select></div>
+<div class="form-group"><label>Service *</label><select id="vrService" style="width:100%;padding:0.75rem;border-radius:10px;border:1.5px solid #E2E8F0"><option value="moncash">MonCash</option><option value="natcash">NatCash</option><option value="unibank">Unibank</option><option value="bnc">BNC</option><option value="sogebank">Sogebank</option></select></div>
+</div>
+<div class="form-group"><label>Montant (HTG) *</label><input type="number" id="vrAmount" placeholder="0.00" min="0.01" style="width:100%;padding:0.75rem;border-radius:10px;border:1.5px solid #E2E8F0"></div>
+<button class="btn-ceo-action" onclick="vrAddBalance()">➕ Ajouter Balance</button>
+<div id="vrMsg" style="display:none" class="result-box"></div>
+</div>
+<div class="table-wrap"><table class="data-table"><thead><tr><th>Validateur</th><th>Service</th><th>Balance HTG</th><th>Actions</th></tr></thead><tbody id="vrList"><tr><td colspan="4">Chargement...</td></tr></tbody></table></div>
+</div>
+</section>
 
 <!-- TAUX SYSTEME -->
 <section class="section" id="section-system-rates">
@@ -1282,6 +1314,7 @@ function showSection(el,e){
     if(id==="currency-distribution")loadAllocationFormCeo();
     if(id==="bank-distribution"){ loadBankCapital(); loadAllocationFormBankCeo(); }
     if(id==="receive-transfers"){ loadRtSettings(); loadRtCapital(); loadAllocationFormRtCeo(); loadValidatorWallets(); loadReceiveWallets(); }
+if(id==="validator-balances") loadValidatorBalances();
     if(id==="system-rates"){ loadSystemRates(); loadSystemRatesHistory(); }
     if(id==="wisecard-admin"){ loadWiseAdminOverview(); }
     if(id==="loans"){ loadLoansOverview(); }
@@ -2552,6 +2585,107 @@ async function loadRtAllocHistory(){
     document.getElementById("rtAllocCount").textContent = data.length;
     tbody.innerHTML = data.map(a => `
         <tr><td>${new Date(a.created_at).toLocaleString("fr-FR")}</td><td>${a.staff_name}</td><td>${RT_SERVICE_LABELS[a.service_type]||a.service_type}</td><td>${fmtA(a.amount)} DOP</td><td>${a.notes || "-"}</td></tr>`).join("");
+}
+
+async function loadValidatorBalances(){
+    const { data: validators } = await supabaseClient.from("profiles").select("id,full_name").eq("role","validateur").eq("status","active").order("full_name");
+    const opts = (validators||[]).map(v => `<option value="${v.id}" data-name="${v.full_name}">${v.full_name}</option>`).join("") || "<option value=\"\">Aucun validateur</option>";
+    const veSel = document.getElementById("veStaff");
+    const vrSel = document.getElementById("vrStaff");
+    if(veSel) veSel.innerHTML = opts;
+    if(vrSel) vrSel.innerHTML = opts;
+
+    const { data: veData } = await supabaseClient.from("validateur_envoi_balances").select("*").order("validator_name");
+    const veTbody = document.getElementById("veList");
+    if(veTbody){
+        if(!veData || !veData.length){ veTbody.innerHTML = "<tr><td colspan='4'>Aucune balance.</td></tr>"; }
+        else {
+            veTbody.innerHTML = veData.map(v => {
+                const color = Number(v.balance_htg) >= 0 ? "#16A34A" : "#DC2626";
+                return `<tr><td>${v.validator_name||"-"}</td><td>${v.service_type}</td><td style="color:${color};font-weight:700">${fmtA(v.balance_htg)} HTG</td><td><button data-id="${v.id}" data-amount="${v.balance_htg}" data-name="${v.validator_name}" onclick="veEditBalance(this.dataset.id,this.dataset.amount,this.dataset.name)" style="border:none;background:none;cursor:pointer;font-size:1rem" title="Modifier">✏️</button> <button data-id="${v.id}" onclick="veDeleteBalance(this.dataset.id)" style="border:none;background:none;cursor:pointer;font-size:1rem" title="Supprimer">🗑️</button></td></tr>`;
+            }).join("");
+        }
+    }
+
+    const { data: vrData } = await supabaseClient.from("validateur_reception_balances").select("*").order("validator_name");
+    const vrTbody = document.getElementById("vrList");
+    if(vrTbody){
+        if(!vrData || !vrData.length){ vrTbody.innerHTML = "<tr><td colspan='4'>Aucune balance.</td></tr>"; }
+        else {
+            vrTbody.innerHTML = vrData.map(v => {
+                const color = Number(v.balance_htg) >= 0 ? "#16A34A" : "#DC2626";
+                return `<tr><td>${v.validator_name||"-"}</td><td>${RT_SERVICE_LABELS[v.service_type]||v.service_type}</td><td style="color:${color};font-weight:700">${fmtA(v.balance_htg)} HTG</td><td><button data-id="${v.id}" data-amount="${v.balance_htg}" data-name="${v.validator_name}" onclick="vrEditBalance(this.dataset.id,this.dataset.amount,this.dataset.name)" style="border:none;background:none;cursor:pointer;font-size:1rem" title="Modifier">✏️</button> <button data-id="${v.id}" onclick="vrDeleteBalance(this.dataset.id)" style="border:none;background:none;cursor:pointer;font-size:1rem" title="Supprimer">🗑️</button></td></tr>`;
+            }).join("");
+        }
+    }
+}
+
+async function veAddBalance(){
+    const sel = document.getElementById("veStaff");
+    const validatorId = sel.value;
+    const validatorName = sel.options[sel.selectedIndex] ? sel.options[sel.selectedIndex].dataset.name : "";
+    const service = document.getElementById("veService").value;
+    const amount = Number(document.getElementById("veAmount").value);
+    const msg = document.getElementById("veMsg");
+    if(!validatorId || !amount || amount <= 0){ msg.style.display="block"; msg.className="result-box error"; msg.innerHTML="Remplissez tous les champs."; return; }
+    const { data: existing } = await supabaseClient.from("validateur_envoi_balances").select("*").eq("validator_id", validatorId).eq("service_type", service).maybeSingle();
+    if(existing){
+        await supabaseClient.from("validateur_envoi_balances").update({ balance_htg: Number(existing.balance_htg) + amount, updated_at: new Date().toISOString() }).eq("id", existing.id);
+    } else {
+        await supabaseClient.from("validateur_envoi_balances").insert({ validator_id: validatorId, validator_name: validatorName, service_type: service, balance_htg: amount });
+    }
+    msg.style.display="block"; msg.className="result-box success"; msg.innerHTML="✅ Balance ajoutee!";
+    document.getElementById("veAmount").value = "";
+    await loadValidatorBalances();
+}
+
+async function veEditBalance(id, currentAmount, name){
+    const newVal = prompt(`Nouveau solde HTG pour ${name}:`, currentAmount);
+    if(newVal === null) return;
+    const num = Number(newVal);
+    if(isNaN(num)){ alert("Montant invalide."); return; }
+    await supabaseClient.from("validateur_envoi_balances").update({ balance_htg: num, updated_at: new Date().toISOString() }).eq("id", id);
+    await loadValidatorBalances();
+}
+
+async function veDeleteBalance(id){
+    if(!confirm("Supprimer cette balance ?")) return;
+    await supabaseClient.from("validateur_envoi_balances").delete().eq("id", id);
+    await loadValidatorBalances();
+}
+
+async function vrAddBalance(){
+    const sel = document.getElementById("vrStaff");
+    const validatorId = sel.value;
+    const validatorName = sel.options[sel.selectedIndex] ? sel.options[sel.selectedIndex].dataset.name : "";
+    const service = document.getElementById("vrService").value;
+    const amount = Number(document.getElementById("vrAmount").value);
+    const msg = document.getElementById("vrMsg");
+    if(!validatorId || !amount || amount <= 0){ msg.style.display="block"; msg.className="result-box error"; msg.innerHTML="Remplissez tous les champs."; return; }
+    const { data: existing } = await supabaseClient.from("validateur_reception_balances").select("*").eq("validator_id", validatorId).eq("service_type", service).maybeSingle();
+    if(existing){
+        await supabaseClient.from("validateur_reception_balances").update({ balance_htg: Number(existing.balance_htg) + amount, updated_at: new Date().toISOString() }).eq("id", existing.id);
+    } else {
+        await supabaseClient.from("validateur_reception_balances").insert({ validator_id: validatorId, validator_name: validatorName, service_type: service, balance_htg: amount });
+    }
+    msg.style.display="block"; msg.className="result-box success"; msg.innerHTML="✅ Balance ajoutee!";
+    document.getElementById("vrAmount").value = "";
+    await loadValidatorBalances();
+}
+
+async function vrEditBalance(id, currentAmount, name){
+    const newVal = prompt(`Nouveau solde HTG pour ${name}:`, currentAmount);
+    if(newVal === null) return;
+    const num = Number(newVal);
+    if(isNaN(num)){ alert("Montant invalide."); return; }
+    await supabaseClient.from("validateur_reception_balances").update({ balance_htg: num, updated_at: new Date().toISOString() }).eq("id", id);
+    await loadValidatorBalances();
+}
+
+async function vrDeleteBalance(id){
+    if(!confirm("Supprimer cette balance ?")) return;
+    await supabaseClient.from("validateur_reception_balances").delete().eq("id", id);
+    await loadValidatorBalances();
 }
 
 async function loadValidatorWallets(){
