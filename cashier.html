@@ -3596,7 +3596,8 @@ async function markArrival(){
     openingDate.setHours(Number(openingParts[0]), Number(openingParts[1]) + 15, 0, 0);
     const isLate = now > openingDate;
     const minutesLate = isLate ? Math.round((now - openingDate) / 60000) : 0;
-    const deduction = isLate ? 150 : 0;
+    const lateRatePerHour = Number(systemRatesCache.late_deduction_per_hour || 50);
+    const deduction = isLate ? Math.round(minutesLate * (lateRatePerHour / 60) * 100) / 100 : 0;
     let clientIp = null;
     try {
         const ipRes = await Promise.race([fetch("https://api.ipify.org?format=json"), new Promise((_,r)=>setTimeout(()=>r(new Error("timeout")),3000))]);
@@ -3612,7 +3613,7 @@ async function markArrival(){
     });
 
     if(isLate){
-        statusEl.innerHTML = `<span style="color:#DC2626;font-weight:700">⏰ Arrivee enregistree. En retard de ${minutesLate} min - deduction 150 DOP.</span>`;
+        statusEl.innerHTML = `<span style="color:#DC2626;font-weight:700">⏰ Arrivee enregistree. En retard de ${minutesLate} min - deduction ${deduction.toLocaleString("fr-FR")} DOP.</span>`;
     } else {
         statusEl.innerHTML = `<span style="color:#16A34A;font-weight:700">🎉 Felicitations! Vous etes arrive(e) a l'heure aujourd'hui.</span>`;
     }
