@@ -279,3 +279,71 @@
     });
 
 })();
+
+function nexusPlaySound(type){
+    try{
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if(!AudioCtx) return;
+        const ctx = new AudioCtx();
+        const now = ctx.currentTime;
+        const patterns = {
+            approved: [[880,0.15],[1108,0.18]],
+            rejected: [[300,0.25]],
+            wrongnumber: [[440,0.12],[0,0.06],[440,0.12]]
+        };
+        const seq = patterns[type] || [[600,0.15]];
+        let t = now;
+        seq.forEach(([freq,dur]) => {
+            if(freq > 0){
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = "sine";
+                osc.frequency.value = freq;
+                gain.gain.setValueAtTime(0.2, t);
+                gain.gain.exponentialRampToValueAtTime(0.001, t + dur);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start(t);
+                osc.stop(t + dur);
+            }
+            t += dur;
+        });
+        if(navigator.vibrate){
+            if(type === "approved") navigator.vibrate([100,50,100]);
+            else if(type === "rejected") navigator.vibrate(300);
+            else navigator.vibrate([80,40,80,40,80]);
+        }
+    } catch(e){}
+}
+
+function nexusToast(message, type){
+    try{
+        const colors = { success:"#16A34A", error:"#DC2626", warning:"#F59E0B", info:"#2563EB" };
+        const icons = { success:"✅", error:"❌", warning:"⚠️", info:"ℹ️" };
+        const color = colors[type] || colors.info;
+        const icon = icons[type] || icons.info;
+        let container = document.getElementById("nexusToastContainer");
+        if(!container){
+            container = document.createElement("div");
+            container.id = "nexusToastContainer";
+            container.style.cssText = "position:fixed;top:1rem;right:1rem;z-index:99999;display:flex;flex-direction:column;gap:0.5rem;max-width:320px";
+            document.body.appendChild(container);
+        }
+        const toast = document.createElement("div");
+        toast.style.cssText = `background:#fff;border-left:4px solid ${color};border-radius:8px;padding:0.85rem 1rem;box-shadow:0 6px 20px rgba(0,0,0,0.15);font-size:0.9rem;color:#1E293B;display:flex;align-items:center;gap:0.5rem;animation:nexusToastIn 0.3s ease`;
+        toast.innerHTML = `<span style="font-size:1.1rem">${icon}</span><span>${message}</span>`;
+        container.appendChild(toast);
+        setTimeout(() => {
+            toast.style.transition = "opacity 0.3s, transform 0.3s";
+            toast.style.opacity = "0";
+            toast.style.transform = "translateX(20px)";
+            setTimeout(() => toast.remove(), 300);
+        }, 4500);
+    } catch(e){}
+}
+if(!document.getElementById("nexusToastStyle")){
+    const style = document.createElement("style");
+    style.id = "nexusToastStyle";
+    style.textContent = "@keyframes nexusToastIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}";
+    document.head.appendChild(style);
+}
