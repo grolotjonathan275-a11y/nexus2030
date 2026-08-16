@@ -1379,10 +1379,8 @@ async function executeChange(){
 
     if(type === "achat"){
         await logCaisseLedger(code, amount, 0, usedRate, "change_achat_devise", "exchange_transactions", null);
-        await logCaisseLedger("DOP", 0, dopAmount, usedRate, "change_achat_dop", "exchange_transactions", null);
     } else {
         await logCaisseLedger(code, 0, amount, usedRate, "change_vente_devise", "exchange_transactions", null);
-        await logCaisseLedger("DOP", dopAmount, 0, usedRate, "change_vente_dop", "exchange_transactions", null);
     }
 
     printExchangeReceipt({ type, code, amount, usedRate, dopAmount, clientName, clientPhone, notes });
