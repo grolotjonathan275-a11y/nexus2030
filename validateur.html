@@ -731,6 +731,29 @@ function nexusComputeSharpness(imgEl){
     const mean = sum/count;
     return (sumSq/count) - mean*mean;
 }
+
+function nexusWatermarkAndCompress(imgEl, validatorName){
+    const canvas = document.createElement("canvas");
+    const maxW = 1000;
+    const w = imgEl.naturalWidth || imgEl.width, h = imgEl.naturalHeight || imgEl.height;
+    const scale = Math.min(1, maxW / w);
+    canvas.width = Math.round(w*scale);
+    canvas.height = Math.round(h*scale);
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(imgEl, 0, 0, canvas.width, canvas.height);
+    const dateStr = new Date().toLocaleString("fr-FR");
+    const text = `${validatorName || "Validateur"} - ${dateStr}`;
+    const fontSize = Math.max(12, Math.round(canvas.width * 0.028));
+    ctx.font = `bold ${fontSize}px Arial`;
+    const padding = 8;
+    const barHeight = fontSize + padding*2;
+    ctx.fillStyle = "rgba(0,0,0,0.65)";
+    ctx.fillRect(0, canvas.height - barHeight, canvas.width, barHeight);
+    ctx.fillStyle = "#FFFFFF";
+    ctx.textBaseline = "middle";
+    ctx.fillText(text, 10, canvas.height - barHeight/2);
+    return canvas.toDataURL("image/jpeg", 0.75);
+}
 async function handleApprovalPhotoFile(file){
     if(!file) return;
     if(file.size > 5*1024*1024){ alert("Photo trop volumineuse (max 5 Mo)."); return; }
@@ -761,15 +784,27 @@ async function handleApprovalPhotoFile(file){
             clearInterval(progressInterval);
             bar.style.width = "100%";
             const SHARPNESS_THRESHOLD = 15;
-            if(sharpness >= SHARPNESS_THRESHOLD){
-                document.getElementById("approvalPhotoStepAnalyzing").style.display = "none";
-                document.getElementById("approvalPhotoStepSuccess").style.display = "block";
-                await processTransaction(approvalPhotoTxId, "approved", dataUrl);
-                setTimeout(() => { closeApprovalPhotoModal(); }, 900);
-            } else {
+            if(sharpness < SHARPNESS_THRESHOLD){
+                try {
+                    await supabaseClient.from("moncash_blur_attempts_log").insert({ transaction_id: approvalPhotoTxId, validator_id: currentValidatorId, validator_name: currentValidatorName, sharpness_score: sharpness });
+                } catch(e){}
+                document.getElementById("approvalPhotoRetryMsg").textContent = "Tanpri fe foto a pi klè, evite flou, epi reprann li.";
                 document.getElementById("approvalPhotoStepAnalyzing").style.display = "none";
                 document.getElementById("approvalPhotoStepRetry").style.display = "block";
+                return;
             }
+            const { data: dupCheck } = await supabaseClient.from("mobile_money_transactions").select("id").eq("confirmation_photo", dataUrl).neq("id", approvalPhotoTxId).limit(1);
+            if(dupCheck && dupCheck.length){
+                document.getElementById("approvalPhotoRetryMsg").textContent = "Ce recu a deja ete utilise pour une autre transaction. Soumettez un recu different.";
+                document.getElementById("approvalPhotoStepAnalyzing").style.display = "none";
+                document.getElementById("approvalPhotoStepRetry").style.display = "block";
+                return;
+            }
+            const finalPhoto = nexusWatermarkAndCompress(img, currentValidatorName);
+            document.getElementById("approvalPhotoStepAnalyzing").style.display = "none";
+            document.getElementById("approvalPhotoStepSuccess").style.display = "block";
+            await processTransaction(approvalPhotoTxId, "approved", finalPhoto);
+            setTimeout(() => { closeApprovalPhotoModal(); }, 900);
         })()]);
     } catch(e){
         clearInterval(progressInterval);
@@ -812,7 +847,7 @@ document.addEventListener("DOMContentLoaded", () => {
 <div id="approvalPhotoStepRetry" style="display:none">
 <div style="font-size:3rem;margin-bottom:0.5rem">⚠️</div>
 <h3 style="margin-bottom:0.5rem;color:#DC2626">Photo pas assez claire</h3>
-<p style="color:#64748B;margin-bottom:1.25rem;font-size:0.9rem">Tanpri fe foto a pi klè, evite flou, epi reprann li.</p>
+<p id="approvalPhotoRetryMsg" style="color:#64748B;margin-bottom:1.25rem;font-size:0.9rem">Tanpri fe foto a pi klè, evite flou, epi reprann li.</p>
 <div style="display:flex;flex-direction:column;gap:0.75rem">
 <button onclick="document.getElementById('approvalPhotoCamera').click()" style="padding:0.9rem;border-radius:10px;border:none;background:#10B981;color:#fff;font-weight:700;cursor:pointer;font-size:1rem">📷 Reprendre la photo</button>
 <button onclick="document.getElementById('approvalPhotoGallery').click()" style="padding:0.9rem;border-radius:10px;border:1.5px solid #E2E8F0;background:#fff;cursor:pointer;font-size:1rem">🖼️ Choisir une autre photo</button>
