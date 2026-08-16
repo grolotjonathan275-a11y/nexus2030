@@ -517,7 +517,7 @@
             </div>
             <div class="card" style="margin-top:1.5rem">
                 <div class="card-header"><h3>Historique de Pointage - Tous les Caissiers</h3><span class="badge" id="pointageCeoCount">0</span></div>
-                <div class="table-wrap"><table class="data-table"><thead><tr><th>Caissier</th><th>Succursale</th><th>Date</th><th>Heure</th><th>Distance</th><th>IP</th><th>Statut</th><th>Retard</th><th>Deduction</th><th>Selfie</th></tr></thead><tbody id="pointageCeoList"><tr><td colspan="10">Chargement...</td></tr></tbody></table></div>
+                <div class="table-wrap"><table class="data-table"><thead><tr><th>Caissier</th><th>Succursale</th><th>Date</th><th>Heure</th><th>Distance</th><th>IP</th><th>Statut</th><th>Retard</th><th>Deduction</th><th>Selfie</th><th>Actions</th></tr></thead><tbody id="pointageCeoList"><tr><td colspan="11">Chargement...</td></tr></tbody></table></div>
             </div>
         </section>
 
@@ -1244,7 +1244,7 @@ async function loadLoginHistory(){
 async function loadPointageCeo(){
     const rows = await sf("cashier_attendance", "GET", null, "?order=check_in_time.desc&limit=100");
     if(!Array.isArray(rows)){
-        document.getElementById("pointageCeoList").innerHTML = "<tr><td colspan='9'>Erreur de chargement</td></tr>";
+        document.getElementById("pointageCeoList").innerHTML = "<tr><td colspan='11'>Erreur de chargement</td></tr>";
         return;
     }
     const today = new Date().toDateString();
@@ -1267,8 +1267,26 @@ async function loadPointageCeo(){
             <td>${x.is_late ? x.minutes_late+" min" : "-"}</td>
             <td>${x.deduction_amount > 0 ? x.deduction_amount+" DOP" : "-"}</td>
             <td>${x.selfie_photo ? `<img src="${x.selfie_photo}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;cursor:pointer" onclick="window.open('${x.selfie_photo}','_blank')">` : "-"}</td>
+            <td style="white-space:nowrap"><button data-id="${x.id}" data-min="${x.minutes_late||0}" data-ded="${x.deduction_amount||0}" onclick="editAttendanceCeo(this.dataset.id,this.dataset.min,this.dataset.ded)" style="border:none;background:none;cursor:pointer;font-size:1rem" title="Modifier">✏️</button> <button data-id="${x.id}" onclick="deleteAttendanceCeo(this.dataset.id)" style="border:none;background:none;cursor:pointer;font-size:1rem" title="Supprimer">🗑️</button></td>
         </tr>
-    `).join("") || "<tr><td colspan='9'>Aucun pointage</td></tr>";
+    `).join("") || "<tr><td colspan='11'>Aucun pointage</td></tr>";
+}
+async function editAttendanceCeo(id, minutesLate, deductionAmount){
+    const newMinutes = prompt("Minutes de retard:", minutesLate || 0);
+    if(newMinutes === null) return;
+    const newMinutesNum = Number(newMinutes);
+    if(isNaN(newMinutesNum) || newMinutesNum < 0){ alert("Valeur invalide."); return; }
+    const newDeduction = prompt("Montant deduction (DOP):", deductionAmount || 0);
+    if(newDeduction === null) return;
+    const newDeductionNum = Number(newDeduction);
+    if(isNaN(newDeductionNum) || newDeductionNum < 0){ alert("Valeur invalide."); return; }
+    await sf("cashier_attendance", "PATCH", { minutes_late: newMinutesNum, is_late: newMinutesNum > 0, deduction_amount: newDeductionNum }, `?id=eq.${id}`);
+    loadPointageCeo();
+}
+async function deleteAttendanceCeo(id){
+    if(!confirm("Supprimer cet enregistrement de pointage ? Cette action est irreversible.")) return;
+    await sf("cashier_attendance", "DELETE", null, `?id=eq.${id}`);
+    loadPointageCeo();
 }
 async function loadEmployeeDirectory(){
     const { data: users, error } = await supabaseClient.from("profiles").select("*").order("role", { ascending: true });
