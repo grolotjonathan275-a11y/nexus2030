@@ -1537,7 +1537,7 @@ async function loadLoginHistory(){
     `).join("") || "<tr><td colspan='5'>Aucune connexion</td></tr>";
 }
 async function loadPointageAdmin(){
-    const r = await fetch(`${SUPA_URL}/rest/v1/cashier_attendance?order=check_in_time.desc&limit=100`, {headers:{"apikey":SUPA_KEY,"Authorization":`Bearer ${SUPA_KEY}`}});
+    const r = await fetch(`${SUPA_URL}/rest/v1/cashier_attendance?select=id,cashier_name,branch,check_in_time,distance_meters,within_geofence,ip_address,minutes_late,is_late,deduction_amount&order=check_in_time.desc&limit=100`, {headers:{"apikey":SUPA_KEY,"Authorization":`Bearer ${SUPA_KEY}`}});
     const rows = await r.json();
     if(!Array.isArray(rows)){
         document.getElementById("pointageAdminList").innerHTML = "<tr><td colspan='9'>Erreur de chargement</td></tr>";
@@ -1562,10 +1562,17 @@ async function loadPointageAdmin(){
             <td><span class="badge-status ${x.within_geofence ? "approved" : "pending"}">${x.within_geofence ? "Valide" : "Rejete"}</span></td>
             <td>${x.is_late ? x.minutes_late+" min" : "-"}</td>
             <td>${x.deduction_amount > 0 ? x.deduction_amount+" DOP" : "-"}</td>
-            <td>${x.selfie_photo ? `<img src="${x.selfie_photo}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;cursor:pointer" onclick="window.open('${x.selfie_photo}','_blank')">` : "-"}</td>
+            <td><button data-id="${x.id}" onclick="viewAttendanceSelfieAdmin(this.dataset.id)" style="border:none;background:none;cursor:pointer;font-size:1.2rem" title="Voir la photo">📷</button></td>
         </tr>
     `).join("") || "<tr><td colspan='9'>Aucun pointage</td></tr>";
 }
+async function viewAttendanceSelfieAdmin(id){
+    const r = await fetch(`${SUPA_URL}/rest/v1/cashier_attendance?id=eq.${id}&select=selfie_photo`, {headers:{"apikey":SUPA_KEY,"Authorization":`Bearer ${SUPA_KEY}`}});
+    const rows = await r.json();
+    const photo = rows && rows[0] && rows[0].selfie_photo;
+    if(photo){ window.open(photo, "_blank"); } else { alert("Aucune photo disponible."); }
+}
+
 async function loadAdminCashiersList(){
     const wr = await fetch(`${SUPA_URL}/rest/v1/cashier_wallets?order=last_updated.desc`, {headers:{"apikey":SUPA_KEY,"Authorization":`Bearer ${SUPA_KEY}`}}); const wallets = await wr.json();
     document.getElementById("adminCashiersList").innerHTML = wallets.map(w => `
