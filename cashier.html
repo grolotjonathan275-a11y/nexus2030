@@ -517,6 +517,14 @@
                     </div>
                 </div>
 
+<div class="card mt-2">
+<div class="card-header"><h3>💰 Compte Change Devises</h3></div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:0.75rem;padding:1rem">
+<div style="text-align:center"><div style="font-size:1.3rem;font-weight:800;color:#DC2626" id="changeCompteAchat">0</div><div style="font-size:0.8rem;color:#64748B">Total Achat (DOP)</div></div>
+<div style="text-align:center"><div style="font-size:1.3rem;font-weight:800;color:#16A34A" id="changeCompteVente">0</div><div style="font-size:0.8rem;color:#64748B">Total Vente (DOP)</div></div>
+<div style="text-align:center"><div style="font-size:1.3rem;font-weight:800" id="changeCompteNet">0</div><div style="font-size:0.8rem;color:#64748B">Solde Net (Session)</div></div>
+</div>
+</div>
                 <div class="card mt-2">
                     <div class="card-header"><h3>Historique des Changes</h3><span class="badge" id="changeCount">0</span></div>
                     <div class="table-wrap">
@@ -1137,7 +1145,7 @@ function showSection(el, e) {
     document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
     document.getElementById("section-" + id).classList.add("active");
     document.getElementById("pageTitle").textContent = el.textContent.trim();
-    if(id === "change"){ loadExchangeRatesCashier(); loadMyCurrencyWallets(); loadChangeHistory(); }
+if(id === "change"){ loadExchangeRatesCashier(); loadMyCurrencyWallets(); loadChangeHistory(); loadChangeDevisesCompte(); }
     if(id === "loan"){ loadBranchLoans(); }
     if(id === "receive"){ loadRwBalances(); loadRtSettingsCache(); loadRtTransactions(); loadRtNegotiations(); }
     if(id === "wisecard"){ loadWiseWallet(); loadWiseTransactions(); }
@@ -1379,8 +1387,10 @@ async function executeChange(){
 
     if(type === "achat"){
         await logCaisseLedger(code, amount, 0, usedRate, "change_achat_devise", "exchange_transactions", null);
+        await logCaisseLedger("DOP-CHANGE", 0, dopAmount, usedRate, "change_achat_dop", "exchange_transactions", null);
     } else {
         await logCaisseLedger(code, 0, amount, usedRate, "change_vente_devise", "exchange_transactions", null);
+        await logCaisseLedger("DOP-CHANGE", dopAmount, 0, usedRate, "change_vente_dop", "exchange_transactions", null);
     }
 
     printExchangeReceipt({ type, code, amount, usedRate, dopAmount, clientName, clientPhone, notes });
@@ -1409,6 +1419,21 @@ async function loadMyCurrencyWallets(){
         const flag = r ? r.flag_emoji : "";
         return `<tr><td>${flag} ${w.currency_code}</td><td><strong>${fmtAmount(w.balance)}</strong></td></tr>`;
     }).join("");
+}
+
+async function loadChangeDevisesCompte(){
+    if(!currentCaisseSession){ return; }
+    const rows = await supaFetch("caisse_ledger", "GET", null, `?session_id=eq.${currentCaisseSession.id}&devise=eq.DOP-CHANGE`);
+    const list = Array.isArray(rows) ? rows : [];
+    const totalAchat = list.reduce((s,r) => s + Number(r.sortie||0), 0);
+    const totalVente = list.reduce((s,r) => s + Number(r.entree||0), 0);
+    const net = totalVente - totalAchat;
+    const elAchat = document.getElementById("changeCompteAchat");
+    const elVente = document.getElementById("changeCompteVente");
+    const elNet = document.getElementById("changeCompteNet");
+    if(elAchat) elAchat.textContent = totalAchat.toLocaleString("fr-FR",{minimumFractionDigits:2});
+    if(elVente) elVente.textContent = totalVente.toLocaleString("fr-FR",{minimumFractionDigits:2});
+    if(elNet){ elNet.textContent = net.toLocaleString("fr-FR",{minimumFractionDigits:2}); elNet.style.color = net >= 0 ? "#16A34A" : "#DC2626"; }
 }
 
 async function loadChangeHistory(){
