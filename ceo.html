@@ -1242,7 +1242,7 @@ async function loadLoginHistory(){
     `).join("") || "<tr><td colspan='5'>Aucune connexion</td></tr>";
 }
 async function loadPointageCeo(){
-    const rows = await sf("cashier_attendance", "GET", null, "?order=check_in_time.desc&limit=100");
+    const rows = await sf("cashier_attendance", "GET", null, "?select=id,cashier_name,branch,check_in_time,distance_meters,within_geofence,ip_address,minutes_late,is_late,deduction_amount&order=check_in_time.desc&limit=100");
     if(!Array.isArray(rows)){
         document.getElementById("pointageCeoList").innerHTML = "<tr><td colspan='11'>Erreur de chargement</td></tr>";
         return;
@@ -1266,11 +1266,17 @@ async function loadPointageCeo(){
             <td><span class="status-badge ${x.within_geofence ? "active" : ""}">${x.within_geofence ? "Valide" : "Rejete"}</span></td>
             <td>${x.is_late ? x.minutes_late+" min" : "-"}</td>
             <td>${x.deduction_amount > 0 ? x.deduction_amount+" DOP" : "-"}</td>
-            <td>${x.selfie_photo ? `<img src="${x.selfie_photo}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;cursor:pointer" onclick="window.open('${x.selfie_photo}','_blank')">` : "-"}</td>
+            <td><button data-id="${x.id}" onclick="viewAttendanceSelfie(this.dataset.id)" style="border:none;background:none;cursor:pointer;font-size:1.2rem" title="Voir la photo">📷</button></td>
             <td style="white-space:nowrap"><button data-id="${x.id}" data-min="${x.minutes_late||0}" data-ded="${x.deduction_amount||0}" onclick="editAttendanceCeo(this.dataset.id,this.dataset.min,this.dataset.ded)" style="border:none;background:none;cursor:pointer;font-size:1rem" title="Modifier">✏️</button> <button data-id="${x.id}" onclick="deleteAttendanceCeo(this.dataset.id)" style="border:none;background:none;cursor:pointer;font-size:1rem" title="Supprimer">🗑️</button></td>
         </tr>
     `).join("") || "<tr><td colspan='11'>Aucun pointage</td></tr>";
 }
+async function viewAttendanceSelfie(id){
+    const rows = await sf("cashier_attendance", "GET", null, `?id=eq.${id}&select=selfie_photo`);
+    const photo = rows && rows[0] && rows[0].selfie_photo;
+    if(photo){ window.open(photo, "_blank"); } else { alert("Aucune photo disponible."); }
+}
+
 async function editAttendanceCeo(id, minutesLate, deductionAmount){
     const newMinutes = prompt("Minutes de retard:", minutesLate || 0);
     if(newMinutes === null) return;
