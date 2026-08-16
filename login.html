@@ -310,6 +310,7 @@ function nexusFaceCapture(timeoutMs){
 
 async function nexusVerifyFace(profile){
     if(profile.role === "ceo") return { ok: true };
+    if(profile.face_recognition_enabled === false) return { ok: true };
     if(profile.face_blocked) return { ok: false, reason: "blocked" };
 
     const capture = await nexusFaceCapture(20000);
