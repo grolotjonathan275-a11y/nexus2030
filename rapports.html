@@ -54,6 +54,7 @@ td{padding:0.75rem;border-top:1px solid #F1F5F9;white-space:nowrap}
 <div class="tabs">
 <button class="tab-btn active" onclick="switchTab('detail')">📋 Historique Detaille</button>
 <button class="tab-btn" onclick="switchTab('general')">📄 Historique General (PDF)</button>
+<button class="tab-btn" onclick="switchTab('balances');loadBalancesReport()">💰 Balances Validateurs</button>
 </div>
 
 <!-- ONGLET DETAILLE -->
@@ -104,6 +105,21 @@ td{padding:0.75rem;border-top:1px solid #F1F5F9;white-space:nowrap}
 
 <div id="genResults"></div>
 </div>
+<div class="tab-content" id="tab-balances">
+<div class="card">
+<div class="filters">
+<div class="form-group"><button class="btn btn-primary" onclick="loadBalancesReport()">🔄 Actualiser</button></div>
+</div>
+</div>
+<div class="card">
+<div class="card-header"><h3>➡️ Balance Envoi (MonCash/NatCash)</h3></div>
+<div class="table-wrap"><table id="balEnvoiTable"><thead><tr><th>Validateur</th><th>Service</th><th>Balance HTG</th></tr></thead><tbody id="balEnvoiBody"><tr><td colspan="3" style="padding:1.5rem;text-align:center">Chargement...</td></tr></tbody></table></div>
+</div>
+<div class="card" style="margin-top:1.25rem">
+<div class="card-header"><h3>⬅️ Balance Reception (5 services)</h3></div>
+<div class="table-wrap"><table id="balRecTable"><thead><tr><th>Validateur</th><th>Service</th><th>Balance HTG</th></tr></thead><tbody id="balRecBody"><tr><td colspan="3" style="padding:1.5rem;text-align:center">Chargement...</td></tr></tbody></table></div>
+</div>
+</div>
 
 <!-- ZONE IMPRESSION A4 -->
 <div id="printArea"></div>
@@ -137,6 +153,29 @@ function switchTab(name){
     document.querySelectorAll(".tab-content").forEach(c=>c.classList.remove("active"));
     event.target.classList.add("active");
     document.getElementById("tab-"+name).classList.add("active");
+}
+
+const RAPPORTS_RT_LABELS = {moncash:"MonCash", natcash:"NatCash", sogebank:"Sogebank", bnc:"BNC", unibank:"Unibank"};
+async function loadBalancesReport(){
+    const { data: veData } = await supabaseClient.from("validateur_envoi_balances").select("*").order("validator_name");
+    const veBody = document.getElementById("balEnvoiBody");
+    if(!veData || !veData.length){ veBody.innerHTML = "<tr><td colspan='3' style='padding:1.5rem;text-align:center;color:#94A3B8'>Aucune balance.</td></tr>"; }
+    else {
+        veBody.innerHTML = veData.map(v => {
+            const color = Number(v.balance_htg) >= 0 ? "#16A34A" : "#DC2626";
+            return `<tr><td>${v.validator_name||"-"}</td><td>${v.service_type}</td><td style="color:${color};font-weight:700">${fmtA(v.balance_htg)} HTG</td></tr>`;
+        }).join("");
+    }
+    const { data: vrData } = await supabaseClient.from("validateur_reception_balances").select("*").order("validator_name");
+    const vrBody = document.getElementById("balRecBody");
+    if(!vrData || !vrData.length){ vrBody.innerHTML = "<tr><td colspan='3' style='padding:1.5rem;text-align:center;color:#94A3B8'>Aucune balance.</td></tr>"; }
+    else {
+        vrBody.innerHTML = vrData.map(v => {
+            const color = Number(v.balance_htg) >= 0 ? "#16A34A" : "#DC2626";
+            const svcLabel = RAPPORTS_RT_LABELS[v.service_type] || v.service_type;
+            return `<tr><td>${v.validator_name||"-"}</td><td>${svcLabel}</td><td style="color:${color};font-weight:700">${fmtA(v.balance_htg)} HTG</td></tr>`;
+        }).join("");
+    }
 }
 
 async function loadStaffFilter(){
