@@ -3658,7 +3658,7 @@ function nexusApplyPointageLock(locked){
 async function nexusCheckPointageGate(){
     try{
         const cycleStart = nexusGetCycleStart();
-        const rows = await supaFetch("cashier_attendance", "GET", null, `?cashier_id=eq.${CASHIER_ID}&within_geofence=eq.true&order=check_in_time.desc&limit=5`);
+        const rows = await supaFetch("cashier_attendance", "GET", null, `?select=id,check_in_time&cashier_id=eq.${CASHIER_ID}&within_geofence=eq.true&order=check_in_time.desc&limit=5`);
         const list = Array.isArray(rows) ? rows : [];
         const hasToday = list.some(r => new Date(r.check_in_time) >= cycleStart);
         nexusApplyPointageLock(!hasToday);
@@ -3674,7 +3674,7 @@ function nexusGetCycleStart(){
 }
 
 async function loadPointageHistory(){
-    const rows = await supaFetch("cashier_attendance", "GET", null, `?cashier_id=eq.${CASHIER_ID}&order=check_in_time.desc&limit=30`);
+    const rows = await supaFetch("cashier_attendance", "GET", null, `?select=id,check_in_time,within_geofence,distance_meters,is_late,minutes_late,deduction_amount&cashier_id=eq.${CASHIER_ID}&order=check_in_time.desc&limit=30`);
     if(!Array.isArray(rows)){ return; }
     const now = new Date();
     const thisMonth = rows.filter(r => { const d = new Date(r.check_in_time); return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear(); });
