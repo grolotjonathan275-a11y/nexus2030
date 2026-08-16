@@ -1000,7 +1000,8 @@ async function loadWiseCollectHistoryA(){
 const SYS_RATE_META_A = {
     withdrawal_fee_percent: {label:"Frais Nexus sur Retrait", desc:"Applique sur tous les retraits de comptes epargne (individuel, epargne, entreprise).", suffix:"%"},
     loan_interest_percent: {label:"Interet sur Prestamo", desc:"Interet applique sur le capital emprunte, du a l'echeance (15 jours).", suffix:"%"},
-    loan_mora_percent: {label:"Mora (penalite de retard)", desc:"Penalite calculee sur le montant de l'interet (pas sur le capital), apres le delai de grace de 5 jours.", suffix:"%"}
+    loan_mora_percent: {label:"Mora (penalite de retard)", desc:"Penalite calculee sur le montant de l'interet (pas sur le capital), apres le delai de grace de 5 jours.", suffix:"%"},
+    late_deduction_per_hour: {label:"Deduction Retard (par 60 min)", desc:"Montant deduit par tranche de 60 minutes de retard au pointage (calcul proportionnel: 30 min = moitie du montant).", suffix:" DOP"}
 };
 
 async function loadSystemRates(){
@@ -1031,7 +1032,7 @@ async function saveSystemRateAdmin(key){
     const currentArr = await rtFetch("system_rates","GET",null,"?rate_key=eq."+key);
     const current = currentArr && currentArr[0];
 
-    if(!confirm("Confirmer le changement de '" + SYS_RATE_META_A[key].label + "' de " + (current?.rate_value||0) + "% a " + newValue + "%? Ce changement s'applique immediatement a tout le systeme.")) return;
+    if(!confirm("Confirmer le changement de '" + SYS_RATE_META_A[key].label + "' de " + (current?.rate_value||0) + SYS_RATE_META_A[key].suffix + " a " + newValue + SYS_RATE_META_A[key].suffix + "? Ce changement s'applique immediatement a tout le systeme.")) return;
 
     await rtFetch("system_rates_history","POST",{
         rate_key: key, old_value: current?.rate_value, new_value: newValue, changed_by_name: "Super Admin"
@@ -1043,7 +1044,7 @@ async function saveSystemRateAdmin(key){
         body: JSON.stringify({ rate_value: newValue, updated_by_name: "Super Admin", updated_at: new Date().toISOString() })
     });
 
-    alert("? " + SYS_RATE_META_A[key].label + " mis a jour: " + newValue + "%");
+    alert("? " + SYS_RATE_META_A[key].label + " mis a jour: " + newValue + SYS_RATE_META_A[key].suffix);
     loadSystemRates();
     loadSystemRatesHistory();
 }
@@ -1054,7 +1055,7 @@ async function loadSystemRatesHistory(){
     if(!data || !data.length){ tbody.innerHTML = "<tr><td colspan=''5''>Aucune modification.</td></tr>".replace(/''/g,"'"); document.getElementById("sysRatesHistCount").textContent = "0"; return; }
     document.getElementById("sysRatesHistCount").textContent = data.length;
     tbody.innerHTML = data.map(h => `
-        <tr><td>${new Date(h.changed_at).toLocaleString("fr-FR")}</td><td>${SYS_RATE_META_A[h.rate_key]?.label||h.rate_key}</td><td>${h.old_value}%</td><td><strong>${h.new_value}%</strong></td><td>${h.changed_by_name}</td></tr>`).join("");
+<tr><td>${new Date(h.changed_at).toLocaleString("fr-FR")}</td><td>${SYS_RATE_META_A[h.rate_key]?.label||h.rate_key}</td><td>${h.old_value}${SYS_RATE_META_A[h.rate_key]?.suffix||"%"}</td><td><strong>${h.new_value}${SYS_RATE_META_A[h.rate_key]?.suffix||"%"}</strong></td><td>${h.changed_by_name}</td></tr>`).join("");
 }
 
 // ===== RECEPTION TRANSFERTS =====
