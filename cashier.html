@@ -3619,7 +3619,51 @@ async function markArrival(){
     btn.textContent = "✅ Pointage effectue";
     btn.disabled = true;
     loadPointageHistory();
+    nexusCheckPointageGate();
 }
+function nexusGoToPointage(){
+    const link = document.querySelector('a[href="#pointage"]');
+    if(link) link.click();
+}
+function nexusApplyPointageLock(locked){
+    let banner = document.getElementById("pointageGateBanner");
+    if(!banner){
+        banner = document.createElement("div");
+        banner.id = "pointageGateBanner";
+        banner.style.cssText = "display:none;background:#DC2626;color:#fff;padding:0.85rem 1rem;text-align:center;font-weight:700;position:sticky;top:0;z-index:9998;font-size:0.9rem";
+        banner.innerHTML = "⚠️ Vous devez pointer votre arrivee avant de continuer.";
+        const btn = document.createElement("button");
+        btn.textContent = "Aller au Pointage";
+        btn.style.cssText = "margin-left:0.75rem;padding:0.35rem 0.9rem;border-radius:8px;border:none;background:#fff;color:#DC2626;cursor:pointer;font-weight:700";
+        btn.onclick = nexusGoToPointage;
+        banner.appendChild(btn);
+        document.body.insertBefore(banner, document.body.firstChild);
+    }
+    if(!document.getElementById("nexusPointageLockStyle")){
+        const style = document.createElement("style");
+        style.id = "nexusPointageLockStyle";
+        style.textContent = "body.pointage-locked .nav-item{pointer-events:none !important;opacity:0.35 !important} body.pointage-locked .nav-item[href='#pointage']{pointer-events:auto !important;opacity:1 !important}";
+        document.head.appendChild(style);
+    }
+    if(locked){
+        document.body.classList.add("pointage-locked");
+        banner.style.display = "block";
+        nexusGoToPointage();
+    } else {
+        document.body.classList.remove("pointage-locked");
+        banner.style.display = "none";
+    }
+}
+async function nexusCheckPointageGate(){
+    try{
+        const cycleStart = nexusGetCycleStart();
+        const rows = await supaFetch("cashier_attendance", "GET", null, `?cashier_id=eq.${CASHIER_ID}&within_geofence=eq.true&order=check_in_time.desc&limit=5`);
+        const list = Array.isArray(rows) ? rows : [];
+        const hasToday = list.some(r => new Date(r.check_in_time) >= cycleStart);
+        nexusApplyPointageLock(!hasToday);
+    } catch(e){}
+}
+
 function nexusGetCycleStart(){
     const now = new Date();
     const cycleStart = new Date(now);
@@ -3768,6 +3812,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     if(profile.avatar_url) applyAvatar(profile.avatar_url);
 
     loadDashboard();
+    nexusCheckPointageGate();
 
     // ===== TEMPS REEL: mise a jour automatique de mes transactions =====
     supabaseClient.channel("cashier-realtime-mm")
