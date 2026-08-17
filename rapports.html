@@ -128,6 +128,7 @@ td{padding:0.75rem;border-top:1px solid #F1F5F9;white-space:nowrap}
 <div class="form-group"><label>Du</label><input type="date" id="profitDateFrom"></div>
 <div class="form-group"><label>Au</label><input type="date" id="profitDateTo"></div>
 <div class="form-group"><button class="btn btn-primary" onclick="loadProfitByCashier()">🔍 Rechercher</button></div>
+<div class="form-group"><button class="btn btn-pdf" onclick="printProfitByCashier()">🖨️ Imprimer / PDF</button></div>
 </div>
 </div>
 <div class="card">
@@ -223,11 +224,35 @@ async function loadProfitByCashier(){
     });
     const rows = Object.values(byCashier).map(c => ({ name: c.name, devises: c.devises||0, mm: c.mm||0, total: (c.devises||0)+(c.mm||0) }));
     rows.sort((a,b) => b.total - a.total);
+    lastProfitRows = rows; lastProfitFrom = fromStr; lastProfitTo = toStr;
     if(!rows.length){ tbody.innerHTML = "<tr><td colspan='4' style='padding:1.5rem;text-align:center'>Aucune donnee.</td></tr>"; return; }
     let html = rows.map(r => `<tr><td>${r.name}</td><td>${fmtA(r.devises)} DOP</td><td>${fmtA(r.mm)} DOP</td><td style="font-weight:700">${fmtA(r.total)} DOP</td></tr>`).join("");
     const grandTotal = rows.reduce((s,r)=>s+r.total,0);
     html += `<tr style="background:#F8FAFC;font-weight:800"><td colspan="3">TOTAL GENERAL</td><td>${fmtA(grandTotal)} DOP</td></tr>`;
     tbody.innerHTML = html;
+}
+async function printProfitByCashier(){
+    if(!lastProfitRows || !lastProfitRows.length){ alert("Effectuez d'abord une recherche avec des resultats avant d'imprimer."); return; }
+    const dateLabel = lastProfitFrom === lastProfitTo
+        ? new Date(lastProfitFrom + "T00:00:00").toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long",year:"numeric"})
+        : new Date(lastProfitFrom + "T00:00:00").toLocaleDateString("fr-FR") + " au " + new Date(lastProfitTo + "T00:00:00").toLocaleDateString("fr-FR");
+    const rowsHtml = lastProfitRows.map(r => `<tr><td style="padding:6px;border:1px solid #ccc">${r.name}</td><td style="padding:6px;border:1px solid #ccc;text-align:right">${fmtA(r.devises)} DOP</td><td style="padding:6px;border:1px solid #ccc;text-align:right">${fmtA(r.mm)} DOP</td><td style="padding:6px;border:1px solid #ccc;text-align:right;font-weight:700">${fmtA(r.total)} DOP</td></tr>`).join("");
+    const grandTotal = lastProfitRows.reduce((s,r)=>s+r.total,0);
+    const printHtml = `
+        <div style="text-align:center;margin-bottom:1.5rem;border-bottom:2px solid #000;padding-bottom:1rem">
+            <h1 style="font-size:1.4rem">NEXUS CASA DE CAMBIO</h1>
+            <p style="font-size:0.9rem">Benefices par Caissier</p>
+            <p style="font-size:0.9rem;font-weight:700">${dateLabel}</p>
+            <p style="font-size:0.75rem;color:#666">Genere par: ${currentUser.name} (${currentUser.role})</p>
+        </div>
+        <table style="width:100%;border-collapse:collapse">
+            <thead><tr><th style="padding:6px;border:1px solid #ccc;text-align:left">Caissier</th><th style="padding:6px;border:1px solid #ccc;text-align:right">Benefice Devises</th><th style="padding:6px;border:1px solid #ccc;text-align:right">Benefice MonCash/NatCash</th><th style="padding:6px;border:1px solid #ccc;text-align:right">Total</th></tr></thead>
+            <tbody>${rowsHtml}</tbody>
+        </table>
+        <div style="margin-top:1rem;border-top:2px solid #000;padding-top:0.75rem;font-weight:700;text-align:right">TOTAL GENERAL: ${fmtA(grandTotal)} DOP</div>
+    `;
+    document.getElementById("printArea").innerHTML = printHtml;
+    window.print();
 }
 
 async function loadStaffFilter(){
@@ -589,6 +614,7 @@ async function loadDetailedReport(){
 }
 
 let lastGeneralData = null;
+let lastProfitRows = null; let lastProfitFrom = null; let lastProfitTo = null;
 let lastGeneralDate = null;
 
 function exportGeneralExcel(){
