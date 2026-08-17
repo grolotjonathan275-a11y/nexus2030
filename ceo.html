@@ -50,6 +50,7 @@
         <a href="#bank-distribution" class="nav-item" onclick="showSection(this,event)"><span>🏦</span>Distribution Bancaire</a>
 <a href="#receive-transfers" class="nav-item" onclick="showSection(this,event)"><span>🔄</span>Reception Transferts</a>
 <a href="#validator-balances" class="nav-item" onclick="showSection(this,event)"><span>💰</span>Balances Validateurs</a>
+<a href="#ceo-direct-mm" class="nav-item" onclick="showSection(this,event)"><span>📲</span>Envoi Manuel MonCash/NatCash</a>
 <a href="rapports.html" class="nav-item"><span>📊</span>Rapports</a>
 <a href="#system-rates" class="nav-item" onclick="showSection(this,event)"><span>⚙️</span>Taux Systeme</a>
 <a href="#wisecard-admin" class="nav-item" onclick="showSection(this,event)"><span>💳</span>Carte Debit Wise</a>
@@ -765,6 +766,26 @@ Equipe</h3><span class="badge" id="usersCount">0</span></div>
 <div class="table-wrap"><table class="data-table"><thead><tr><th>Heure</th><th>Validateur</th><th>Type</th><th>Service</th><th>Entree</th><th>Sortie</th><th>Motif</th><th>Actions</th></tr></thead><tbody id="vlList"><tr><td colspan="8">Chargement...</td></tr></tbody></table></div>
 </div>
 </section>
+<section class="section" id="section-ceo-direct-mm">
+<div class="card">
+<div class="card-header"><h3>📲 Envoi Manuel MonCash/NatCash</h3></div>
+<div style="padding:1rem">
+<div class="form-group"><label>Service *</label><select id="ceoDirectService"><option value="moncash">MonCash</option><option value="natcash">NatCash</option></select></div>
+<div class="form-group"><label>Caissier (attribue a) *</label><select id="ceoDirectCashier"><option value="">Chargement...</option></select></div>
+<div class="form-group"><label>Nom du client *</label><input type="text" id="ceoDirectSenderName"></div>
+<div class="form-group"><label>WhatsApp du client *</label><input type="text" id="ceoDirectWhatsapp"></div>
+<div class="form-group"><label>Numero MonCash/NatCash destinataire *</label><input type="text" id="ceoDirectMobile"></div>
+<div class="form-group"><label>Montant DOP *</label><input type="number" id="ceoDirectAmount"></div>
+<div class="form-group"><label style="display:flex;align-items:center;gap:0.5rem"><input type="checkbox" id="ceoDirectFeeDeducted" style="width:auto"> Frais deduit du montant (sinon ajoute a part)</label></div>
+<button class="btn-ceo-action" onclick="submitCeoDirectTransaction()">📤 Soumettre pour validation</button>
+<div id="ceoDirectMsg" style="display:none" class="result-box"></div>
+</div>
+</div>
+<div class="card" style="margin-top:1.25rem">
+<div class="card-header"><h3>Historique des envois manuels</h3><span class="badge" id="ceoDirectCount">0</span></div>
+<div class="table-wrap"><table class="data-table"><thead><tr><th>Heure</th><th>Service</th><th>Caissier</th><th>Client</th><th>Montant</th><th>Statut</th></tr></thead><tbody id="ceoDirectHistList"><tr><td colspan="6">Chargement...</td></tr></tbody></table></div>
+</div>
+</section>
 
 <!-- TAUX SYSTEME -->
 <section class="section" id="section-system-rates">
@@ -1218,6 +1239,82 @@ async function toggleFaceRecognitionCeo(id, currentEnabled) {
     if (error) { alert("Erreur: " + error.message); return; }
     loadUsers();
 }
+async function loadCeoDirectCashiers(){
+    const { data } = await supabaseClient.from("profiles").select("id,full_name").eq("role","caissier").eq("status","active").order("full_name");
+    const sel = document.getElementById("ceoDirectCashier");
+    if(sel) sel.innerHTML = (data||[]).map(c => `<option value="${c.id}">${c.full_name}</option>`).join("") || "<option value=''>Aucun caissier</option>";
+}
+async function submitCeoDirectTransaction(){
+    const service = document.getElementById("ceoDirectService").value;
+    const cashierId = document.getElementById("ceoDirectCashier").value;
+    const senderName = document.getElementById("ceoDirectSenderName").value.trim();
+    const whatsapp = document.getElementById("ceoDirectWhatsapp").value.trim();
+    const mobileNumber = document.getElementById("ceoDirectMobile").value.trim();
+    const amt = Number(document.getElementById("ceoDirectAmount").value);
+    const feeDeducted = document.getElementById("ceoDirectFeeDeducted").checked;
+    const msg = document.getElementById("ceoDirectMsg");
+    if(!cashierId || !senderName || !whatsapp || !mobileNumber || !amt || amt <= 0){
+        msg.style.display="block"; msg.className="result-box error"; msg.innerHTML="Remplissez tous les champs obligatoires.";
+        return;
+    }
+    const { data: settings } = await supabaseClient.from("mobile_money_settings").select("*").eq("id",1).single();
+    if(!settings){
+        msg.style.display="block"; msg.className="result-box error"; msg.innerHTML="Parametres MonCash/NatCash introuvables.";
+        return;
+    }
+    const rate = service === "moncash" ? Number(settings.moncash_rate) : Number(settings.natcash_rate);
+    const feePct = Number(settings.fee_percent);
+    const feeDop = amt * (feePct/100);
+    let amountHtg, total, netAmountDop;
+    if(feeDeducted){
+        netAmountDop = amt - feeDop;
+        amountHtg = netAmountDop * rate;
+        total = amt;
+    } else {
+        amountHtg = amt * rate;
+        total = amt + feeDop;
+        netAmountDop = amt;
+    }
+    const { error } = await supabaseClient.from("mobile_money_transactions").insert({
+        created_by: cashierId, branch: "", service_type: service, sender_full_name: senderName,
+        sender_whatsapp: whatsapp, mobile_number: mobileNumber, amount_dop: amt, rate: rate,
+        amount_htg: amountHtg, fee_percent: feePct, fee_dop: feeDop, total_charged_dop: total,
+        fee_mode: feeDeducted ? "deducted" : "separate", net_amount_dop: netAmountDop, is_ceo_direct: true
+    });
+    if(error){
+        msg.style.display="block"; msg.className="result-box error"; msg.innerHTML="Erreur: "+error.message;
+        return;
+    }
+    msg.style.display="block"; msg.className="result-box success"; msg.innerHTML="✅ Transaction soumise pour validation!";
+    document.getElementById("ceoDirectSenderName").value="";
+    document.getElementById("ceoDirectWhatsapp").value="";
+    document.getElementById("ceoDirectMobile").value="";
+    document.getElementById("ceoDirectAmount").value="";
+    document.getElementById("ceoDirectFeeDeducted").checked=false;
+    loadCeoDirectHistory();
+}
+async function loadCeoDirectHistory(){
+    const { data: txs } = await supabaseClient.from("mobile_money_transactions").select("*").eq("is_ceo_direct", true).order("created_at",{ascending:false}).limit(50);
+    const list = txs || [];
+    const ids = [...new Set(list.map(t => t.created_by))];
+    let profMap = {};
+    if(ids.length){
+        const { data: profs } = await supabaseClient.from("profiles").select("id,full_name").in("id", ids);
+        (profs||[]).forEach(p => profMap[p.id] = p.full_name);
+    }
+    document.getElementById("ceoDirectCount").textContent = list.length;
+    const statusLabels = {pending_validation:"En attente", approved:"Approuve", rejected:"Rejete", wrong_number:"Numero faux"};
+    document.getElementById("ceoDirectHistList").innerHTML = list.map(t => `
+        <tr>
+            <td>${new Date(t.created_at).toLocaleString("fr-FR")}</td>
+            <td>${t.service_type === "moncash" ? "MonCash" : "NatCash"}</td>
+            <td>${profMap[t.created_by] || "-"}</td>
+            <td>${t.sender_full_name}</td>
+            <td>${Number(t.total_charged_dop).toLocaleString("fr-FR",{minimumFractionDigits:2})} DOP</td>
+            <td>${statusLabels[t.status] || t.status}</td>
+        </tr>`).join("") || "<tr><td colspan='6'>Aucune transaction.</td></tr>";
+}
+
 async function deleteUserCeo(id, name) {
     if (!confirm(`Supprimer le compte de ${name}? Cette action retire l'acces au tableau de bord.`)) return;
     const { error } = await supabaseClient.from("profiles").delete().eq("id", id);
@@ -1361,6 +1458,7 @@ function showSection(el,e){
     if(id==="bank-distribution"){ loadBankCapital(); loadAllocationFormBankCeo(); }
     if(id==="receive-transfers"){ loadRtSettings(); loadRtCapital(); loadAllocationFormRtCeo(); loadValidatorWallets(); loadReceiveWallets(); }
 if(id==="validator-balances") loadValidatorBalances();
+            if(id === "ceo-direct-mm"){ loadCeoDirectCashiers(); loadCeoDirectHistory(); }
     if(id==="system-rates"){ loadSystemRates(); loadSystemRatesHistory(); }
     if(id==="wisecard-admin"){ loadWiseAdminOverview(); }
     if(id==="loans"){ loadLoansOverview(); }
