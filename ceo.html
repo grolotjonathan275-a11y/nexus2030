@@ -775,8 +775,15 @@ Equipe</h3><span class="badge" id="usersCount">0</span></div>
 <div class="form-group"><label>Nom du client *</label><input type="text" id="ceoDirectSenderName"></div>
 <div class="form-group"><label>WhatsApp du client *</label><input type="text" id="ceoDirectWhatsapp"></div>
 <div class="form-group"><label>Numero MonCash/NatCash destinataire *</label><input type="text" id="ceoDirectMobile"></div>
-<div class="form-group"><label>Montant DOP *</label><input type="number" id="ceoDirectAmount"></div>
-<div class="form-group"><label style="display:flex;align-items:center;gap:0.5rem"><input type="checkbox" id="ceoDirectFeeDeducted" style="width:auto"> Frais deduit du montant (sinon ajoute a part)</label></div>
+<div class="form-group"><label>Montant DOP *</label><input type="number" id="ceoDirectAmount" oninput="calcCeoDirectPreview()"></div>
+<div id="ceoDirectFeeBox" style="display:none;background:#F8FAFC;border-radius:10px;padding:1rem;margin:1rem 0">
+<div style="display:flex;justify-content:space-between;padding:0.35rem 0"><span>Montant envoye:</span><strong id="ceoDirectShowAmount">-</strong></div>
+<div style="display:flex;justify-content:space-between;padding:0.35rem 0"><span>Taux applique:</span><strong id="ceoDirectShowRate">-</strong></div>
+<div style="display:flex;justify-content:space-between;padding:0.35rem 0"><span>Client va recevoir (HTG):</span><strong id="ceoDirectShowHtg">-</strong></div>
+<div style="display:flex;justify-content:space-between;padding:0.35rem 0"><span id="ceoDirectFeeLabel">Frais service:</span><strong id="ceoDirectShowFee">-</strong></div>
+<div style="display:flex;justify-content:space-between;padding:0.5rem 0;border-top:1px solid #E2E8F0;margin-top:0.35rem"><span><strong>Total:</strong></span><strong id="ceoDirectShowTotal">-</strong></div>
+</div>
+<div class="form-group"><label style="display:flex;align-items:center;gap:0.5rem"><input type="checkbox" id="ceoDirectFeeDeducted" style="width:auto" onchange="calcCeoDirectPreview()"> Frais deduit du montant (sinon ajoute a part)</label></div>
 <button class="btn-ceo-action" onclick="submitCeoDirectTransaction()">📤 Soumettre pour validation</button>
 <div id="ceoDirectMsg" style="display:none" class="result-box"></div>
 </div>
@@ -1239,14 +1246,52 @@ async function toggleFaceRecognitionCeo(id, currentEnabled) {
     if (error) { alert("Erreur: " + error.message); return; }
     loadUsers();
 }
+let ceoDirectSettings = null;
+async function loadCeoDirectSettings(){
+    const { data } = await supabaseClient.from("mobile_money_settings").select("*").eq("id",1).single();
+    ceoDirectSettings = data || null;
+}
 async function loadCeoDirectCashiers(){
-    const { data } = await supabaseClient.from("profiles").select("id,full_name").eq("role","caissier").eq("status","active").order("full_name");
+    const { data } = await supabaseClient.from("profiles").select("id,full_name,branch").eq("role","caissier").eq("status","active").order("full_name");
     const sel = document.getElementById("ceoDirectCashier");
-    if(sel) sel.innerHTML = (data||[]).map(c => `<option value="${c.id}">${c.full_name}</option>`).join("") || "<option value=''>Aucun caissier</option>";
+    if(sel) sel.innerHTML = (data||[]).map(c => `<option value="${c.id}" data-name="${c.full_name}" data-branch="${c.branch||''}">${c.full_name}</option>`).join("") || "<option value=''>Aucun caissier</option>";
+}
+function calcCeoDirectPreview(){
+    const amt = Number(document.getElementById("ceoDirectAmount").value);
+    if(!amt || amt <= 0 || !ceoDirectSettings) return;
+    const service = document.getElementById("ceoDirectService").value;
+    const rate = service === "moncash" ? Number(ceoDirectSettings.moncash_rate) : Number(ceoDirectSettings.natcash_rate);
+    const feePct = Number(ceoDirectSettings.fee_percent);
+    const feeDeducted = document.getElementById("ceoDirectFeeDeducted").checked;
+    document.getElementById("ceoDirectFeeBox").style.display = "block";
+    if(feeDeducted){
+        const feeDop = amt * (feePct/100);
+        const netDop = amt - feeDop;
+        const amountHtg = netDop * rate;
+        document.getElementById("ceoDirectShowAmount").textContent = fmtA(amt) + " DOP";
+        document.getElementById("ceoDirectShowRate").textContent = "1 DOP = " + rate + " HTG";
+        document.getElementById("ceoDirectFeeLabel").textContent = `Frais deduits (${feePct}%):`;
+        document.getElementById("ceoDirectShowFee").textContent = "-" + fmtA(feeDop) + " DOP";
+        document.getElementById("ceoDirectShowHtg").textContent = fmtA(amountHtg) + " HTG";
+        document.getElementById("ceoDirectShowTotal").textContent = fmtA(amt) + " DOP (rien de plus a payer)";
+    } else {
+        const amountHtg = amt * rate;
+        const feeDop = amt * (feePct/100);
+        const total = amt + feeDop;
+        document.getElementById("ceoDirectShowAmount").textContent = fmtA(amt) + " DOP";
+        document.getElementById("ceoDirectShowRate").textContent = "1 DOP = " + rate + " HTG";
+        document.getElementById("ceoDirectShowHtg").textContent = fmtA(amountHtg) + " HTG";
+        document.getElementById("ceoDirectFeeLabel").textContent = `Frais service (${feePct}%):`;
+        document.getElementById("ceoDirectShowFee").textContent = fmtA(feeDop) + " DOP";
+        document.getElementById("ceoDirectShowTotal").textContent = fmtA(total) + " DOP";
+    }
 }
 async function submitCeoDirectTransaction(){
     const service = document.getElementById("ceoDirectService").value;
-    const cashierId = document.getElementById("ceoDirectCashier").value;
+    const cashierSel = document.getElementById("ceoDirectCashier");
+    const cashierId = cashierSel.value;
+    const cashierName = cashierSel.selectedOptions[0] ? cashierSel.selectedOptions[0].dataset.name : "";
+    const cashierBranch = cashierSel.selectedOptions[0] ? cashierSel.selectedOptions[0].dataset.branch : "";
     const senderName = document.getElementById("ceoDirectSenderName").value.trim();
     const whatsapp = document.getElementById("ceoDirectWhatsapp").value.trim();
     const mobileNumber = document.getElementById("ceoDirectMobile").value.trim();
@@ -1257,13 +1302,13 @@ async function submitCeoDirectTransaction(){
         msg.style.display="block"; msg.className="result-box error"; msg.innerHTML="Remplissez tous les champs obligatoires.";
         return;
     }
-    const { data: settings } = await supabaseClient.from("mobile_money_settings").select("*").eq("id",1).single();
-    if(!settings){
+    if(!ceoDirectSettings){ await loadCeoDirectSettings(); }
+    if(!ceoDirectSettings){
         msg.style.display="block"; msg.className="result-box error"; msg.innerHTML="Parametres MonCash/NatCash introuvables.";
         return;
     }
-    const rate = service === "moncash" ? Number(settings.moncash_rate) : Number(settings.natcash_rate);
-    const feePct = Number(settings.fee_percent);
+    const rate = service === "moncash" ? Number(ceoDirectSettings.moncash_rate) : Number(ceoDirectSettings.natcash_rate);
+    const feePct = Number(ceoDirectSettings.fee_percent);
     const feeDop = amt * (feePct/100);
     let amountHtg, total, netAmountDop;
     if(feeDeducted){
@@ -1275,22 +1320,31 @@ async function submitCeoDirectTransaction(){
         total = amt + feeDop;
         netAmountDop = amt;
     }
-    const { error } = await supabaseClient.from("mobile_money_transactions").insert({
-        created_by: cashierId, branch: "", service_type: service, sender_full_name: senderName,
+    const { data, error } = await supabaseClient.from("mobile_money_transactions").insert({
+        created_by: cashierId, branch: cashierBranch, service_type: service, sender_full_name: senderName,
         sender_whatsapp: whatsapp, mobile_number: mobileNumber, amount_dop: amt, rate: rate,
         amount_htg: amountHtg, fee_percent: feePct, fee_dop: feeDop, total_charged_dop: total,
         fee_mode: feeDeducted ? "deducted" : "separate", net_amount_dop: netAmountDop, is_ceo_direct: true
-    });
+    }).select().single();
     if(error){
         msg.style.display="block"; msg.className="result-box error"; msg.innerHTML="Erreur: "+error.message;
         return;
     }
     msg.style.display="block"; msg.className="result-box success"; msg.innerHTML="✅ Transaction soumise pour validation!";
+    const receiptParams = new URLSearchParams({
+        id: data.id, service_type: service, sender_full_name: senderName, sender_whatsapp: whatsapp,
+        mobile_number: mobileNumber, amount_dop: amt, rate: rate, amount_htg: amountHtg,
+        fee_percent: feePct, fee_dop: feeDop, total_charged_dop: total,
+        fee_mode: feeDeducted ? "deducted" : "separate", net_amount_dop: netAmountDop,
+        branch: cashierBranch, staff_name: cashierName, created_at: data.created_at, status: "pending_validation"
+    });
+    window.open("receipt-mobile-money.html?"+receiptParams.toString(),"_blank");
     document.getElementById("ceoDirectSenderName").value="";
     document.getElementById("ceoDirectWhatsapp").value="";
     document.getElementById("ceoDirectMobile").value="";
     document.getElementById("ceoDirectAmount").value="";
     document.getElementById("ceoDirectFeeDeducted").checked=false;
+    document.getElementById("ceoDirectFeeBox").style.display="none";
     loadCeoDirectHistory();
 }
 async function loadCeoDirectHistory(){
@@ -1458,7 +1512,7 @@ function showSection(el,e){
     if(id==="bank-distribution"){ loadBankCapital(); loadAllocationFormBankCeo(); }
     if(id==="receive-transfers"){ loadRtSettings(); loadRtCapital(); loadAllocationFormRtCeo(); loadValidatorWallets(); loadReceiveWallets(); }
 if(id==="validator-balances") loadValidatorBalances();
-            if(id === "ceo-direct-mm"){ loadCeoDirectCashiers(); loadCeoDirectHistory(); }
+            if(id === "ceo-direct-mm"){ loadCeoDirectCashiers(); loadCeoDirectSettings(); loadCeoDirectHistory(); }
     if(id==="system-rates"){ loadSystemRates(); loadSystemRatesHistory(); }
     if(id==="wisecard-admin"){ loadWiseAdminOverview(); }
     if(id==="loans"){ loadLoansOverview(); }
