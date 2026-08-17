@@ -253,7 +253,7 @@ const SERVICES = {
     mobilemoney: {
         label: "MonCash / NatCash",
         table: "mobile_money_transactions",
-        extraFilter: q => q,
+        extraFilter: q => q.eq("is_ceo_direct", false),
         staffCol: "created_by",
         cols: [
             {h:"Heure", v:t=>fmtDT(t.created_at)},
@@ -316,7 +316,7 @@ const SERVICES = {
     validationsmm: {
         label: "Validations MonCash / NatCash",
         table: "mobile_money_transactions",
-        extraFilter: q => q,
+        extraFilter: q => (currentUser && currentUser.role === "super_admin") ? q.eq("is_ceo_direct", false) : q,
         staffCol: "validated_by",
         dateCol: "validated_at",
         cols: [
