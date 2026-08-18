@@ -74,8 +74,8 @@ td{padding:0.75rem;border-top:1px solid #F1F5F9;white-space:nowrap}
 <option value="disashop">Disashop (Recharges/Services)</option>
 <option value="distribution">Distribution Devises (CEO)</option>
 <option value="caisse_mouvements">Mouvements de Caisse (Debut/Reappro/Decaissement)</option>
-<option value="validateur_ledger">Balances Validateurs (Envoi/Reception)</option>
-<option value="change_devises_compte">Compte Change Devises (Achat/Vente)</option>
+<option value="validateur_ledger" id="detSvcOptValideur">Balances Validateurs (Envoi/Reception)</option>
+<option value="change_devises_compte" id="detSvcOptChangeDevises">Compte Change Devises (Achat/Vente)</option>
 </select>
 </div>
 <div class="form-group"><label>Date</label><input type="date" id="detDate"></div>
@@ -718,6 +718,10 @@ document.addEventListener("DOMContentLoaded", async () => {
                 b.style.display = "none";
             }
         });
+        const optVal = document.getElementById("detSvcOptValideur");
+        const optChg = document.getElementById("detSvcOptChangeDevises");
+        if(optVal) optVal.remove();
+        if(optChg) optChg.remove();
     }
 
     const today = new Date().toISOString().split("T")[0];
