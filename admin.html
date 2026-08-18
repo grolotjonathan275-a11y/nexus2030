@@ -957,7 +957,7 @@ async function loadWiseAdminOverviewA(){
         </div>`).join("") || "<p style=''color:#64748B''>Aucune demande en attente.</p>";
 
     document.getElementById("wiseAllCount").textContent = data.length;
-    const statusLabels = {pending:"? En attente", approved:"? Approuve", rejected:"? Rejete"};
+    const statusLabels = {pending:"⏳ En attente", approved:"✅ Approuve", rejected:"❌ Rejete"};
     document.getElementById("wiseAllList").innerHTML = data.map(r => `
         <tr>
             <td>${new Date(r.created_at).toLocaleDateString("fr-FR")}</td>
@@ -982,7 +982,7 @@ async function decideWiseRequestA(id, decision){
         body: JSON.stringify({ status: decision, decided_by_name: "Super Admin", decided_at: new Date().toISOString() })
     });
 
-    alert("? Demande " + (decision === "approved" ? "approuvee" : "rejetee") + "!");
+    alert("✅ Demande " + (decision === "approved" ? "approuvee" : "rejetee") + "!");
     loadWiseAdminOverviewA();
 }
 
@@ -1016,7 +1016,7 @@ async function collectWiseWalletA(staffId, staffName, amount){
         body: JSON.stringify({ balance_dop: 0, updated_at: new Date().toISOString() })
     });
 
-    alert("? Montant collecte et wallet remis a zero!");
+    alert("✅ Montant collecte et wallet remis a zero!");
     loadWiseAdminWalletsA();
     loadWiseCollectHistoryA();
 }
@@ -1078,7 +1078,7 @@ async function saveSystemRateAdmin(key){
         body: JSON.stringify({ rate_value: newValue, updated_by_name: "Super Admin", updated_at: new Date().toISOString() })
     });
 
-    alert("? " + SYS_RATE_META_A[key].label + " mis a jour: " + newValue + SYS_RATE_META_A[key].suffix);
+    alert("✅ " + SYS_RATE_META_A[key].label + " mis a jour: " + newValue + SYS_RATE_META_A[key].suffix);
     loadSystemRates();
     loadSystemRatesHistory();
 }
@@ -1148,7 +1148,7 @@ async function saveRtSettingsAdmin(svc){
         body: JSON.stringify({ divisor: newDivisor, fee_percent: newFee, updated_by_name: "Super Admin", updated_at: new Date().toISOString() })
     });
 
-    alert("? Taux " + RT_SERVICE_LABELS_A[svc] + " mis a jour!");
+    alert("✅ Taux " + RT_SERVICE_LABELS_A[svc] + " mis a jour!");
     loadRtSettingsAdmin();
 }
 
@@ -1184,7 +1184,7 @@ async function rechargeRtCapitalAdmin(svc){
     });
 
     input.value = "";
-    alert("? Capital " + RT_SERVICE_LABELS_A[svc] + " recharge! Nouveau solde: " + newBalance.toLocaleString("fr-FR",{minimumFractionDigits:2}) + " DOP");
+    alert("✅ Capital " + RT_SERVICE_LABELS_A[svc] + " recharge! Nouveau solde: " + newBalance.toLocaleString("fr-FR",{minimumFractionDigits:2}) + " DOP");
     loadRtCapitalAdmin();
 }
 
@@ -1513,7 +1513,7 @@ async function loadLoansOverviewAdmin(){
             </div>
         </div>`).join("") || "<p style=''color:#64748B''>Aucune demande en attente.</p>";
 
-    const statusLabels = {pending:"? En attente", approved:"? A decaisser", rejected:"? Rejete", disbursed:"💸 Decaisse", repaid:"? Rembourse"};
+    const statusLabels = {pending:"⏳ En attente", approved:"✅ A decaisser", rejected:"❌ Rejete", disbursed:"💵 Decaisse", repaid:"✅ Rembourse"};
     document.getElementById("loanAllCount").textContent = data.length;
     document.getElementById("loanAllList").innerHTML = data.map(l => {
         const d = calcLoanDetailsAdmin(l);
@@ -1548,7 +1548,7 @@ async function decideLoanAdmin(loanId, decision){
         })
     });
 
-    alert("? Demande " + (decision === "approved" ? "approuvee" : "rejetee") + "!");
+    alert("✅ Demande " + (decision === "approved" ? "approuvee" : "rejetee") + "!");
     loadLoansOverviewAdmin();
 }
 
@@ -1631,7 +1631,7 @@ async function resetAdminProfit(cashierId){
         headers: {"apikey": SUPA_KEY, "Authorization": `Bearer ${SUPA_KEY}`, "Content-Type": "application/json", "Prefer": "return=minimal"},
         body: JSON.stringify({profit_htg: 0, profit_dop: 0, profit_usd: 0})
     });
-    alert("? Profit collecte et remis a zero!");
+    alert("✅ Profit collecte et remis a zero!");
     loadAdminCashiersList();
 }
 
@@ -2258,7 +2258,7 @@ async function saveMoneyServiceSettings(){
         return;
     }
 
-    showSettingsMsg("? Parametres enregistres avec succes! Les nouvelles valeurs s'appliquent immediatement pour toutes les prochaines transactions.", false);
+    showSettingsMsg("✅ Parametres enregistres avec succes! Les nouvelles valeurs s'appliquent immediatement pour toutes les prochaines transactions.", false);
 }
 
 function showSettingsMsg(text, isError){
@@ -2515,7 +2515,7 @@ async function loadGlobalTransactions(){
 
     const typeIcons = { depot:"📥 Depot", retrait:"📤 Retrait", moncash:"📱 MonCash", natcash:"📲 NatCash" };
     const statusLabels = {
-        completed:"? Complet", pending_validation:"? En attente", approved:"? Approuve",
+        completed:"✅ Complet", pending_validation:"⏳ En attente", approved:"✅ Approuve",
         rejected:"❌ Rejete", wrong_number:"⚠️ Numero Faux", cancelled:"🚫 Annule"
     };
 
@@ -2605,7 +2605,7 @@ async function saveExchangeRate(id){
         msg.textContent = "Erreur: " + error.message;
     } else {
         msg.style.background = "#DCFCE7"; msg.style.color = "#166534";
-        msg.textContent = "? Taux mis a jour! Il apparait maintenant sur le site public.";
+        msg.textContent = "✅ Taux mis a jour! Il apparait maintenant sur le site public.";
         loadExchangeRates();
     }
 }
@@ -2662,7 +2662,7 @@ async function uploadPromotion(){
         return;
     }
 
-    showPromoMsg("? Publicite publiee avec succes sur le site!", false);
+    showPromoMsg("✅ Publicite publiee avec succes sur le site!", false);
     document.getElementById("promoFile").value = "";
     document.getElementById("promoTitle").value = "";
     document.getElementById("promoDescription").value = "";
@@ -2744,7 +2744,7 @@ async function publishNews(){
 
     if(error){ showNewsMsg("Erreur: " + error.message, true); return; }
 
-    showNewsMsg("? Actualite publiee avec succes!", false);
+    showNewsMsg("✅ Actualite publiee avec succes!", false);
     document.getElementById("newsTitle").value = "";
     document.getElementById("newsContent").value = "";
     document.getElementById("newsImage").value = "";
@@ -3313,7 +3313,7 @@ async function uploadPartnerLogo(){
 
     if(error){ showPartnersMsg("Erreur: " + error.message, true); return; }
 
-    showPartnersMsg("? Logo ajoute avec succes!", false);
+    showPartnersMsg("✅ Logo ajoute avec succes!", false);
     document.getElementById("partnerName").value = "";
     document.getElementById("partnerLogo").value = "";
     loadPartnerLogos();
@@ -3379,7 +3379,7 @@ async function saveContactInfo(){
         msg.textContent = "Erreur: " + error.message;
     } else {
         msg.style.background = "#DCFCE7"; msg.style.color = "#166534";
-        msg.textContent = "? Informations mises a jour! Elles apparaissent maintenant sur le site public.";
+        msg.textContent = "✅ Informations mises a jour! Elles apparaissent maintenant sur le site public.";
     }
 }
 
@@ -3458,7 +3458,7 @@ async function saveBranch(){
         return;
     }
 
-    showBranchMsg(editId ? "? Succursale mise a jour!" : "? Succursale creee avec succes!", false);
+    showBranchMsg(editId ? "✅ Succursale mise a jour!" : "✅ Succursale creee avec succes!", false);
     resetBranchForm();
     loadBranchesManagement();
 }
