@@ -82,6 +82,7 @@ td{padding:0.75rem;border-top:1px solid #F1F5F9;white-space:nowrap}
 <div class="form-group" id="detStaffGroup" style="display:none"><label>Personnel</label><select id="detStaff"><option value="">Tous</option></select></div>
 <div class="form-group"><button class="btn btn-primary" onclick="loadDetailedReport()">🔍 Rechercher</button></div>
 <div class="form-group"><button class="btn btn-pdf" onclick="printDetailedReport()">🖨️ Telecharger / Imprimer PDF</button></div>
+<div class="form-group"><button class="btn" id="btnBle58Detail" style="background:#0EA5E9;color:#fff" onclick="printDetailedBLE()">🖨️ 58mm</button></div>
 <div class="form-group"><button class="btn" style="background:#16A34A;color:#fff" onclick="exportDetailedExcel()">📊 Exporter Excel</button></div>
 </div>
 </div>
@@ -101,6 +102,7 @@ td{padding:0.75rem;border-top:1px solid #F1F5F9;white-space:nowrap}
 <div class="form-group" id="genStaffGroup" style="display:none"><label>Personnel</label><select id="genStaff"><option value="">Tous</option></select></div>
 <div class="form-group"><button class="btn btn-primary" onclick="loadGeneralReport()">📈 Generer le Rapport</button></div>
 <div class="form-group"><button class="btn btn-pdf" onclick="window.print()">🖨️ Telecharger / Imprimer PDF</button></div>
+<div class="form-group"><button class="btn" id="btnBle58General" style="background:#0EA5E9;color:#fff" onclick="printGeneralBLE()">🖨️ 58mm</button></div>
 <div class="form-group"><button class="btn" style="background:#16A34A;color:#fff" onclick="exportGeneralExcel()">📊 Exporter Excel</button></div>
 </div>
 </div>
@@ -129,6 +131,7 @@ td{padding:0.75rem;border-top:1px solid #F1F5F9;white-space:nowrap}
 <div class="form-group"><label>Au</label><input type="date" id="profitDateTo"></div>
 <div class="form-group"><button class="btn btn-primary" onclick="loadProfitByCashier()">🔍 Rechercher</button></div>
 <div class="form-group"><button class="btn btn-pdf" onclick="printProfitByCashier()">🖨️ Imprimer / PDF</button></div>
+<div class="form-group"><button class="btn" id="btnBle58Profit" style="background:#0EA5E9;color:#fff" onclick="printProfitByCashierBLE()">🖨️ 58mm</button></div>
 </div>
 </div>
 <div class="card">
@@ -737,7 +740,80 @@ function rapportsViewReceipt(src){
 function closeRapportsLightbox(){
     document.getElementById("rapportsLightbox").style.display = "none";
 }
+function nexusCleanForBLE(v){
+    return String(v==null?"":v).replace(/<[^>]*>/g,"").trim();
+}
+async function printDetailedBLE(){
+    if(!lastDetailedData || !lastDetailedData.length){ alert("Effectuez d'abord une recherche avec des resultats avant d'imprimer."); return; }
+    const svc = SERVICES[lastDetailedSvcKey];
+    let lines = [
+        {text:"NEXUS CASA DE CAMBIO", align:"center", bold:true},
+        {text: svc.label, align:"center"},
+        {text: new Date(lastDetailedDate+"T00:00:00").toLocaleDateString("fr-FR"), align:"center"},
+        {text: "Personnel: " + lastDetailedStaffLabel, align:"center"},
+        {text:"--------------------------------", align:"left"}
+    ];
+    lastDetailedData.forEach(t => {
+        svc.cols.forEach(c => { lines.push({text: c.h + ": " + nexusCleanForBLE(c.v(t)), align:"left"}); });
+        lines.push({text:"--------------------------------", align:"left"});
+    });
+    const totalStr = computeTotalStr(svc, lastDetailedData);
+    lines.push({text:"Total: " + lastDetailedData.length + " transaction(s)", align:"left"});
+    lines.push({text:"TOTAL: " + totalStr, bold:true, align:"left"});
+    lines.push({text:"", align:"left"});
+    lines.push({text:"Merci Nexus Casa de Cambio", align:"center"});
+    await nexusPrintBLE(lines, document.getElementById("btnBle58Detail"));
+}
+async function printGeneralBLE(){
+    if(!lastGeneralData){ alert("Generez d'abord un rapport avant d'imprimer."); return; }
+    let lines = [
+        {text:"NEXUS CASA DE CAMBIO", align:"center", bold:true},
+        {text:"Rapport General d'Activite", align:"center"},
+        {text: new Date(lastGeneralDate+"T00:00:00").toLocaleDateString("fr-FR"), align:"center"},
+        {text:"--------------------------------", align:"left"}
+    ];
+    let grandTotalTxns = 0;
+    for(const svcKey of Object.keys(SERVICES)){
+        const svc = SERVICES[svcKey];
+        const rows = lastGeneralData[svcKey] || [];
+        grandTotalTxns += rows.length;
+        if(rows.length === 0) continue;
+        const totalStr = computeTotalStr(svc, rows);
+        lines.push({text: svc.label, bold:true, align:"left"});
+        lines.push({text: rows.length + " txn(s) - " + totalStr, align:"left"});
+        lines.push({text:"--------------------------------", align:"left"});
+    }
+    lines.push({text:"TOTAL GENERAL: " + grandTotalTxns + " transaction(s)", bold:true, align:"left"});
+    lines.push({text:"", align:"left"});
+    lines.push({text:"Merci Nexus Casa de Cambio", align:"center"});
+    await nexusPrintBLE(lines, document.getElementById("btnBle58General"));
+}
+async function printProfitByCashierBLE(){
+    if(!lastProfitRows || !lastProfitRows.length){ alert("Effectuez d'abord une recherche avec des resultats avant d'imprimer."); return; }
+    const dateLabel = lastProfitFrom === lastProfitTo
+        ? new Date(lastProfitFrom + "T00:00:00").toLocaleDateString("fr-FR")
+        : new Date(lastProfitFrom + "T00:00:00").toLocaleDateString("fr-FR") + " au " + new Date(lastProfitTo + "T00:00:00").toLocaleDateString("fr-FR");
+    let lines = [
+        {text:"NEXUS CASA DE CAMBIO", align:"center", bold:true},
+        {text:"Benefices par Caissier", align:"center"},
+        {text: dateLabel, align:"center"},
+        {text:"--------------------------------", align:"left"}
+    ];
+    lastProfitRows.forEach(r => {
+        lines.push({text: r.name, bold:true, align:"left"});
+        lines.push({text: "Devises: " + fmtA(r.devises) + " DOP", align:"left"});
+        lines.push({text: "MonCash/NatCash: " + fmtA(r.mm) + " DOP", align:"left"});
+        lines.push({text: "Total: " + fmtA(r.total) + " DOP", align:"left"});
+        lines.push({text:"--------------------------------", align:"left"});
+    });
+    const grandTotal = lastProfitRows.reduce((s,r)=>s+r.total,0);
+    lines.push({text:"TOTAL GENERAL: " + fmtA(grandTotal) + " DOP", bold:true, align:"left"});
+    lines.push({text:"", align:"left"});
+    lines.push({text:"Merci Nexus Casa de Cambio", align:"center"});
+    await nexusPrintBLE(lines, document.getElementById("btnBle58Profit"));
+}
 </script>
+<script src="assets/js/ble-print.js"></script>
 <script src="assets/js/theme-switcher.js"></script>
 <script src="assets/js/enhancements.js"></script>
 <div id="rapportsLightbox" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);z-index:9999;align-items:center;justify-content:center" onclick="closeRapportsLightbox()">
