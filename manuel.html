@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEXUS Casa de Cambio — Manuel / Manyèl</title>
+<style>
+:root{
+  --navy:#1E293B;
+  --navy-light:#334155;
+  --purple:#7C3AED;
+  --purple-light:#A855F7;
+  --gray:#64748B;
+  --gray-light:#94A3B8;
+  --bg:#F8FAFC;
+  --border:#E2E8F0;
+  --green:#16A34A;
+  --red:#DC2626;
+  --amber:#F59E0B;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{
+  font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
+  background:var(--bg);
+  color:#1E293B;
+  line-height:1.65;
+}
+/* ===== TOPBAR ===== */
+.manual-topbar{
+  position:sticky; top:0; z-index:100;
+  background:linear-gradient(135deg,var(--navy),var(--navy-light));
+  color:#fff;
+  padding:0.9rem 1.25rem;
+  display:flex; align-items:center; justify-content:space-between;
+  box-shadow:0 2px 12px rgba(0,0,0,0.15);
+  flex-wrap:wrap; gap:0.75rem;
+}
+.manual-topbar .brand{display:flex;align-items:center;gap:0.6rem;font-weight:800;font-size:1.05rem;}
+.manual-topbar .brand span.sub{font-weight:400;font-size:0.78rem;opacity:0.85;display:block;}
+.topbar-actions{display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;}
+.lang-toggle{
+  display:flex; background:rgba(255,255,255,0.12); border-radius:10px; padding:3px; gap:2px;
+}
+.lang-toggle button{
+  border:none; background:transparent; color:#fff; padding:0.45rem 0.9rem; border-radius:8px;
+  font-size:0.82rem; font-weight:700; cursor:pointer; opacity:0.7; transition:all 0.2s;
+}
+.lang-toggle button.active{background:var(--purple); opacity:1;}
+.btn-print, .btn-back{
+  border:1.5px solid rgba(255,255,255,0.3); background:rgba(255,255,255,0.08); color:#fff;
+  padding:0.45rem 0.9rem; border-radius:8px; font-size:0.82rem; font-weight:600; cursor:pointer;
+  text-decoration:none; display:inline-flex; align-items:center; gap:0.35rem;
+}
+.btn-print:hover, .btn-back:hover{background:rgba(255,255,255,0.18);}
+
+/* ===== LAYOUT ===== */
+.manual-layout{ display:flex; max-width:1200px; margin:0 auto; }
+.manual-sidebar{
+  width:260px; flex-shrink:0; padding:1.5rem 1rem;
+  position:sticky; top:64px; align-self:flex-start; max-height:calc(100vh - 64px); overflow-y:auto;
+}
+.manual-sidebar h4{font-size:0.72rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--gray); margin-bottom:0.75rem; padding-left:0.5rem;}
+.manual-sidebar a{
+  display:block; padding:0.55rem 0.75rem; border-radius:8px; color:var(--navy);
+  text-decoration:none; font-size:0.87rem; margin-bottom:2px; transition:all 0.15s; font-weight:500;
+}
+.manual-sidebar a:hover{background:#EDE9FE; color:var(--purple);}
+.manual-sidebar a.active{background:var(--purple); color:#fff; font-weight:700;}
+
+.manual-content{ flex:1; padding:2rem 2rem 5rem 1.5rem; max-width:800px; }
+
+/* ===== COVER ===== */
+.manual-cover{
+  background:linear-gradient(135deg,var(--navy) 0%, #2D1B69 55%, var(--purple) 100%);
+  color:#fff; border-radius:20px; padding:3rem 2rem; text-align:center; margin-bottom:2.5rem;
+  box-shadow:0 12px 30px rgba(124,58,237,0.25);
+}
+.manual-cover .logo-badge{
+  width:64px;height:64px;border-radius:16px;background:rgba(255,255,255,0.15);
+  display:flex;align-items:center;justify-content:center;font-size:2rem;margin:0 auto 1rem;
+}
+.manual-cover h1{font-size:1.9rem; font-weight:900; letter-spacing:0.02em;}
+.manual-cover .subtitle{font-size:1.15rem; color:#E9D5FF; margin-top:0.4rem; font-weight:500;}
+.manual-cover .version-pill{
+  display:inline-block; background:rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.3);
+  padding:0.4rem 1.1rem; border-radius:999px; margin-top:1.25rem; font-weight:700; font-size:0.9rem;
+}
+.manual-cover .cover-date{margin-top:0.5rem; font-size:0.85rem; color:#CBD5E1;}
+
+/* ===== CARDS / SECTIONS ===== */
+.manual-section{
+  background:#fff; border-radius:16px; padding:1.75rem; margin-bottom:1.5rem;
+  border:1px solid var(--border); box-shadow:0 1px 3px rgba(0,0,0,0.04);
+  scroll-margin-top:80px;
+}
+.manual-section h2{
+  font-size:1.35rem; color:var(--navy); font-weight:800; margin-bottom:1rem;
+  display:flex; align-items:center; gap:0.6rem; padding-bottom:0.75rem; border-bottom:2px solid #F1F5F9;
+}
+.manual-section h2 .num{
+  background:var(--purple); color:#fff; width:32px;height:32px;border-radius:9px;
+  display:flex;align-items:center;justify-content:center;font-size:0.95rem;flex-shrink:0;
+}
+.manual-section h3{font-size:1.05rem; color:var(--purple); font-weight:700; margin:1.25rem 0 0.6rem;}
+.manual-section p{margin-bottom:0.85rem; color:#334155;}
+.manual-section ul{margin:0 0 0.85rem 1.3rem;}
+.manual-section ul li{margin-bottom:0.45rem; color:#334155;}
+.manual-section ol{margin:0 0 0.85rem 1.3rem;}
+.manual-section ol li{margin-bottom:0.45rem; color:#334155;}
+.manual-section ol li::marker{font-weight:700; color:var(--purple);}
+.manual-section strong{color:var(--navy);}
+
+.note-box, .warn-box{
+  border-radius:10px; padding:0.85rem 1rem; margin:0.9rem 0; font-size:0.9rem;
+  display:flex; gap:0.6rem; align-items:flex-start;
+}
+.note-box{background:#F3E8FF; border-left:4px solid var(--purple);}
+.warn-box{background:#FEF2F2; border-left:4px solid var(--red);}
+.note-box .ico, .warn-box .ico{font-size:1.1rem; flex-shrink:0;}
+.note-box b{color:var(--purple);}
+.warn-box b{color:var(--red);}
+
+table.role-table{width:100%; border-collapse:collapse; margin:1rem 0; font-size:0.88rem;}
+table.role-table th{
+  background:var(--navy); color:#fff; text-align:left; padding:0.65rem 0.9rem; font-size:0.8rem;
+}
+table.role-table th:first-child{border-radius:8px 0 0 0;}
+table.role-table th:last-child{border-radius:0 8px 0 0;}
+table.role-table td{padding:0.65rem 0.9rem; border-bottom:1px solid var(--border); vertical-align:top;}
+table.role-table tr:last-child td{border-bottom:none;}
+table.role-table td:first-child{font-weight:700; color:var(--navy); white-space:nowrap;}
+
+.toc-page h2{font-size:1.35rem; color:var(--navy); margin-bottom:1rem;}
+.toc-list a{
+  display:flex; justify-content:space-between; padding:0.7rem 0; border-bottom:1px dashed var(--border);
+  color:var(--navy); text-decoration:none; font-weight:600;
+}
+.toc-list a:hover{color:var(--purple);}
+.toc-list a span.arrow{color:var(--purple);}
+
+.faq-q{font-weight:700; color:var(--navy); margin-top:1.1rem;}
+.faq-a{color:#334155; margin-top:0.25rem;}
+
+.manual-footer{text-align:center; padding:2.5rem 1rem 1rem; color:var(--gray-light); font-size:0.85rem; font-style:italic;}
+
+[data-lang-content]{display:none;}
+[data-lang-content].active{display:block;}
+
+/* ===== MOBILE ===== */
+.mobile-toc-toggle{display:none;}
+@media (max-width: 860px){
+  .manual-sidebar{
+    position:fixed; top:60px; left:0; height:calc(100vh - 60px); background:#fff; z-index:90;
+    box-shadow:2px 0 12px rgba(0,0,0,0.1); transform:translateX(-105%); transition:transform 0.25s; width:78%;
+  }
+  .manual-sidebar.open{transform:translateX(0);}
+  .manual-layout{flex-direction:column;}
+  .manual-content{padding:1.25rem 1rem 4rem;}
+  .mobile-toc-toggle{
+    display:inline-flex; border:1.5px solid rgba(255,255,255,0.3); background:rgba(255,255,255,0.08);
+    color:#fff; padding:0.45rem 0.7rem; border-radius:8px; cursor:pointer; align-items:center; gap:0.3rem;
+    font-size:0.82rem;
+  }
+  .manual-cover{padding:2rem 1.25rem;}
+  .manual-cover h1{font-size:1.4rem;}
+  .sidebar-overlay{display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:85;}
+  .sidebar-overlay.show{display:block;}
+}
+
+/* ===== PRINT ===== */
+@media print{
+  .manual-topbar, .manual-sidebar, .sidebar-overlay{display:none !important;}
+  .manual-content{max-width:100%; padding:0;}
+  .manual-section{box-shadow:none; border:none; page-break-inside:avoid;}
+  body{background:#fff;}
+}
+</style>
+</head>
+<body>
+
+<div class="manual-topbar">
+  <div style="display:flex;align-items:center;gap:0.75rem">
+    <button class="btn-back mobile-toc-toggle" onclick="toggleMobileToc()">☰</button>
+    <div class="brand">
+      💎 NEXUS Casa de Cambio
+      <span class="sub" data-lang-content data-lang="fr">Manuel d'Utilisation — Version 1</span>
+      <span class="sub" data-lang-content data-lang="kre">Manyèl Itilizasyon — Vèsyon 1</span>
+    </div>
+  </div>
+  <div class="topbar-actions">
+    <div class="lang-toggle">
+      <button id="btnLangFr" onclick="setLang('fr')">Français</button>
+      <button id="btnLangKre" onclick="setLang('kre')">Kreyòl</button>
+    </div>
+    <button class="btn-print" onclick="window.print()">🖨️ <span data-lang-content data-lang="fr">Imprimer</span><span data-lang-content data-lang="kre">Enprime</span></button>
+    <a class="btn-back" href="javascript:history.back()">← <span data-lang-content data-lang="fr">Retour</span><span data-lang-content data-lang="kre">Retou</span></a>
+  </div>
+</div>
+
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleMobileToc()"></div>
+
+<div class="manual-layout">
+  <aside class="manual-sidebar" id="manualSidebar">
+    <h4 data-lang-content data-lang="fr">Table des matières</h4>
+    <h4 data-lang-content data-lang="kre">Tab matyè</h4>
+    <nav id="tocNav"></nav>
+  </aside>
+
+  <main class="manual-content">
+
+    <!-- COVER -->
+    <div class="manual-cover">
+      <div class="logo-badge">💎</div>
+      <h1>NEXUS CASA DE CAMBIO</h1>
+      <div class="subtitle" data-lang-content data-lang="fr">Manuel d'Utilisation du Système</div>
+      <div class="subtitle" data-lang-content data-lang="kre">Manyèl Itilizasyon Sistèm nan</div>
+      <div class="version-pill" data-lang-content data-lang="fr">📘 Version 1</div>
+      <div class="version-pill" data-lang-content data-lang="kre">📘 Vèsyon 1</div>
+      <div class="cover-date" data-lang-content data-lang="fr">Août 2026 · nexuscasadecambio.com</div>
+      <div class="cover-date" data-lang-content data-lang="kre">Out 2026 · nexuscasadecambio.com</div>
+    </div>
+
+    <!-- ========================= FRANÇAIS ========================= -->
+    <div data-lang-content data-lang="fr">
+
+      <section class="manual-section" id="s1-fr" data-toc="1. Introduction">
+        <h2><span class="num">1</span>Introduction</h2>
+        <p>Ce manuel décrit l'utilisation du système NEXUS Casa de Cambio, une plateforme complète de gestion pour bureau de change, transferts d'argent mobile (MonCash/NatCash), dépôts bancaires, prêts (Prestamo), et services associés.</p>
+        <p>Le système est accessible depuis un navigateur web (téléphone, tablette, ou ordinateur) à l'adresse : <strong>www.nexuscasadecambio.com</strong></p>
+        <div class="warn-box"><span class="ico">⚠️</span><span><b>Attention :</b> Pour toute fonctionnalité Bluetooth (impression de reçus sur imprimante 58mm), le site doit être ouvert dans Google Chrome directement — pas dans Facebook, Messenger, Instagram ou WhatsApp (ces applications ne supportent pas le Bluetooth).</span></div>
+      </section>
+
+      <section class="manual-section" id="s2-fr" data-toc="2. Rôles du Système">
+        <h2><span class="num">2</span>Rôles du Système</h2>
+        <p>Chaque personne dispose d'un compte avec un rôle précis, qui détermine ce qu'elle peut voir et faire dans le système.</p>
+        <table class="role-table">
+          <tr><th>Rôle</th><th>Description</th></tr>
+          <tr><td>Caissier</td><td>Gère sa caisse quotidienne : dépôts, retraits, change de devises, MonCash/NatCash, prêts, etc.</td></tr>
+          <tr><td>Agent</td><td>Rôle similaire au Caissier avec un accès limité à certains services.</td></tr>
+          <tr><td>Validateur</td><td>Approuve ou rejette les transactions MonCash/NatCash et les réceptions de transferts soumises par les caissiers.</td></tr>
+          <tr><td>Superviseur</td><td>Supervise les caissiers et agents de son équipe.</td></tr>
+          <tr><td>Secrétaire</td><td>Gère la création de nouveaux clients et le KYC.</td></tr>
+          <tr><td>CEO</td><td>Accès complet à la gestion opérationnelle, aux rapports, aux caisses, et aux bénéfices.</td></tr>
+          <tr><td>Super Admin</td><td>Accès complet, y compris la gestion technique et les paramètres système.</td></tr>
+        </table>
+      </section>
+
+      <section class="manual-section" id="s3-fr" data-toc="3. Connexion et Sécurité">
+        <h2><span class="num">3</span>Connexion et Sécurité</h2>
+        <h3>3.1 Se connecter</h3>
+        <ol>
+          <li>Ouvrez www.nexuscasadecambio.com dans votre navigateur.</li>
+          <li>Entrez votre e-mail et votre mot de passe.</li>
+          <li>Cliquez sur "Connexion".</li>
+        </ol>
+        <h3>3.2 Reconnaissance Faciale</h3>
+        <p>Pour renforcer la sécurité, certains comptes doivent scanner leur visage à chaque connexion :</p>
+        <ul>
+          <li>La toute première connexion enregistre votre visage comme référence.</li>
+          <li>Aux connexions suivantes, votre visage est comparé à cette référence.</li>
+          <li>Après 3 échecs de reconnaissance, le compte est automatiquement bloqué et seul le CEO peut le débloquer.</li>
+        </ul>
+        <div class="note-box"><span class="ico">ℹ️</span><span><b>Note :</b> Le CEO peut activer ou désactiver la reconnaissance faciale pour n'importe quel employé, individuellement, depuis "Gestion Utilisateurs".</span></div>
+      </section>
+
+      <section class="manual-section" id="s4-fr" data-toc="4. Guide du Caissier">
+        <h2><span class="num">4</span>Guide du Caissier</h2>
+        <h3>4.1 Pointage (Présence Obligatoire)</h3>
+        <p>Chaque caissier doit pointer son arrivée avant de pouvoir utiliser le reste du système.</p>
+        <ol>
+          <li>Ouvrez la section "Pointage".</li>
+          <li>Prenez un selfie (la caméra s'ouvre automatiquement).</li>
+          <li>Le système vérifie votre position GPS par rapport à votre succursale.</li>
+        </ol>
+        <ul>
+          <li>Si vous arrivez à l'heure : un message de félicitations s'affiche.</li>
+          <li>Si vous êtes en retard : une déduction proportionnelle est appliquée (calculée par minute de retard, selon le taux fixé par le CEO).</li>
+        </ul>
+        <div class="warn-box"><span class="ico">⚠️</span><span><b>Attention :</b> Tant que vous n'avez pas pointé pour la journée, l'accès aux autres sections est bloqué — un bandeau rouge vous redirige automatiquement vers le Pointage.</span></div>
+
+        <h3>4.2 Ma Caisse</h3>
+        <p>C'est le tableau de bord financier quotidien du caissier.</p>
+        <ul>
+          <li><strong>Fonds Initial</strong> : le montant remis par le CEO/Admin au début de la journée.</li>
+          <li><strong>Réapprovisionnement</strong> : ajout de fonds en cours de journée.</li>
+          <li><strong>Décaissement</strong> : sortie d'argent justifiée (avec motif obligatoire).</li>
+          <li><strong>Solde Théorique Disponible</strong> : calculé automatiquement à partir de toutes les opérations DOP de la journée.</li>
+        </ul>
+        <div class="note-box"><span class="ico">ℹ️</span><span><b>Note :</b> Les opérations de Change de Devises n'affectent PAS le Solde Théorique DOP — elles ont leur propre compte séparé (voir section 4.3).</span></div>
+        <p>Chaque matin, une nouvelle session commence automatiquement — la session de la veille est archivée et reste consultable via le bouton "Archives".</p>
+
+        <h3>4.3 Change de Devises</h3>
+        <p>Permet d'acheter ou vendre des devises étrangères (USD, EUR, CAD, etc.) contre des gourdes (DOP).</p>
+        <ul>
+          <li><strong>Achat</strong> : le client vous remet des dollars, vous lui remettez des gourdes.</li>
+          <li><strong>Vente</strong> : le client vous remet des gourdes, vous lui remettez des dollars.</li>
+        </ul>
+        <p>Le "Compte Change Devises" affiche séparément le total acheté et vendu de la journée, sans affecter le Solde Théorique de Ma Caisse.</p>
+
+        <h3>4.4 MonCash / NatCash</h3>
+        <ol>
+          <li>Sélectionnez le service (MonCash ou NatCash).</li>
+          <li>Entrez le nom du client, son WhatsApp, le numéro destinataire, et le montant.</li>
+          <li>Choisissez si les frais sont déduits du montant ou payés en plus par le client.</li>
+          <li>Confirmez avoir vérifié le numéro et reçu les fonds en espèces.</li>
+        </ol>
+        <p>La transaction passe en statut "En attente" jusqu'à ce qu'un Validateur l'approuve (avec photo de confirmation Digicel/Natcom).</p>
+        <ul>
+          <li><strong>Reçu Envoyer</strong> : historique de toutes vos transactions soumises.</li>
+          <li><strong>Reçu Recevoir</strong> : transactions déjà approuvées, avec la photo de confirmation du validateur et son nom.</li>
+        </ul>
+
+        <h3>4.5 Dépôts et Retraits (Comptes Épargne)</h3>
+        <p>Gestion des mouvements sur les comptes épargne des clients (individuels, entreprise). Des frais Nexus s'appliquent sur les retraits selon le taux configuré par le CEO.</p>
+
+        <h3>4.6 Prestamo (Prêts)</h3>
+        <p>Octroi de prêts aux clients avec calcul automatique de l'intérêt et de la pénalité de retard (mora), selon les taux configurés par le CEO.</p>
+
+        <h3>4.7 Disashop</h3>
+        <p>Recharges et services divers pour les clients, avec suivi de la commission par catégorie.</p>
+
+        <h3>4.8 Réception de Transferts (Haïti → RD)</h3>
+        <p>Permet de recevoir un transfert envoyé depuis Haïti et de remettre le montant équivalent en pesos dominicains au client, après négociation validée par un Validateur.</p>
+
+        <h3>4.9 Archives</h3>
+        <p>Chaque section (Ma Caisse, Pointage) dispose d'un bouton "Archives" pour consulter l'historique des jours précédents, en lecture seule.</p>
+      </section>
+
+      <section class="manual-section" id="s5-fr" data-toc="5. Guide de l'Agent">
+        <h2><span class="num">5</span>Guide de l'Agent</h2>
+        <p>Le rôle Agent fonctionne de manière similaire au Caissier, avec un accès à un sous-ensemble de services (selon la configuration de votre poste). Les principes de Pointage, Ma Caisse, et validation des transactions sont identiques à ceux décrits pour le Caissier.</p>
+      </section>
+
+      <section class="manual-section" id="s6-fr" data-toc="6. Guide du Validateur">
+        <h2><span class="num">6</span>Guide du Validateur</h2>
+        <p>Le Validateur approuve les transactions MonCash/NatCash et les réceptions de transferts soumises par les caissiers et agents.</p>
+        <h3>6.1 Transactions en Attente</h3>
+        <p>La liste des transactions en attente apparaît automatiquement. Cliquez sur une transaction pour voir les détails complets.</p>
+        <h3>6.2 Approuver une Transaction MonCash/NatCash</h3>
+        <ol>
+          <li>Cliquez sur "✅ Approuve".</li>
+          <li>Prenez une photo du reçu de confirmation (Digicel pour MonCash, Natcom pour NatCash), ou choisissez-la depuis votre galerie si vous l'avez déjà.</li>
+          <li>Le système analyse automatiquement la netteté de la photo (maximum 10 secondes).</li>
+        </ol>
+        <ul>
+          <li>Si la photo est claire : la transaction est approuvée automatiquement, votre balance diminue, et un filigrane (votre nom + date/heure) est ajouté à la photo.</li>
+          <li>Si la photo est floue : un message vous demande de reprendre la photo.</li>
+        </ul>
+        <div class="warn-box"><span class="ico">⚠️</span><span><b>Attention :</b> Un même reçu ne peut pas être utilisé deux fois pour deux transactions différentes — le système le détecte automatiquement.</span></div>
+        <p>Les boutons "❌ Rejeter" et "⚠️ Numéro Faux" ne demandent pas de photo — une simple confirmation suffit.</p>
+        <h3>6.3 Mes Balances</h3>
+        <p>Le tableau de bord affiche votre balance Envoi (MonCash/NatCash) restante, mise à jour par le CEO/Super Admin. Elle diminue automatiquement à chaque approbation.</p>
+        <h3>6.4 Historique</h3>
+        <p>Consultez toutes vos validations passées, avec date, heure précise (à la seconde), et statut.</p>
+      </section>
+
+      <section class="manual-section" id="s7-fr" data-toc="7. Guide du CEO">
+        <h2><span class="num">7</span>Guide du CEO</h2>
+        <p>Le CEO a accès à l'ensemble des fonctionnalités opérationnelles et stratégiques du système.</p>
+        <h3>7.1 Gestion Utilisateurs</h3>
+        <ul>
+          <li>Créer, activer/désactiver, ou supprimer des comptes employés.</li>
+          <li>Débloquer un compte bloqué pour échec de reconnaissance faciale.</li>
+          <li>Activer ou désactiver la reconnaissance faciale pour chaque employé individuellement.</li>
+        </ul>
+        <h3>7.2 Gestion des Caisses</h3>
+        <p>Vue d'ensemble de toutes les sessions de caisse ouvertes. Le CEO peut ouvrir une caisse pour un employé, ajouter un réapprovisionnement, ou modifier/supprimer une entrée manuelle.</p>
+        <p>Le bouton "Archives" permet de consulter les sessions de n'importe quelle date passée, avec le détail complet des mouvements.</p>
+        <div class="note-box"><span class="ico">ℹ️</span><span><b>Note :</b> Chaque matin, toute session encore "Ouverte" de la veille est automatiquement fermée et archivée dès qu'une page du système est chargée — le caissier repart avec un solde vierge.</span></div>
+        <h3>7.3 Distribution Devises</h3>
+        <p>Permet de donner un stock de devises (USD, EUR, etc.) à un caissier ou agent, pour qu'il puisse vendre cette devise à ses clients.</p>
+        <h3>7.4 Balances Validateurs</h3>
+        <p>Gestion des balances Envoi et Réception de chaque validateur. Un historique complet ("Historique des Mouvements") trace chaque réapprovisionnement, approbation, et validation.</p>
+        <h3>7.5 Pointage Caissiers</h3>
+        <p>Vue d'ensemble des présences de tous les caissiers, avec possibilité de corriger manuellement les minutes de retard ou le montant de déduction si nécessaire.</p>
+        <h3>7.6 Bénéfices Nexus</h3>
+        <p>Tableau de bord des bénéfices générés chaque jour par l'entreprise :</p>
+        <ul>
+          <li><strong>Bénéfice Devises</strong> : montant acheté × 2, montant vendu × 5 (en DOP).</li>
+          <li><strong>Bénéfice MonCash/NatCash</strong> : frais de 10% perçus sur chaque transaction approuvée.</li>
+        </ul>
+        <p>Un graphique affiche la tendance des 7 derniers jours, et un historique permet de consulter n'importe quelle période passée.</p>
+        <h3>7.7 Taux Système</h3>
+        <p>Configuration centralisée des taux appliqués dans tout le système, sans avoir besoin de modifier le code :</p>
+        <ul>
+          <li>Frais Nexus sur Retrait (%)</li>
+          <li>Intérêt sur Prestamo (%)</li>
+          <li>Mora / pénalité de retard sur Prestamo (%)</li>
+          <li>Déduction Retard au Pointage (DOP par 60 minutes)</li>
+        </ul>
+        <p>Chaque changement est enregistré dans un historique avec l'ancienne et la nouvelle valeur.</p>
+      </section>
+
+      <section class="manual-section" id="s8-fr" data-toc="8. Guide du Super Admin">
+        <h2><span class="num">8</span>Guide du Super Admin</h2>
+        <p>Le Super Admin dispose des mêmes fonctionnalités opérationnelles que le CEO (Gestion des Caisses, Pointage, Balances Validateurs, Bénéfices Nexus, Taux Système).</p>
+        <p>Le Super Admin a en plus accès à des paramètres techniques additionnels (site web public, publicités, actualités, partenaires).</p>
+      </section>
+
+      <section class="manual-section" id="s9-fr" data-toc="9. Superviseur et Secrétaire">
+        <h2><span class="num">9</span>Superviseur et Secrétaire</h2>
+        <h3>9.1 Superviseur</h3>
+        <p>Supervise l'activité de son équipe de caissiers/agents assignés : clients, KYC, comptes.</p>
+        <h3>9.2 Secrétaire</h3>
+        <p>Responsable de la création de nouveaux clients et de la validation KYC. Le formulaire de création de client propose désormais la liste complète des succursales réelles.</p>
+      </section>
+
+      <section class="manual-section" id="s10-fr" data-toc="10. Rapports">
+        <h2><span class="num">10</span>Rapports</h2>
+        <p>Le module Rapports est accessible au CEO, Super Admin, Superviseur, et Secrétaire, avec des niveaux de détail différents selon le rôle.</p>
+        <h3>10.1 Historique Détaillé</h3>
+        <p>Sélectionnez un service, une date, et (si autorisé) un membre du personnel, pour voir la liste complète des transactions.</p>
+        <h3>10.2 Historique Général (PDF)</h3>
+        <p>Génère un rapport combinant tous les services pour une date donnée, prêt à imprimer en PDF format A4.</p>
+        <h3>10.3 Balances Validateurs et Bénéfices par Caissier</h3>
+        <p>Réservés au CEO et Super Admin uniquement. Affichent respectivement l'état des balances de chaque validateur, et le bénéfice généré par chaque caissier sur une période choisie.</p>
+        <h3>10.4 Export et Impression</h3>
+        <ul>
+          <li><strong>PDF</strong> : impression classique format A4.</li>
+          <li><strong>Excel</strong> : export des données brutes pour analyse.</li>
+          <li><strong>58mm</strong> : impression directe sur imprimante thermique Bluetooth, au format condensé adapté au papier étroit.</li>
+        </ul>
+        <div class="warn-box"><span class="ico">⚠️</span><span><b>Attention :</b> L'impression 58mm nécessite Google Chrome (le Bluetooth ne fonctionne pas dans les navigateurs intégrés de Facebook, Messenger, Instagram ou WhatsApp).</span></div>
+      </section>
+
+      <section class="manual-section" id="s11-fr" data-toc="11. Questions Fréquentes">
+        <h2><span class="num">11</span>Questions Fréquentes</h2>
+        <div class="faq-q">Je ne peux pas naviguer dans l'application, un bandeau rouge bloque tout.</div>
+        <div class="faq-a">Vous n'avez pas encore pointé votre arrivée aujourd'hui. Rendez-vous dans "Pointage" et prenez votre selfie.</div>
+        <div class="faq-q">Le bouton 58mm affiche "Bluetooth non disponible".</div>
+        <div class="faq-a">Ouvrez le lien directement dans Google Chrome, pas dans Facebook, Messenger, Instagram ou WhatsApp.</div>
+        <div class="faq-q">Ma photo de confirmation MonCash/NatCash est refusée.</div>
+        <div class="faq-a">La photo est probablement floue. Reprenez-la dans un endroit bien éclairé, en tenant le téléphone stable.</div>
+        <div class="faq-q">Le Solde Théorique de ma caisse semble incorrect après un change de devises.</div>
+        <div class="faq-a">C'est normal : depuis la mise à jour, le Change de Devises a son propre compte séparé ("Compte Change Devises") et n'affecte plus le Solde Théorique DOP.</div>
+        <div class="faq-q">Qui contacter en cas de problème ?</div>
+        <div class="faq-a">Contactez votre CEO ou l'administrateur du système.</div>
+      </section>
+
+      <div class="manual-footer">— Fin du Manuel — Version 1 —</div>
+    </div>
+
+    <!-- ========================= KREYÒL ========================= -->
+    <div data-lang-content data-lang="kre">
+
+      <section class="manual-section" id="s1-kre" data-toc="1. Entwodiksyon">
+        <h2><span class="num">1</span>Entwodiksyon</h2>
+        <p>Manyèl sa a eksplike kijan pou itilize sistèm NEXUS Casa de Cambio, yon platfòm konplè pou jesyon biwo chanj lajan, transfè lajan mobil (MonCash/NatCash), depo bankè, prè (Prestamo), ak lòt sèvis ki asosye.</p>
+        <p>Sistèm nan aksesib depi yon navigatè entènèt (telefòn, tablèt, oswa òdinatè) nan adrès sa a : <strong>www.nexuscasadecambio.com</strong></p>
+        <div class="warn-box"><span class="ico">⚠️</span><span><b>Atansyon :</b> Pou nenpòt fonksyonalite Bluetooth (enprime resi sou enprimant 58mm), sit la dwe louvri nan Google Chrome dirèkteman — pa nan Facebook, Messenger, Instagram oswa WhatsApp (aplikasyon sa yo pa sipòte Bluetooth).</span></div>
+      </section>
+
+      <section class="manual-section" id="s2-kre" data-toc="2. Wòl nan Sistèm nan">
+        <h2><span class="num">2</span>Wòl nan Sistèm nan</h2>
+        <p>Chak moun gen yon kont ak yon wòl presi, ki detèmine sa yo ka wè ak fè nan sistèm nan.</p>
+        <table class="role-table">
+          <tr><th>Wòl</th><th>Deskripsyon</th></tr>
+          <tr><td>Kesye</td><td>Jere kès li chak jou : depo, retrè, chanj devise, MonCash/NatCash, prè, elatriye.</td></tr>
+          <tr><td>Ajan</td><td>Yon wòl ki similè ak Kesye, ak yon aksè limite sou kèk sèvis.</td></tr>
+          <tr><td>Validatè</td><td>Apwouve oswa rejte tranzaksyon MonCash/NatCash ak resepsyon transfè kesye/ajan yo soumèt.</td></tr>
+          <tr><td>Superviseur</td><td>Sipèvize kesye ak ajan nan ekip li.</td></tr>
+          <tr><td>Sekretè</td><td>Responsab kreye nouvo kliyan ak KYC.</td></tr>
+          <tr><td>CEO</td><td>Aksè konplè sou jesyon operasyonèl la, rapò yo, kès yo, ak benefis yo.</td></tr>
+          <tr><td>Super Admin</td><td>Aksè konplè, ansanm ak jesyon teknik ak paramèt sistèm nan.</td></tr>
+        </table>
+      </section>
+
+      <section class="manual-section" id="s3-kre" data-toc="3. Koneksyon ak Sekirite">
+        <h2><span class="num">3</span>Koneksyon ak Sekirite</h2>
+        <h3>3.1 Konekte</h3>
+        <ol>
+          <li>Louvri www.nexuscasadecambio.com nan navigatè ou.</li>
+          <li>Antre imèl ak modpas ou.</li>
+          <li>Klike sou "Connexion".</li>
+        </ol>
+        <h3>3.2 Rekonesans Fasyal</h3>
+        <p>Pou ranfòse sekirite, kèk kont dwe eskane vizaj yo chak fwa yo konekte :</p>
+        <ul>
+          <li>Premye koneksyon an anrejistre vizaj ou kòm referans.</li>
+          <li>Nan koneksyon k ap vini yo, vizaj ou konpare ak referans sa a.</li>
+          <li>Apre 3 echèk rekonesans, kont lan bloke otomatikman e sèlman CEO a ka debloke l.</li>
+        </ul>
+        <div class="note-box"><span class="ico">ℹ️</span><span><b>Sonje :</b> CEO a ka aktive oswa dezaktive rekonesans fasyal la pou nenpòt anplwaye, endividyèlman, depi "Gestion Utilisateurs".</span></div>
+      </section>
+
+      <section class="manual-section" id="s4-kre" data-toc="4. Gid Kesye a">
+        <h2><span class="num">4</span>Gid Kesye a</h2>
+        <h3>4.1 Pwentaj (Prezans Obligatwa)</h3>
+        <p>Chak kesye dwe pwente rive li anvan li ka itilize rès sistèm nan.</p>
+        <ol>
+          <li>Louvri seksyon "Pointage".</li>
+          <li>Pran yon selfi (kamera a louvri otomatikman).</li>
+          <li>Sistèm nan verifye pozisyon GPS ou parapò ak succursale ou.</li>
+        </ol>
+        <ul>
+          <li>Si ou rive alè : yon mesaj felisitasyon parèt.</li>
+          <li>Si ou an reta : yon diminisyon pwopòsyonèl aplike (kalkile pa minit reta, selon tarif CEO a fikse a).</li>
+        </ul>
+        <div class="warn-box"><span class="ico">⚠️</span><span><b>Atansyon :</b> Toutotan ou poko pwente pou jounen an, aksè nan lòt seksyon yo bloke — yon bannyè wouj voye ou otomatikman sou Pointage.</span></div>
+
+        <h3>4.2 Ma Caisse</h3>
+        <p>Se tablo bò finansye chak jou kesye a.</p>
+        <ul>
+          <li><strong>Fonds Initial</strong> : montan CEO/Admin remèt nan kòmansman jounen an.</li>
+          <li><strong>Réapprovisionnement</strong> : ajoute fon pandan jounen an.</li>
+          <li><strong>Décaissement</strong> : sòti lajan jistifye (ak yon rezon obligatwa).</li>
+          <li><strong>Solde Théorique Disponible</strong> : kalkile otomatikman ak tout operasyon DOP jounen an.</li>
+        </ul>
+        <div class="note-box"><span class="ico">ℹ️</span><span><b>Sonje :</b> Operasyon Change de Devises yo PA afekte Solde Théorique DOP la — yo gen pwòp kont pa yo apa (gade seksyon 4.3).</span></div>
+        <p>Chak maten, yon nouvo sesyon kòmanse otomatikman — sesyon lavey la achive e li rete disponib pou konsilte nan bouton "Archives".</p>
+
+        <h3>4.3 Change de Devises</h3>
+        <p>Pèmèt achte oswa vann devise etranje (USD, EUR, CAD, elatriye) kont gourd (DOP).</p>
+        <ul>
+          <li><strong>Achat</strong> : kliyan an remèt ou dola, ou remèt li gourd.</li>
+          <li><strong>Vente</strong> : kliyan an remèt ou gourd, ou remèt li dola.</li>
+        </ul>
+        <p>"Compte Change Devises" la montre separeman total achte ak vann jounen an, san l pa afekte Solde Théorique Ma Caisse a.</p>
+
+        <h3>4.4 MonCash / NatCash</h3>
+        <ol>
+          <li>Chwazi sèvis la (MonCash oswa NatCash).</li>
+          <li>Antre non kliyan an, WhatsApp li, nimewo destinatè a, ak montan an.</li>
+          <li>Chwazi si frè yo dediwi nan montan an oswa kliyan an peye yo apa.</li>
+          <li>Konfime ou verifye nimewo a e ou resevwa lajan kach la.</li>
+        </ol>
+        <p>Tranzaksyon an rete "En attente" jiskaske yon Validatè apwouve l (ak foto konfimasyon Digicel/Natcom).</p>
+        <ul>
+          <li><strong>Reçu Envoyer</strong> : istorik tout tranzaksyon ou soumèt yo.</li>
+          <li><strong>Reçu Recevoir</strong> : tranzaksyon ki deja apwouve yo, ak foto konfimasyon validatè a ak non li.</li>
+        </ul>
+
+        <h3>4.5 Depo ak Retrè (Kont Epay)</h3>
+        <p>Jesyon mouvman sou kont epay kliyan yo (endividyèl, antrepriz). Gen frè Nexus ki aplike sou retrè yo selon tarif CEO a fikse a.</p>
+
+        <h3>4.6 Prestamo (Prè)</h3>
+        <p>Bay kliyan yo prè ak kalkil otomatik enterè ak penalite reta (mora), selon tarif CEO a fikse a.</p>
+
+        <h3>4.7 Disashop</h3>
+        <p>Rechajman ak lòt sèvis pou kliyan yo, ak swiv komisyon pa kategori.</p>
+
+        <h3>4.8 Resepsyon Transfè (Ayiti → RD)</h3>
+        <p>Pèmèt resevwa yon transfè ki voye soti Ayiti epi remèt kliyan an montan ekivalan an pezo dominiken, apre negosyasyon yon Validatè apwouve.</p>
+
+        <h3>4.9 Achiv</h3>
+        <p>Chak seksyon (Ma Caisse, Pointage) gen yon bouton "Archives" pou konsilte istorik jou pase yo, lekti sèlman.</p>
+      </section>
+
+      <section class="manual-section" id="s5-kre" data-toc="5. Gid Ajan an">
+        <h2><span class="num">5</span>Gid Ajan an</h2>
+        <p>Wòl Ajan an fonksyone menm jan ak Kesye a, ak yon aksè sou yon pati sèvis yo sèlman (selon konfigirasyon pòs ou). Prensip Pwentaj, Ma Caisse, ak validasyon tranzaksyon yo idantik ak sa nou deja eksplike pou Kesye a.</p>
+      </section>
+
+      <section class="manual-section" id="s6-kre" data-toc="6. Gid Validatè a">
+        <h2><span class="num">6</span>Gid Validatè a</h2>
+        <p>Validatè a apwouve tranzaksyon MonCash/NatCash ak resepsyon transfè kesye/ajan yo soumèt yo.</p>
+        <h3>6.1 Tranzaksyon An Atant</h3>
+        <p>Lis tranzaksyon an atant yo parèt otomatikman. Klike sou yon tranzaksyon pou wè tout detay li.</p>
+        <h3>6.2 Apwouve yon Tranzaksyon MonCash/NatCash</h3>
+        <ol>
+          <li>Klike sou "✅ Approuve".</li>
+          <li>Pran yon foto resi konfimasyon an (Digicel pou MonCash, Natcom pou NatCash), oswa chwazi l nan galri ou si ou deja genyen l.</li>
+          <li>Sistèm nan analize netete foto a otomatikman (maksimòm 10 segond).</li>
+        </ol>
+        <ul>
+          <li>Si foto a klè : tranzaksyon an apwouve otomatikman, balans ou diminye, e yon watèmak (non ou + dat/lè) ajoute sou foto a.</li>
+          <li>Si foto a flou : yon mesaj mande ou reprann foto a.</li>
+        </ul>
+        <div class="warn-box"><span class="ico">⚠️</span><span><b>Atansyon :</b> Yon menm resi pa ka itilize de fwa pou 2 tranzaksyon diferan — sistèm nan detekte sa otomatikman.</span></div>
+        <p>Bouton "❌ Rejeter" ak "⚠️ Numéro Faux" yo pa mande foto — yon senp konfimasyon sifi.</p>
+        <h3>6.3 Balans Pa M</h3>
+        <p>Tablo bò a montre balans Envoi (MonCash/NatCash) ki rete pou ou, CEO/Super Admin mete ajou l. Li diminye otomatikman chak fwa ou apwouve.</p>
+        <h3>6.4 Istorik</h3>
+        <p>Konsilte tout validasyon pase ou yo, ak dat, lè egzat (jiska segond), ak statis.</p>
+      </section>
+
+      <section class="manual-section" id="s7-kre" data-toc="7. Gid CEO a">
+        <h2><span class="num">7</span>Gid CEO a</h2>
+        <p>CEO a gen aksè sou tout fonksyonalite operasyonèl ak estratejik sistèm nan.</p>
+        <h3>7.1 Gestion Utilisateurs</h3>
+        <ul>
+          <li>Kreye, aktive/dezaktive, oswa efase kont anplwaye.</li>
+          <li>Debloke yon kont ki bloke akoz echèk rekonesans fasyal.</li>
+          <li>Aktive oswa dezaktive rekonesans fasyal pou chak anplwaye endividyèlman.</li>
+        </ul>
+        <h3>7.2 Gestion des Caisses</h3>
+        <p>Vi jeneral tout sesyon caisse ki ouvri yo. CEO a ka louvri yon caisse pou yon anplwaye, ajoute yon reapwovizyònman, oswa modifye/efase yon antre manyèl.</p>
+        <p>Bouton "Archives" la pèmèt konsilte sesyon nenpòt dat pase, ak detay konplè mouvman yo.</p>
+        <div class="note-box"><span class="ico">ℹ️</span><span><b>Sonje :</b> Chak maten, nenpòt sesyon ki toujou "Ouverte" depi lavey la fèmen otomatikman e achive depi yon paj nan sistèm nan chaje — kesye a repati ak yon balans vyèj.</span></div>
+        <h3>7.3 Distribution Devises</h3>
+        <p>Pèmèt bay yon stòk devise (USD, EUR, elatriye) yon kesye oswa ajan, pou li ka vann devise sa a bay kliyan li yo.</p>
+        <h3>7.4 Balances Validateurs</h3>
+        <p>Jesyon balans Envoi ak Reception chak validatè. Yon istorik konplè ("Historique des Mouvements") swiv chak reapwovizyònman, apwobasyon, ak validasyon.</p>
+        <h3>7.5 Pointage Caissiers</h3>
+        <p>Vi jeneral prezans tout kesye yo, ak posibilite pou korije manyèlman minit reta a oswa montan diminisyon an si sa nesesè.</p>
+        <h3>7.6 Bénéfices Nexus</h3>
+        <p>Tablo bò benefis antrepriz la jenere chak jou :</p>
+        <ul>
+          <li><strong>Bénéfice Devises</strong> : montan achte a × 2, montan vann lan × 5 (an DOP).</li>
+          <li><strong>Bénéfice MonCash/NatCash</strong> : frè 10% yo touche sou chak tranzaksyon apwouve.</li>
+        </ul>
+        <p>Yon grafik montre tandans 7 dènye jou yo, e yon istorik pèmèt konsilte nenpòt peryòd pase.</p>
+        <h3>7.7 Taux Système</h3>
+        <p>Konfigirasyon santralize tarif ki aplike nan tout sistèm nan, san bezwen touche kòd la :</p>
+        <ul>
+          <li>Frè Nexus sou Retrait (%)</li>
+          <li>Enterè sou Prestamo (%)</li>
+          <li>Mora / penalite reta sou Prestamo (%)</li>
+          <li>Diminisyon Reta nan Pwentaj (DOP pou chak 60 minit)</li>
+        </ul>
+        <p>Chak chanjman anrejistre nan yon istorik ak ansyen ak nouvo valè a.</p>
+      </section>
+
+      <section class="manual-section" id="s8-kre" data-toc="8. Gid Super Admin an">
+        <h2><span class="num">8</span>Gid Super Admin an</h2>
+        <p>Super Admin an gen menm fonksyonalite operasyonèl ak CEO a (Gestion des Caisses, Pointage, Balances Validateurs, Bénéfices Nexus, Taux Système).</p>
+        <p>Super Admin an gen anplis aksè sou paramèt teknik adisyonèl (sit entènèt piblik la, piblisite, aktualite, patnè).</p>
+      </section>
+
+      <section class="manual-section" id="s9-kre" data-toc="9. Superviseur ak Sekretè">
+        <h2><span class="num">9</span>Superviseur ak Sekretè</h2>
+        <h3>9.1 Superviseur</h3>
+        <p>Sipèvize aktivite ekip kesye/ajan ki asiyen a li yo : kliyan, KYC, kont.</p>
+        <h3>9.2 Sekretè</h3>
+        <p>Responsab kreye nouvo kliyan ak validasyon KYC. Fòm kreyasyon kliyan an kounye a ofri lis konplè vrè succursale yo.</p>
+      </section>
+
+      <section class="manual-section" id="s10-kre" data-toc="10. Rapò">
+        <h2><span class="num">10</span>Rapò</h2>
+        <p>Modil Rapports la aksesib pou CEO, Super Admin, Superviseur, ak Sekretè, ak nivo detay diferan selon wòl la.</p>
+        <h3>10.1 Historique Détaillé</h3>
+        <p>Chwazi yon sèvis, yon dat, ak (si otorize) yon manm pèsonèl, pou wè lis konplè tranzaksyon yo.</p>
+        <h3>10.2 Historique Général (PDF)</h3>
+        <p>Jenere yon rapò ki konbine tout sèvis yo pou yon dat bay, pare pou enprime an PDF fòma A4.</p>
+        <h3>10.3 Balances Validateurs ak Bénéfices par Caissier</h3>
+        <p>Rezève sèlman pou CEO ak Super Admin. Yo montre respektivman eta balans chak validatè, ak benefis chak kesye jenere sou yon peryòd chwazi.</p>
+        <h3>10.4 Ekspòte ak Enprime</h3>
+        <ul>
+          <li><strong>PDF</strong> : enprime klasik fòma A4.</li>
+          <li><strong>Excel</strong> : ekspòte done brit pou analiz.</li>
+          <li><strong>58mm</strong> : enprime dirèkteman sou enprimant tèrmik Bluetooth, nan fòma kondanse ki adapte pou papye etwat la.</li>
+        </ul>
+        <div class="warn-box"><span class="ico">⚠️</span><span><b>Atansyon :</b> Enprime 58mm mande Google Chrome (Bluetooth pa fonksyone nan navigatè entegre Facebook, Messenger, Instagram oswa WhatsApp).</span></div>
+      </section>
+
+      <section class="manual-section" id="s11-kre" data-toc="11. Kesyon Moun Poze Souvan">
+        <h2><span class="num">11</span>Kesyon Moun Poze Souvan</h2>
+        <div class="faq-q">Mwen pa ka navige nan aplikasyon an, yon bannyè wouj bloke tout bagay.</div>
+        <div class="faq-a">Ou poko pwente rive ou jodi a. Al nan "Pointage" epi pran selfi ou.</div>
+        <div class="faq-q">Bouton 58mm lan montre "Bluetooth non disponible".</div>
+        <div class="faq-a">Louvri lyen an dirèkteman nan Google Chrome, pa nan Facebook, Messenger, Instagram oswa WhatsApp.</div>
+        <div class="faq-q">Foto konfimasyon MonCash/NatCash mwen an rejte.</div>
+        <div class="faq-a">Foto a pwobableman flou. Reprann li nan yon kote ki byen klere, kenbe telefòn ou estab.</div>
+        <div class="faq-q">Solde Théorique caisse m nan sanble pa kòrèk apre yon chanj devise.</div>
+        <div class="faq-a">Sa nòmal : depi dènye mizajou a, Chanj Devise gen pwòp kont pa l apa ("Compte Change Devises") e li pa afekte Solde Théorique DOP la ankò.</div>
+        <div class="faq-q">Ki moun pou m kontakte si gen yon pwoblèm ?</div>
+        <div class="faq-a">Kontakte CEO ou oswa administratè sistèm nan.</div>
+      </section>
+
+      <div class="manual-footer">— Fen Manyèl la — Vèsyon 1 —</div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+function setLang(lang){
+  document.documentElement.lang = lang === 'fr' ? 'fr' : 'ht';
+  document.querySelectorAll('[data-lang-content]').forEach(el => {
+    el.classList.toggle('active', el.getAttribute('data-lang') === lang);
+  });
+  document.getElementById('btnLangFr').classList.toggle('active', lang === 'fr');
+  document.getElementById('btnLangKre').classList.toggle('active', lang === 'kre');
+  localStorage.setItem('nexusManualLang', lang);
+  buildToc(lang);
+  window.scrollTo({top:0, behavior:'instant'});
+}
+
+function buildToc(lang){
+  const nav = document.getElementById('tocNav');
+  const sections = document.querySelectorAll(`.manual-section[id$="-${lang}"]`);
+  nav.innerHTML = '';
+  sections.forEach(sec => {
+    const a = document.createElement('a');
+    a.href = '#' + sec.id;
+    a.textContent = sec.getAttribute('data-toc');
+    a.onclick = () => { closeMobileTocIfOpen(); };
+    nav.appendChild(a);
+  });
+  setupScrollSpy();
+}
+
+function closeMobileTocIfOpen(){
+  document.getElementById('manualSidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('show');
+}
+
+function toggleMobileToc(){
+  document.getElementById('manualSidebar').classList.toggle('open');
+  document.getElementById('sidebarOverlay').classList.toggle('show');
+}
+
+let scrollSpyObserver = null;
+function setupScrollSpy(){
+  if(scrollSpyObserver) scrollSpyObserver.disconnect();
+  const links = document.querySelectorAll('#tocNav a');
+  const sections = Array.from(links).map(a => document.querySelector(a.getAttribute('href')));
+  scrollSpyObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if(entry.isIntersecting){
+        links.forEach(l => l.classList.remove('active'));
+        const match = document.querySelector(`#tocNav a[href="#${entry.target.id}"]`);
+        if(match) match.classList.add('active');
+      }
+    });
+  }, {rootMargin:'-15% 0px -70% 0px'});
+  sections.forEach(s => { if(s) scrollSpyObserver.observe(s); });
+}
+
+const savedLang = localStorage.getItem('nexusManualLang') || 'fr';
+setLang(savedLang);
+</script>
+
+</body>
+</html>
