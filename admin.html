@@ -1244,7 +1244,7 @@ async function allocateReceiveFundsAdmin(){
         await rtFetch("receive_wallets","POST",{ cashier_id: staffId, service_type: svc, balance_dop: amount });
     }
 
-    showRtAllocMsgAdmin(`? ${amount.toLocaleString("fr-FR",{minimumFractionDigits:2})} DOP donne a ${staffName} pour ${RT_SERVICE_LABELS_A[svc]}!`, false);
+    showRtAllocMsgAdmin(`✅ ${amount.toLocaleString("fr-FR",{minimumFractionDigits:2})} DOP donne a ${staffName} pour ${RT_SERVICE_LABELS_A[svc]}!`, false);
     document.getElementById("rtAllocAmount").value = "";
     document.getElementById("rtAllocNotes").value = "";
     loadRtCapitalAdmin();
@@ -2187,7 +2187,7 @@ async function allocateBankFunds(){
         await supabaseClient.from("bank_wallets").insert({ cashier_id: staffId, bank_name: bank, balance: amount });
     }
 
-    showBankAllocMsgAdmin(`? ${fmtA(amount)} DOP donne a ${staffName} pour ${BANK_LABELS_ADMIN[bank]}!`, false);
+    showBankAllocMsgAdmin(`✅ ${fmtA(amount)} DOP donne a ${staffName} pour ${BANK_LABELS_ADMIN[bank]}!`, false);
     document.getElementById("bankAllocAmount").value = "";
     document.getElementById("bankAllocNotes").value = "";
     loadBankCapital();
@@ -2824,7 +2824,7 @@ async function allocateCurrency(){
         await supabaseClient.from("currency_wallets").insert({ cashier_id: staffId, currency_code: currencyCode, balance: amount });
     }
 
-    showAllocMsg(`? ${amount.toLocaleString("fr-FR",{minimumFractionDigits:2})} ${currencyCode} donne a ${staffName}!`, false);
+    showAllocMsg(`✅ ${amount.toLocaleString("fr-FR",{minimumFractionDigits:2})} ${currencyCode} donne a ${staffName}!`, false);
     document.getElementById("allocAmount").value = "";
     document.getElementById("allocNotes").value = "";
     loadAllocationHistory();
