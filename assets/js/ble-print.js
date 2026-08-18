@@ -31,6 +31,11 @@ async function nexusPrintBLE(lines, btnEl){
     let originalHtml;
     if(btnEl){ originalHtml = btnEl.innerHTML; btnEl.innerHTML = "Connexion..."; btnEl.disabled = true; }
     try{
+        if(!navigator.bluetooth){
+            alert("Bluetooth non disponible dans ce navigateur. Ouvrez ce lien dans Chrome (pas dans Facebook/Messenger/Instagram) pour imprimer via Bluetooth. Utilisez le bouton Imprimer classique en attendant.");
+            if(btnEl){ btnEl.innerHTML = originalHtml; btnEl.disabled = false; }
+            return;
+        }
         const data = nexusBuildReceiptBytes(lines);
         const device = await navigator.bluetooth.requestDevice({
             acceptAllDevices: true,
