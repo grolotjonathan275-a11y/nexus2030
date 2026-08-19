@@ -270,7 +270,7 @@ async function loadStaffFilter(){
 }
 
 function isPrivileged(){
-    return ["ceo","super_admin","superviseur","secretaire"].includes(currentUser.role);
+    return ["ceo","ceo1","super_admin","superviseur","secretaire"].includes(currentUser.role);
 }
 
 function dayRange(dateStr){
@@ -395,7 +395,7 @@ const SERVICES = {
     validationsmm: {
         label: "Validations MonCash / NatCash",
         table: "mobile_money_transactions",
-        extraFilter: q => (currentUser && currentUser.role === "super_admin") ? q.eq("is_ceo_direct", false) : q,
+        extraFilter: q => (currentUser && (currentUser.role === "super_admin" || currentUser.role === "ceo1")) ? q.eq("is_ceo_direct", false) : q,
         staffCol: "validated_by",
         dateCol: "validated_at",
         cols: [
@@ -715,7 +715,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const { data: profile } = await supabaseClient.from("profiles").select("*").eq("id", session.user.id).single();
     if(!profile){ window.location.href = "login.html"; return; }
     currentUser = { id: profile.id, name: profile.full_name, role: profile.role };
-    if(!["ceo","super_admin"].includes(currentUser.role)){
+    if(!["ceo","ceo1","super_admin"].includes(currentUser.role)){
         document.querySelectorAll(".tab-btn").forEach(b => {
             if(b.getAttribute("onclick") && (b.getAttribute("onclick").includes("'balances'") || b.getAttribute("onclick").includes("'profit'"))){
                 b.style.display = "none";
