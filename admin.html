@@ -2053,12 +2053,14 @@ async function loadUsers() {
             <td>${renderSupervisorCell(u, supervisors)}</td>
             <td><span class="badge-status ${u.status === 'active' ? 'approved' : 'pending'}">${u.status || "-"}</span></td>
             <td>
+                ${u.role === "ceo" ? `<span style="color:#94A3B8;font-size:0.82rem;font-weight:600">🔒 Protege</span>` : `
                 <button onclick="toggleUserStatus('${u.id}','${u.status}')" class="btn-approve" style="background:${u.status === 'active' ? '#F59E0B' : '#10B981'};">
                     ${u.status === 'active' ? 'Desactiver' : 'Activer'}
                 </button>
                 <button onclick="deleteUser('${u.id}','${u.full_name}')" class="btn-approve" style="background:#EF4444;margin-left:0.4rem;">
                     Supprimer
                 </button>
+                `}
             </td>
         </tr>
     `).join("") || "<tr><td colspan='7'>Aucun utilisateur</td></tr>";
@@ -2088,6 +2090,8 @@ async function assignSupervisor(userId, supervisorId) {
 }
 
 async function toggleUserStatus(id, currentStatus) {
+    const { data: target } = await supabaseClient.from("profiles").select("role").eq("id", id).maybeSingle();
+    if(target && target.role === "ceo"){ alert("Action impossible: le compte CEO principal est protege et ne peut pas etre modifie."); return; }
     const newStatus = currentStatus === "active" ? "inactive" : "active";
     const { error } = await supabaseClient.from("profiles").update({ status: newStatus }).eq("id", id);
     if (error) {
@@ -2098,6 +2102,8 @@ async function toggleUserStatus(id, currentStatus) {
 }
 
 async function deleteUser(id, name) {
+    const { data: target } = await supabaseClient.from("profiles").select("role").eq("id", id).maybeSingle();
+    if(target && target.role === "ceo"){ alert("Action impossible: le compte CEO principal est protege et ne peut pas etre supprime."); return; }
     if (!confirm(`Supprimer le compte de ${name}? Cette action retire l'acces au tableau de bord (le compte de connexion reste dans Supabase Auth, a supprimer manuellement si necessaire).`)) return;
     const { error } = await supabaseClient.from("profiles").delete().eq("id", id);
     if (error) {
