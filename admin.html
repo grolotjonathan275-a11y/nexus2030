@@ -2108,7 +2108,11 @@ async function deleteUser(id, name) {
     if (!confirm(`Supprimer le compte de ${name}? Cette action retire l'acces au tableau de bord (le compte de connexion reste dans Supabase Auth, a supprimer manuellement si necessaire).`)) return;
     const { error } = await supabaseClient.from("profiles").delete().eq("id", id);
     if (error) {
-        alert("Erreur: " + error.message);
+        if(error.message.includes("foreign key")){
+            alert("Impossible de supprimer: ce compte a un historique de transactions dans le systeme (protection des donnees). Utilisez le bouton 'Desactiver' a la place pour retirer son acces.");
+        } else {
+            alert("Erreur: " + error.message);
+        }
         return;
     }
     loadUsers();
