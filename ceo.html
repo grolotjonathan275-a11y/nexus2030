@@ -547,6 +547,7 @@
                             <select id="newRole" style="width:100%;padding:0.6rem;border-radius:8px;border:1px solid #CBD5E1;font-family:inherit;">
                                 <option value="">-- Choisir un role --</option>
                                 <option value="super_admin">Super Admin</option>
+                                <option value="ceo1">CEO 1</option>
                                 <option value="ceo">CEO / Directeur General</option>
                                 <option value="secretaire">Secretaire</option>
                                 <option value="superviseur">Superviseur</option>
@@ -1155,6 +1156,7 @@ function nexusTogglePwd(id, btn){
 }
 const ROLE_LABELS = {
     super_admin: "Super Admin",
+    ceo1: "CEO 1",
     ceo: "CEO",
     secretaire: "Secretaire",
     superviseur: "Superviseur",
@@ -1560,7 +1562,7 @@ async function loadEmployeeDirectory(){
         if (!groups[u.role]) groups[u.role] = [];
         groups[u.role].push(u);
     });
-    const roleOrder = ["super_admin","ceo","secretaire","superviseur","caissier","agent","validateur","client"];
+    const roleOrder = ["super_admin","ceo1","ceo","secretaire","superviseur","caissier","agent","validateur","client"];
     const roleColors = {
         super_admin:"#7C3AED", ceo:"#0F172A", secretaire:"#7C3AED", superviseur:"#0EA5E9",
         caissier:"#F97316", agent:"#10B981", validateur:"#6366F1", client:"#64748B"
