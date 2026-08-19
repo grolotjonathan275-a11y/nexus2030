@@ -481,7 +481,7 @@
 <option value="">-- Choisir un role --</option>
 <option value="super_admin">Super Admin</option>
 <option value="ceo1">CEO 1</option>
-<option value="ceo">CEO / Directeur General</option>
+<option value="ceo" disabled style="color:#94A3B8">CEO / Directeur General (protege - non disponible)</option>
 <option value="secretaire">Secretaire</option>
 <option value="superviseur">Superviseur</option>
 <option value="caissier">Caissier</option>
@@ -1985,6 +1985,7 @@ async function createNewUser() {
     const phone = document.getElementById("newPhone").value.trim();
     const password = document.getElementById("newPassword").value;
     const role = document.getElementById("newRole").value;
+    if(role === "ceo"){ showCreateMsg("Action impossible: seul le CEO principal actuel peut creer un compte CEO."); return; }
     const branch = document.getElementById("newBranch").value;
 
     if (!full_name || !email || !password || !role) {
