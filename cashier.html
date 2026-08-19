@@ -503,7 +503,7 @@
                         </div>
                         <div class="form-actions">
                             <button class="btn-cancel" onclick="resetChangeForm()">Annuler</button>
-                            <button class="btn-confirm green" onclick="executeChange()">✅ Confirmer l'Operation</button>
+                            <button class="btn-confirm green" id="changeSubmitBtn" onclick="executeChange()">✅ Confirmer l'Operation</button>
                         </div>
                     </div>
                 </div>
@@ -1115,6 +1115,8 @@ let CASHIER_NAME = "Caissier NEXUS";
 let CASHIER_BRANCH = "Santo Domingo";
 let currentProfile = null;
 let currentMoneyService = "moncash";
+let msSubmitInProgress = false;
+let changeSubmitInProgress = false;
 let msSettings = {moncash_rate:1.8, natcash_rate:1.8, fee_percent:10};
 
 // FETCH
@@ -1339,6 +1341,11 @@ function calcChange(){
 }
 
 async function executeChange(){
+    if(changeSubmitInProgress) return;
+    changeSubmitInProgress = true;
+    const chgBtnGuard = document.getElementById("changeSubmitBtn");
+    if(chgBtnGuard) chgBtnGuard.disabled = true;
+    try {
     const type = document.getElementById("chgType").value;
     const code = document.getElementById("chgCurrency").value;
     const amount = Number(document.getElementById("chgAmount").value);
@@ -1401,6 +1408,10 @@ async function executeChange(){
     loadMyCurrencyWallets();
     loadChangeHistory();
     loadWallet();
+    } finally {
+        changeSubmitInProgress = false;
+        if(chgBtnGuard) chgBtnGuard.disabled = false;
+    }
 }
 
 function resetChangeForm(){
@@ -2646,6 +2657,11 @@ function calcMoneyService(){
 }
 
 async function submitMoneyService(){
+    if(msSubmitInProgress) return;
+    msSubmitInProgress = true;
+    const msBtnGuard = document.getElementById("msSubmitBtn");
+    if(msBtnGuard) msBtnGuard.disabled = true;
+    try {
     if(!document.getElementById("msConfirm").checked)return alert("Confirmez avoir verifie le numero et recu les fonds.");
     const senderName=document.getElementById("msSenderName").value.trim();
     const whatsapp=document.getElementById("msSenderWhatsapp").value.trim();
@@ -2717,6 +2733,10 @@ async function submitMoneyService(){
     closeMoneyServiceForm();
     loadMoneyWallet();
     loadMyMoneyTransactions();
+    } finally {
+        msSubmitInProgress = false;
+        if(msBtnGuard) msBtnGuard.disabled = false;
+    }
 }
 
 async function loadMyMoneyTransactions(){
