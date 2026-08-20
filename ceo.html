@@ -1757,10 +1757,16 @@ async function addHistoricalTransaction(){
         msg.style.display = "block"; msg.className = "result-box error"; msg.innerHTML = "Entrez un montant valide et une date.";
         return;
     }
+    let feeAmount = 0;
+    if(type === "retrait"){
+        const { data: rateRow } = await supabaseClient.from("system_rates").select("rate_value").eq("rate_key","withdrawal_fee_percent").maybeSingle();
+        const feePercent = rateRow ? Number(rateRow.rate_value) : 5;
+        feeAmount = amount * (feePercent / 100);
+    }
     const { data: { session } } = await supabaseClient.auth.getSession();
     const { error } = await supabaseClient.from("transactions").insert({
         account_no: currentHistAccount.account_no, client_name: currentHistAccount.client_name,
-        transaction_type: type, amount: amount, currency: currentHistAccount.currency,
+        transaction_type: type, amount: amount, fee_amount: feeAmount, net_amount: amount, currency: currentHistAccount.currency,
         cashier_id: session.user.id, cashier_name: "CEO (Saisie historique)",
         branch: currentHistAccount.branch || "Santo Domingo",
         notes: notes || "Saisie historique livret", status: "completed",
@@ -1786,7 +1792,7 @@ async function recomputeHistoricalBalances(){
     let running = 0;
     for(const t of list){
         const before = running;
-        running = t.transaction_type === "depot" ? running + Number(t.amount) : running - Number(t.amount);
+        running = t.transaction_type === "depot" ? running + Number(t.amount) : running - Number(t.amount) - Number(t.fee_amount||0);
         await supabaseClient.from("transactions").update({ balance_before: before, balance_after: running }).eq("id", t.id);
     }
     await supabaseClient.from("savings_accounts").update({ balance: running }).eq("id", currentHistAccount.id);
