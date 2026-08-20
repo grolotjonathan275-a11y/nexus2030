@@ -2506,11 +2506,11 @@ async function executeRetrait() {
     const notes = document.getElementById("retraitNotes").value;
     if (!amount || amount <= 0) return alert("Entrez un montant valide");
     if (!idDoc) return alert("Piece d'identite obligatoire pour un retrait");
-    if (amount > Number(acc.balance)) return alert("Solde insuffisant! Solde: " + fmtAmount(acc.balance) + " " + acc.currency);
     const feeAmount = amount * (systemRatesCache.withdrawal_fee_percent / 100);
-    const netAmount = amount - feeAmount;
+    if ((amount + feeAmount) > Number(acc.balance)) return alert("Solde insuffisant! Solde: " + fmtAmount(acc.balance) + " " + acc.currency + " (Montant + Frais 5% requis: " + fmtAmount(amount + feeAmount) + " " + acc.currency + ")");
+    const netAmount = amount;
     const balanceBefore = Number(acc.balance);
-    const balanceAfter = balanceBefore - amount;
+    const balanceAfter = balanceBefore - amount - feeAmount;
 
 
     await supaFetch("savings_accounts", "PATCH", {balance: balanceAfter}, `?account_no=eq.${acc.account_no}`);
@@ -2555,7 +2555,7 @@ async function executeRetrait() {
         type: "retrait"
     });
     window.open("receipt-withdrawal.html?" + p.toString(), "_blank");
-    nexusToast("Retrait effectue! Client recoit: " + fmtAmount(netAmount) + " " + currency + " (Frais Nexus 5%: " + fmtAmount(feeAmount) + " " + currency + ")", "success");
+    nexusToast("Retrait effectue! Client recoit: " + fmtAmount(netAmount) + " " + currency + " (Frais Nexus 5%: " + fmtAmount(feeAmount) + " " + currency + " deduits du solde du compte)", "success");
     resetForm("retrait");
     loadDashboard();
 }
