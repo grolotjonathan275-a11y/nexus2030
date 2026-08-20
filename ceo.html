@@ -44,6 +44,8 @@
         <a href="#login-history" class="nav-item" onclick="showSection(this,event)"><span>🔐</span>Historique Connexions</a>
         <a href="#employees" class="nav-item" onclick="showSection(this,event)"><span>👤</span>Employes</a>
         <a href="#users" class="nav-item" onclick="showSection(this,event)"><span>🧑‍💻</span>Gestion Utilisateurs</a>
+<div class="nav-section">CLIENTS HISTORIQUES</div>
+<a href="#anciens-clients" class="nav-item" onclick="showSection(this,event)"><span>📔</span>Anciens Clients (Livret)</a>
         <div class="nav-section">DEVISES</div>
         <a href="#currency-distribution" class="nav-item" onclick="showSection(this,event)"><span>💵</span>Distribution Devises</a>
 <a href="#loans" class="nav-item" onclick="showSection(this,event)"><span>💰</span>Prestamo</a>
@@ -883,6 +885,59 @@ Equipe</h3><span class="badge" id="usersCount">0</span></div>
 </table></div>
 </div>
 </section>
+<section class="section" id="section-anciens-clients">
+<h2 class="section-title">📔 Anciens Clients (Livret)</h2>
+<div class="card">
+<div class="card-header"><h3>➕ Creer un Compte Historique</h3></div>
+<p style="padding:0 1.25rem;margin:0.5rem 0;color:#64748B;font-size:0.85rem">Pour les clients qui avaient un livret papier avant le systeme. Le compte est cree avec un solde de 0 - ajoutez ensuite toutes les transactions historiques ci-dessous.</p>
+<div style="padding:1.25rem">
+<div class="form-grid-2">
+<div class="form-group"><label>Nom complet *</label><input type="text" id="histName"></div>
+<div class="form-group"><label>Telephone *</label><input type="text" id="histPhone"></div>
+</div>
+<div class="form-grid-2">
+<div class="form-group"><label>Email (optionnel)</label><input type="email" id="histEmail"></div>
+<div class="form-group"><label>Type de compte</label><select id="histType"><option value="individuel">Individuel</option><option value="epargne">Epargne</option><option value="entreprise">Entreprise</option></select></div>
+</div>
+<div class="form-grid-2">
+<div class="form-group"><label>Devise</label><select id="histCurrency"><option value="HTG">Gourdes (HTG)</option><option value="DOP">Pesos (DOP)</option><option value="USD">Dollars (USD)</option></select></div>
+<div class="form-group"><label>Branche</label><input type="text" id="histBranch" placeholder="Santo Domingo"></div>
+</div>
+<div class="form-grid-2">
+<div class="form-group"><label>Date de creation du compte *</label><input type="date" id="histOpenDate"></div>
+<div class="form-group"><label>Mot de passe du client *</label><input type="password" id="histPassword" placeholder="Min. 6 caracteres"></div>
+</div>
+<div class="form-group"><label>Notes (optionnel)</label><input type="text" id="histNotes" placeholder="Ex: Migre depuis livret physique"></div>
+<button class="btn-ceo-action" onclick="createHistoricalClient()">✅ Creer le Compte</button>
+<div id="histCreateMsg" style="display:none" class="result-box"></div>
+</div>
+</div>
+<div class="card" style="margin-top:1.25rem">
+<div class="card-header"><h3>🔍 Ajouter les Transactions Historiques</h3></div>
+<div style="padding:1.25rem">
+<div style="display:flex;gap:0.75rem;align-items:flex-end;flex-wrap:wrap">
+<div class="form-group" style="flex:1;margin:0"><label>Numero de compte ou telephone</label><input type="text" id="histSearchInput"></div>
+<button class="btn-ceo-action" onclick="searchHistoricalAccount()">🔍 Rechercher</button>
+</div>
+<div id="histSearchMsg" style="display:none" class="result-box"></div>
+<div id="histAccountResult" style="display:none;margin-top:1rem">
+<div id="histAccountInfo" style="background:#F8FAFC;border-radius:10px;padding:1rem;margin-bottom:1rem"></div>
+<p style="color:#64748B;font-size:0.85rem;margin-bottom:0.75rem">⚠️ Ajoutez les transactions en ordre chronologique (les plus anciennes en premier) pour garder un solde exact.</p>
+<div class="form-grid-2">
+<div class="form-group"><label>Type *</label><select id="histTxType"><option value="depot">Depot</option><option value="retrait">Retrait</option></select></div>
+<div class="form-group"><label>Montant *</label><input type="number" id="histTxAmount" min="0.01"></div>
+</div>
+<div class="form-grid-2">
+<div class="form-group"><label>Date de la transaction *</label><input type="date" id="histTxDate"></div>
+<div class="form-group"><label>Notes</label><input type="text" id="histTxNotes"></div>
+</div>
+<button class="btn-ceo-action" onclick="addHistoricalTransaction()">➕ Ajouter la Transaction</button>
+<div id="histTxMsg" style="display:none" class="result-box"></div>
+<div class="table-wrap" style="margin-top:1rem"><table class="data-table"><thead><tr><th>Date</th><th>Type</th><th>Montant</th><th>Solde Apres</th><th>Notes</th><th>Actions</th></tr></thead><tbody id="histTxList"><tr><td colspan="6">Aucune donnee.</td></tr></tbody></table></div>
+</div>
+</div>
+</div>
+</section>
 
 <!-- PARAMETRES MONCASH / NATCASH -->
         <section class="section" id="section-mm-settings">
@@ -1633,6 +1688,134 @@ if(id==="validator-balances") loadValidatorBalances();
     if(id==="login-history")loadLoginHistory();
     if(id==="users"){loadUsers();loadBranchOptionsForNewUser();}
 }
+
+let currentHistAccount = null;
+
+async function createHistoricalClient(){
+    const name = document.getElementById("histName").value.trim();
+    const phone = document.getElementById("histPhone").value.trim();
+    const email = document.getElementById("histEmail").value.trim();
+    const accType = document.getElementById("histType").value;
+    const currency = document.getElementById("histCurrency").value;
+    const branch = document.getElementById("histBranch").value.trim() || "Santo Domingo";
+    const openDate = document.getElementById("histOpenDate").value;
+    const password = document.getElementById("histPassword").value;
+    const notes = document.getElementById("histNotes").value.trim();
+    const msg = document.getElementById("histCreateMsg");
+    if(!name || !phone || !openDate || !password || password.length < 6){
+        msg.style.display = "block"; msg.className = "result-box error";
+        msg.innerHTML = "Remplissez tous les champs obligatoires (mot de passe min. 6 caracteres).";
+        return;
+    }
+    const year = openDate.split("-")[0];
+    const accountNo = "NEXUS-" + year + "-" + String(Math.floor(Math.random()*999999)).padStart(6,"0");
+    const { error } = await supabaseClient.from("savings_accounts").insert({
+        account_no: accountNo, client_name: name, client_phone: phone, email: email || null,
+        password_hash: btoa(password), account_type: accType, currency: currency, branch: branch,
+        balance: 0, kyc_status: "approved", status: "active",
+        created_by: "ceo_historique", created_at: openDate + "T12:00:00"
+    });
+    if(error){ msg.style.display = "block"; msg.className = "result-box error"; msg.innerHTML = "Erreur: " + error.message; return; }
+    msg.style.display = "block"; msg.className = "result-box success";
+    msg.innerHTML = "Compte cree avec succes! Numero de compte: " + accountNo + ". Ajoutez maintenant les transactions historiques ci-dessous.";
+    document.getElementById("histName").value = "";
+    document.getElementById("histPhone").value = "";
+    document.getElementById("histEmail").value = "";
+    document.getElementById("histBranch").value = "";
+    document.getElementById("histOpenDate").value = "";
+    document.getElementById("histPassword").value = "";
+    document.getElementById("histNotes").value = "";
+    document.getElementById("histSearchInput").value = accountNo;
+    await searchHistoricalAccount();
+}
+
+async function searchHistoricalAccount(){
+    const q = document.getElementById("histSearchInput").value.trim();
+    const msg = document.getElementById("histSearchMsg");
+    if(!q){ msg.style.display = "block"; msg.className = "result-box error"; msg.innerHTML = "Entrez un numero de compte ou un telephone."; return; }
+    const { data } = await supabaseClient.from("savings_accounts").select("*").or("account_no.eq." + q + ",client_phone.eq." + q).limit(1);
+    if(!data || !data.length){
+        msg.style.display = "block"; msg.className = "result-box error"; msg.innerHTML = "Aucun compte trouve.";
+        document.getElementById("histAccountResult").style.display = "none";
+        return;
+    }
+    msg.style.display = "none";
+    currentHistAccount = data[0];
+    document.getElementById("histAccountResult").style.display = "block";
+    document.getElementById("histAccountInfo").innerHTML = currentHistAccount.client_name + " - " + currentHistAccount.account_no + " - Solde actuel: " + Number(currentHistAccount.balance).toLocaleString("fr-FR",{minimumFractionDigits:2}) + " " + currentHistAccount.currency;
+    await loadHistoricalTransactionsList();
+}
+
+async function addHistoricalTransaction(){
+    if(!currentHistAccount){ alert("Recherchez un compte avant de continuer."); return; }
+    const type = document.getElementById("histTxType").value;
+    const amount = Number(document.getElementById("histTxAmount").value);
+    const dateStr = document.getElementById("histTxDate").value;
+    const notes = document.getElementById("histTxNotes").value.trim();
+    const msg = document.getElementById("histTxMsg");
+    if(!amount || amount <= 0 || !dateStr){
+        msg.style.display = "block"; msg.className = "result-box error"; msg.innerHTML = "Entrez un montant valide et une date.";
+        return;
+    }
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    const { error } = await supabaseClient.from("transactions").insert({
+        account_no: currentHistAccount.account_no, client_name: currentHistAccount.client_name,
+        transaction_type: type, amount: amount, currency: currentHistAccount.currency,
+        cashier_id: session.user.id, cashier_name: "CEO (Saisie historique)",
+        branch: currentHistAccount.branch || "Santo Domingo",
+        notes: notes || "Saisie historique livret", status: "completed",
+        created_at: dateStr + "T12:00:00"
+    });
+    if(error){ msg.style.display = "block"; msg.className = "result-box error"; msg.innerHTML = "Erreur: " + error.message; return; }
+    document.getElementById("histTxAmount").value = "";
+    document.getElementById("histTxNotes").value = "";
+    msg.style.display = "block"; msg.className = "result-box success"; msg.innerHTML = "Transaction ajoutee!";
+    await recomputeHistoricalBalances();
+}
+
+async function deleteHistoricalTransaction(id){
+    if(!confirm("Supprimer cette transaction historique ? Le solde sera recalcule automatiquement.")) return;
+    await supabaseClient.from("transactions").delete().eq("id", id);
+    await recomputeHistoricalBalances();
+}
+
+async function recomputeHistoricalBalances(){
+    if(!currentHistAccount) return;
+    const { data: rows } = await supabaseClient.from("transactions").select("*").eq("account_no", currentHistAccount.account_no).order("created_at",{ascending:true}).order("id",{ascending:true});
+    const list = rows || [];
+    let running = 0;
+    for(const t of list){
+        const before = running;
+        running = t.transaction_type === "depot" ? running + Number(t.amount) : running - Number(t.amount);
+        await supabaseClient.from("transactions").update({ balance_before: before, balance_after: running }).eq("id", t.id);
+    }
+    await supabaseClient.from("savings_accounts").update({ balance: running }).eq("id", currentHistAccount.id);
+    currentHistAccount.balance = running;
+    document.getElementById("histAccountInfo").innerHTML = currentHistAccount.client_name + " - " + currentHistAccount.account_no + " - Solde actuel: " + running.toLocaleString("fr-FR",{minimumFractionDigits:2}) + " " + currentHistAccount.currency;
+    await loadHistoricalTransactionsList();
+}
+
+async function loadHistoricalTransactionsList(){
+    if(!currentHistAccount) return;
+    const { data: rows } = await supabaseClient.from("transactions").select("*").eq("account_no", currentHistAccount.account_no).order("created_at",{ascending:true});
+    const list = rows || [];
+    const tbody = document.getElementById("histTxList");
+    if(!list.length){ tbody.innerHTML = `<tr><td colspan="6">Aucune transaction.</td></tr>`; return; }
+    tbody.innerHTML = list.map(t => {
+        const isDepot = t.transaction_type === "depot";
+        const color = isDepot ? "#16A34A" : "#DC2626";
+        const sign = isDepot ? "+" : "-";
+        return `<tr>
+            <td>${new Date(t.created_at).toLocaleDateString("fr-FR")}</td>
+            <td>${isDepot ? "Depot" : "Retrait"}</td>
+            <td style="color:${color}">${sign}${Number(t.amount).toLocaleString("fr-FR",{minimumFractionDigits:2})}</td>
+            <td>${Number(t.balance_after).toLocaleString("fr-FR",{minimumFractionDigits:2})}</td>
+            <td>${t.notes || "-"}</td>
+            <td><button data-id="${t.id}" onclick="deleteHistoricalTransaction(this.dataset.id)" style="border:none;background:none;cursor:pointer;font-size:1rem" title="Supprimer">🗑️</button></td>
+        </tr>`;
+    }).join("");
+}
+
 
 function toggleSidebar(){document.getElementById("sidebar").classList.toggle("open");document.getElementById("sidebarOverlay").classList.toggle("show");}
 
