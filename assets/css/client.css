@@ -268,3 +268,39 @@ img, canvas, table {
     .reports-grid { grid-template-columns: 1fr !important; }
     .stat-card { flex-direction: row; }
 }
+
+/* ===================================================== */
+/* ===== RESPONSIVE CLIENT.HTML (portail client mobile) ===== */
+/* ===================================================== */
+.client-topbar, .overview-hero, .topbar-right, .topbar-greeting, .balance-card, .hero-name {
+    min-width: 0;
+}
+.client-topbar > *, .overview-hero > * {
+    min-width: 0;
+    max-width: 100%;
+}
+.topbar-greeting {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.hero-name, .hero-greeting, .hero-date, .bc-account {
+    overflow-wrap: break-word;
+    word-break: break-word;
+}
+@media (max-width: 768px) {
+    .client-content { padding: 1rem !important; }
+    .client-topbar { padding: 0.75rem 1rem !important; flex-wrap: wrap; gap: 0.5rem; }
+    .overview-hero { padding: 1.25rem 1.5rem !important; flex-wrap: wrap; }
+    .hero-name { font-size: 1.25rem !important; }
+    .bc-amount { font-size: 1.9rem !important; word-break: break-all; }
+    .balance-card { padding: 1.25rem !important; }
+}
+@media (max-width: 400px) {
+    .overview-hero { padding: 1rem !important; }
+    .hero-name { font-size: 1.1rem !important; }
+    .bc-amount { font-size: 1.5rem !important; word-break: break-all; }
+    .kyc-badge { font-size: 0.7rem !important; padding: 0.3rem 0.7rem !important; }
+    .client-content { padding: 0.75rem !important; }
+    .topbar-greeting { max-width: 55vw; }
+}
