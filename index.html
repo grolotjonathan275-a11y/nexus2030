@@ -344,7 +344,7 @@
             <h2 class="section-title">Ce que disent nos clients</h2>
             <p class="section-subtitle">La confiance de milliers de familles haïtiennes et dominicaines</p>
         </div>
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.5rem">
+        <div id="testimonialsGrid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.5rem">
             <div class="why-card" style="flex-direction:column;align-items:flex-start;padding:1.75rem">
                 <div style="color:#F97316;font-size:1rem;margin-bottom:0.75rem">★★★★★</div>
                 <p style="color:#374151;font-size:0.95rem;line-height:1.7;margin-bottom:1.25rem">"J''envoie de l''argent à ma famille en Haïti chaque semaine. Avec Nexus, c''est instantané et je fais toujours confiance au taux affiché."</p>
@@ -603,6 +603,7 @@ async function loadPromotions(){
 
 document.addEventListener("DOMContentLoaded", loadNewsPublic);
 document.addEventListener("DOMContentLoaded", loadPartnerLogosPublic);
+document.addEventListener("DOMContentLoaded", loadTestimonialsPublic);
 document.addEventListener("DOMContentLoaded", loadContactInfoPublic);
 
 function animateHeroStats(){
@@ -703,6 +704,28 @@ async function loadPartnerLogosPublic(){
         document.getElementById("partnersStrip").style.display = "block";
         const imgs = logos.map(l => `<img src="${l.logo_url}" alt="${l.company_name||'Partenaire'}">`).join("");
         document.getElementById("partnersTrack").innerHTML = imgs + imgs;
+    }catch(e){}
+}
+
+async function loadTestimonialsPublic(){
+    try{
+        const r = await fetch(`${NEXUS_SUPA_URL}/rest/v1/testimonials?active=eq.true&order=display_order.asc`, {
+            headers: { "apikey": NEXUS_SUPA_KEY, "Authorization": `Bearer ${NEXUS_SUPA_KEY}` }
+        });
+        const items = await r.json();
+        if(!items || items.length === 0) return;
+        const grid = document.getElementById("testimonialsGrid");
+        if(!grid) return;
+        grid.innerHTML = items.map(t => `
+            <div class="why-card" style="flex-direction:column;align-items:flex-start;padding:1.75rem">
+                <div style="color:#F97316;font-size:1rem;margin-bottom:0.75rem">${"★".repeat(t.rating||5)}</div>
+                <p style="color:#374151;font-size:0.95rem;line-height:1.7;margin-bottom:1.25rem">"${t.comment}"</p>
+                <div style="display:flex;align-items:center;gap:0.75rem">
+                    <div style="width:44px;height:44px;border-radius:50%;background:${t.avatar_color||'#F97316'};display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700">${t.avatar_initials||"?"}</div>
+                    <div><div class="why-card-title">${t.client_name}</div><div class="why-card-desc">${t.client_since_year||""}</div></div>
+                </div>
+            </div>
+        `).join("");
     }catch(e){}
 }
 </script>
