@@ -188,22 +188,22 @@
             </div>
             <div class="hero-stats">
                 <div class="hero-stat">
-                    <span class="hero-stat-number">32</span>
+                    <span class="hero-stat-number" data-target="32" data-suffix="">0</span>
                     <span class="hero-stat-label" data-i18n="hero.stat1">Provinces</span>
                 </div>
                 <div class="hero-stat-divider"></div>
                 <div class="hero-stat">
-                    <span class="hero-stat-number">100+</span>
+                    <span class="hero-stat-number" data-target="100" data-suffix="+">0</span>
                     <span class="hero-stat-label" data-i18n="hero.stat2">Succursales</span>
                 </div>
                 <div class="hero-stat-divider"></div>
                 <div class="hero-stat">
-                    <span class="hero-stat-number">50K+</span>
+                    <span class="hero-stat-number" data-target="50" data-suffix="K+">0</span>
                     <span class="hero-stat-label" data-i18n="hero.stat3">Clients</span>
                 </div>
                 <div class="hero-stat-divider"></div>
                 <div class="hero-stat">
-                    <span class="hero-stat-number">6</span>
+                    <span class="hero-stat-number" data-target="6" data-suffix="">0</span>
                     <span class="hero-stat-label" data-i18n="hero.stat4">Devises</span>
                 </div>
             </div>
@@ -562,6 +562,38 @@ async function loadPromotions(){
 document.addEventListener("DOMContentLoaded", loadNewsPublic);
 document.addEventListener("DOMContentLoaded", loadPartnerLogosPublic);
 document.addEventListener("DOMContentLoaded", loadContactInfoPublic);
+
+function animateHeroStats(){
+    const stats = document.querySelectorAll(".hero-stat-number[data-target]");
+    if(!stats.length) return;
+    const duration = 1600;
+    stats.forEach(el => {
+        const target = Number(el.getAttribute("data-target"));
+        const suffix = el.getAttribute("data-suffix") || "";
+        const startTime = performance.now();
+        function tick(now){
+            const progress = Math.min(1, (now - startTime) / duration);
+            const eased = 1 - Math.pow(1 - progress, 3);
+            const value = Math.floor(eased * target);
+            el.textContent = value + suffix;
+            if(progress < 1){ requestAnimationFrame(tick); }
+            else { el.textContent = target + suffix; }
+        }
+        requestAnimationFrame(tick);
+    });
+}
+const heroStatsSection = document.querySelector(".hero-stats");
+if(heroStatsSection){
+    const heroStatsObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if(entry.isIntersecting){
+                animateHeroStats();
+                heroStatsObserver.disconnect();
+            }
+        });
+    }, { threshold: 0.3 });
+    heroStatsObserver.observe(heroStatsSection);
+}
 
 async function loadContactInfoPublic(){
     try{
