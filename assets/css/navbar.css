@@ -14,7 +14,7 @@ ul { list-style: none; }
    ============================================ */
 .navbar {
     position: fixed;
-    top: 0; left: 0; right: 0;
+    top: 40px; left: 0; right: 0;
     z-index: 1000;
     background: rgba(8, 20, 64, 0.97);
     backdrop-filter: blur(12px);
