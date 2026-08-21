@@ -63,6 +63,7 @@
         <a href="#promotions" class="nav-item" onclick="showSection(this,event)"><span>📢</span>Publicites & Promotions</a>
         <a href="#news" class="nav-item" onclick="showSection(this,event)"><span>📰</span>Actualites</a>
         <a href="#partners" class="nav-item" onclick="showSection(this,event)"><span>🤝</span>Logos Partenaires</a>
+<a href="#testimonials" class="nav-item" onclick="showSection(this,event)"><span>💬</span>Temoignages Clients</a>
         <a href="#contact-info" class="nav-item" onclick="showSection(this,event)"><span>📞</span>Infos Contact Site</a>
         <a href="#manage-branches" class="nav-item" onclick="showSection(this,event)"><span>🏦</span>Gerer Succursales</a>
         <a href="admin.html" class="nav-item"><span>⚙️</span>Super Admin</a>
@@ -1084,6 +1085,26 @@ Equipe</h3><span class="badge" id="usersCount">0</span></div>
                 <div id="partnersListContainer" style="padding:1.5rem;display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:1rem"></div>
             </div>
         </section>
+<section class="section" id="section-testimonials">
+<h2 class="section-title">💬 Temoignages Clients</h2>
+<div class="card">
+<div class="card-header"><h3>Publier un Temoignage</h3></div>
+<div style="padding:1.5rem">
+<div id="testimonialMsg" style="display:none;padding:0.75rem 1rem;border-radius:8px;margin-bottom:1rem;font-size:0.9rem;"></div>
+<div class="form-grid-2">
+<div class="form-group"><label>Nom du client *</label><input type="text" id="testiName" placeholder="Ex: Marie Joseph"></div>
+<div class="form-group"><label>Client depuis (optionnel)</label><input type="text" id="testiSince" placeholder="Ex: Cliente depuis 2024"></div>
+</div>
+<div class="form-group"><label>Commentaire *</label><textarea id="testiComment" rows="3" placeholder="Ce que le client a dit..."></textarea></div>
+<div class="form-group"><label>Note</label><select id="testiRating"><option value="5">★★★★★ (5)</option><option value="4">★★★★ (4)</option><option value="3">★★★ (3)</option></select></div>
+<button class="btn-ceo-action" onclick="publishTestimonial()">📤 Publier sur le Site</button>
+</div>
+</div>
+<div class="card" style="margin-top:1.5rem">
+<div class="card-header"><h3>Temoignages Publies</h3><span class="badge" id="testimonialsCount">0</span></div>
+<div id="testimonialsListContainer" style="padding:1.5rem"></div>
+</div>
+</section>
 
         <!-- INFOS CONTACT SITE WEB -->
         <section class="section" id="section-contact-info">
@@ -1681,6 +1702,7 @@ if(id==="validator-balances") loadValidatorBalances();
     if(id==="news")loadNews();
     if(id==="gestion-caisses")loadGestionCaisses();
     if(id==="partners")loadPartnerLogos();
+            if(id==="testimonials")loadTestimonials();
     if(id==="contact-info")loadContactInfo();
     if(id==="manage-branches")loadBranchesManagement();
     if(id==="employees")loadEmployeeDirectory();
@@ -3753,6 +3775,67 @@ async function deleteNews(id){
     const { error } = await supabaseClient.from("news_announcements").delete().eq("id", id);
     if(error){ alert("Erreur: " + error.message); return; }
     loadNews();
+}
+
+// ===== TEMOIGNAGES CLIENTS =====
+function showTestimonialMsg(text, isError){
+    const el = document.getElementById("testimonialMsg");
+    el.style.display = "block";
+    el.style.background = isError ? "#FEE2E2" : "#DCFCE7";
+    el.style.color = isError ? "#991B1B" : "#166534";
+    el.textContent = text;
+}
+async function publishTestimonial(){
+    const name = document.getElementById("testiName").value.trim();
+    const since = document.getElementById("testiSince").value.trim();
+    const comment = document.getElementById("testiComment").value.trim();
+    const rating = Number(document.getElementById("testiRating").value);
+    if(!name || !comment){ showTestimonialMsg("Nom et commentaire obligatoires.", true); return; }
+    const initials = name.split(/\s+/).map(w=>w[0]).join("").substring(0,2).toUpperCase();
+    const colors = ["#F97316","#081440","#22C55E","#0EA5E9","#7C3AED"];
+    const color = colors[Math.floor(Math.random()*colors.length)];
+    const { data: maxRows } = await supabaseClient.from("testimonials").select("display_order").order("display_order",{ascending:false}).limit(1);
+    const nextOrder = (maxRows && maxRows[0] ? maxRows[0].display_order : 0) + 1;
+    const { error } = await supabaseClient.from("testimonials").insert({
+        client_name: name, client_since_year: since || null, comment: comment,
+        rating: rating, avatar_initials: initials, avatar_color: color, display_order: nextOrder
+    });
+    if(error){ showTestimonialMsg("Erreur: " + error.message, true); return; }
+    showTestimonialMsg("✅ Temoignage publie avec succes!", false);
+    document.getElementById("testiName").value = "";
+    document.getElementById("testiSince").value = "";
+    document.getElementById("testiComment").value = "";
+    document.getElementById("testiRating").value = "5";
+    loadTestimonials();
+}
+async function loadTestimonials(){
+    const { data, error } = await supabaseClient.from("testimonials").select("*").order("display_order",{ascending:true});
+    if(error) return;
+    document.getElementById("testimonialsCount").textContent = data.length;
+    document.getElementById("testimonialsListContainer").innerHTML = data.map(t => `
+        <div style="border:1px solid #E2E8F0;border-radius:10px;padding:1rem;margin-bottom:1rem;display:flex;gap:1rem;align-items:flex-start">
+            <div style="width:44px;height:44px;border-radius:50%;background:${t.avatar_color||'#F97316'};display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;flex-shrink:0">${t.avatar_initials||"?"}</div>
+            <div style="flex:1">
+                <div style="font-weight:700">${t.client_name} <span style="color:#94A3B8;font-weight:400;font-size:0.8rem">${t.client_since_year||""}</span></div>
+                <div style="color:#F97316;font-size:0.85rem;margin:0.2rem 0">${"★".repeat(t.rating||5)}</div>
+                <div style="color:#64748B;font-size:0.85rem">${t.comment}</div>
+                <div style="margin-top:0.5rem;display:flex;gap:0.5rem">
+                    <button class="btn-ceo-action" style="padding:0.3rem 0.6rem;font-size:0.78rem;background:${t.active?"#F59E0B":"#10B981"}" onclick="toggleTestimonial('${t.id}',${t.active})">${t.active?"Desactiver":"Activer"}</button>
+                    <button class="btn-ceo-action warning" style="padding:0.3rem 0.6rem;font-size:0.78rem" onclick="deleteTestimonial('${t.id}')">Supprimer</button>
+                </div>
+            </div>
+        </div>`).join("") || "<p style='color:#94A3B8'>Aucun temoignage publie</p>";
+}
+async function toggleTestimonial(id, currentActive){
+    const { error } = await supabaseClient.from("testimonials").update({ active: !currentActive }).eq("id", id);
+    if(error){ alert("Erreur: " + error.message); return; }
+    loadTestimonials();
+}
+async function deleteTestimonial(id){
+    if(!confirm("Retirer definitivement ce temoignage?")) return;
+    const { error } = await supabaseClient.from("testimonials").delete().eq("id", id);
+    if(error){ alert("Erreur: " + error.message); return; }
+    loadTestimonials();
 }
 
 // ===== LOGOS PARTENAIRES =====
