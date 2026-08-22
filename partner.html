@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Espace Partenaire - NEXUS Casa de Cambio</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Inter',-apple-system,sans-serif}
+body{background:#F8FAFC;color:#0F1729;min-height:100vh}
+.topbar{background:linear-gradient(135deg,#081440,#1A3A8F);color:#fff;padding:1rem 1.5rem;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:50}
+.topbar h1{font-size:1.1rem;font-weight:800}
+.topbar button{background:rgba(255,255,255,0.15);border:none;color:#fff;padding:0.5rem 1rem;border-radius:8px;cursor:pointer;font-size:0.85rem}
+.wrap{max-width:900px;margin:0 auto;padding:1.5rem}
+.card{background:#fff;border-radius:16px;border:1px solid #E2E8F0;box-shadow:0 4px 20px rgba(8,20,64,0.06);padding:1.75rem;margin-bottom:1.5rem}
+.card h2{font-size:1.15rem;color:#081440;margin-bottom:1rem}
+.form-group{margin-bottom:1rem}
+.form-group label{display:block;font-size:0.85rem;font-weight:600;color:#374151;margin-bottom:0.4rem}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:0.7rem 0.9rem;border:1.5px solid #E2E8F0;border-radius:10px;font-size:0.9rem}
+.form-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+@media(max-width:640px){.form-grid-2{grid-template-columns:1fr}}
+.btn-primary{background:linear-gradient(135deg,#FF7A20,#EA580C);color:#fff;border:none;padding:0.85rem 1.5rem;border-radius:10px;font-weight:700;cursor:pointer;font-size:0.95rem;width:100%}
+.btn-primary:disabled{opacity:0.5;cursor:not-allowed}
+.consent-box{background:#F8FAFF;border:1px solid #E2E8F0;border-radius:10px;padding:1rem;margin-bottom:1rem;max-height:220px;overflow-y:auto;font-size:0.8rem;color:#374151;line-height:1.6}
+.checkbox-row{display:flex;align-items:flex-start;gap:0.6rem;margin-bottom:0.75rem;font-size:0.85rem;color:#374151}
+.checkbox-row input{margin-top:0.2rem}
+.msg-box{display:none;padding:0.75rem 1rem;border-radius:8px;margin-bottom:1rem;font-size:0.85rem}
+.msg-error{background:#FEE2E2;color:#991B1B}
+.msg-success{background:#DCFCE7;color:#166534}
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-bottom:1.5rem}
+.stat-card{background:linear-gradient(135deg,#081440,#1A3A8F);color:#fff;border-radius:16px;padding:1.5rem;position:relative;overflow:hidden}
+.stat-card::after{content:'';position:absolute;inset:0;background:radial-gradient(circle at 80% 20%,rgba(255,122,32,0.25),transparent 60%)}
+.stat-card .label{font-size:0.75rem;opacity:0.75;text-transform:uppercase;letter-spacing:0.05em;position:relative}
+.stat-card .value{font-size:1.75rem;font-weight:800;margin-top:0.4rem;position:relative}
+.branch-chip{display:inline-block;background:#EEF2FF;color:#3730A3;padding:0.3rem 0.8rem;border-radius:100px;font-size:0.78rem;font-weight:600;margin:0.2rem}
+table{width:100%;border-collapse:collapse;font-size:0.85rem}
+th{text-align:left;padding:0.6rem;color:#64748B;font-weight:600;border-bottom:2px solid #E2E8F0;font-size:0.75rem;text-transform:uppercase}
+td{padding:0.6rem;border-bottom:1px solid #F1F5F9}
+.print-btn{background:#081440;color:#fff;border:none;padding:0.6rem 1.2rem;border-radius:8px;cursor:pointer;font-size:0.85rem;font-weight:600}
+canvas{max-height:280px}
+@media print{.topbar,.no-print{display:none!important}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+    <h1>🤝 Espace Partenaire d'Affaires</h1>
+    <button onclick="partnerLogout()">Deconnexion</button>
+</div>
+
+<div class="wrap" id="loadingScreen">
+    <div class="card" style="text-align:center;color:#64748B">Chargement...</div>
+</div>
+
+<!-- ============ ETAPE 1: CONTRAT (si pas encore signe) ============ -->
+<div class="wrap" id="contractScreen" style="display:none">
+    <div class="card">
+        <h2>📄 Contrat de Partenariat d'Affaires</h2>
+        <div class="form-group">
+            <label>Choisissez la langue du contrat *</label>
+            <select id="contractLang">
+                <option value="fr">Français</option>
+                <option value="ht">Kreyòl Ayisyen</option>
+                <option value="es">Español</option>
+                <option value="en">English</option>
+                <option value="pt">Português</option>
+            </select>
+        </div>
+        <div class="consent-box" id="contractPreviewText">Chargement du texte du contrat...</div>
+        <div class="form-grid-2">
+            <div class="form-group"><label>Nom complet (signataire) *</label><input type="text" id="sigFullName"></div>
+            <div class="form-group"><label>Numero de document d'identite *</label><input type="text" id="sigDocNumber"></div>
+        </div>
+        <div class="form-group"><label>Date de naissance *</label><input type="date" id="sigBirthDate"></div>
+        <div class="checkbox-row"><input type="checkbox" id="agreeTerms"><span>Je declare avoir lu et j'accepte l'integralite des termes et conditions du contrat ci-dessus.</span></div>
+        <div class="checkbox-row"><input type="checkbox" id="robotCheck"><span>Je ne suis pas un robot.</span></div>
+        <div id="contractMsg" class="msg-box"></div>
+        <button class="btn-primary" onclick="signContract()">✅ Signer et Generer le Contrat (PDF)</button>
+    </div>
+</div>
+
+<!-- ============ ETAPE 2: DASHBOARD (apres signature) ============ -->
+<div class="wrap" id="dashboardScreen" style="display:none">
+    <div class="stat-grid">
+        <div class="stat-card">
+            <div class="label">Wallet Cumulatif</div>
+            <div class="value" id="walletTotal">0.00 DOP</div>
+        </div>
+        <div class="stat-card">
+            <div class="label">Succursales Assignees</div>
+            <div class="value" id="branchCount">0</div>
+        </div>
+        <div class="stat-card">
+            <div class="label">Entrees de Revenu</div>
+            <div class="value" id="entriesCount">0</div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>🏦 Mes Succursales</h2>
+        <div id="myBranches">Chargement...</div>
+    </div>
+
+    <div class="card">
+        <h2>📈 Evolution des Revenus</h2>
+        <canvas id="revenueChart"></canvas>
+    </div>
+
+    <div class="card">
+        <h2>💰 Historique des Revenus <button class="print-btn no-print" style="float:right" onclick="window.print()">🖨️ Imprimer</button></h2>
+        <div style="overflow-x:auto">
+        <table>
+            <thead><tr><th>Periode</th><th>Succursale</th><th>Revenu Brut</th><th>Depenses</th><th>Benefice Net</th><th>Ma Part (%)</th><th>Montant Recu</th><th>Note</th></tr></thead>
+            <tbody id="revenueHistoryBody"><tr><td colspan="8">Chargement...</td></tr></tbody>
+        </table>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>📑 Mon Contrat</h2>
+        <div id="myContractInfo">Chargement...</div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPA_URL = "https://fnuplvbiwfvauwkpxsoc.supabase.co";
+const SUPA_KEY = "sb_publishable_QBqdKkpcjDS3_psUdmc4uA_sMCzLqLo";
+const supabaseClient = supabase.createClient(SUPA_URL, SUPA_KEY);
+
+let currentPartner = null;
+
+const CONTRACT_TEXTS = {
+    fr: {
+        title: "CONTRAT DE PARTENARIAT D'AFFAIRES",
+        body: (p) => `Entre les soussignes:
+
+M. JACQUES VELOURY ROUSSEAU, agissant en qualite de proprietaire de l'entreprise NEXUS CASA DE CAMBIO S.R.L., immatriculee sous le RNC 132854829, ayant ses activites en Republique Dominicaine et en Haiti, ci-apres denomme "le Proprietaire",
+
+ET
+
+${p.name}, titulaire de la piece d'identite n° ${p.doc}, ne(e) le ${p.birth}, ci-apres denomme "le Partenaire d'Affaires",
+
+IL A ETE CONVENU CE QUI SUIT:
+
+Article 1 - Objet: Le Partenaire d'Affaires investit dans une ou plusieurs succursales de NEXUS CASA DE CAMBIO S.R.L. Le detail des succursales concernees est consultable dans l'espace numerique du Partenaire.
+
+Article 2 - Partage des benefices: Apres deduction des depenses operationnelles mensuelles de chaque succursale concernee, le benefice net restant sera partage a raison de 50% pour le Proprietaire et 50% pour le Partenaire d'Affaires.
+
+Article 3 - Transparence: Le Partenaire d'Affaires beneficie d'un acces en lecture seule a la plateforme numerique NEXUS lui permettant de consulter en temps reel les transactions, le personnel et les revenus des succursales dans lesquelles il a investi.
+
+Article 4 - Versement: Les versements de la part de benefice due au Partenaire sont enregistres manuellement par le Proprietaire ou son representant autorise (CEO, CEO1, Super Admin), et un recu est genere a chaque versement pour les deux parties.
+
+Article 5 - Duree et Juridiction: Le present contrat est regi par les lois de la Republique Dominicaine. Tout litige sera soumis aux juridictions competentes de la Republique Dominicaine.
+
+Article 6 - Consentement electronique: Les parties reconnaissent la validite de leur signature electronique apposee via la plateforme numerique NEXUS a la date indiquee ci-dessous.
+
+Fait electroniquement le ${p.date}.`,
+        sigOwner: "Le Proprietaire",
+        sigPartner: "Le Partenaire d'Affaires"
+    },
+    ht: {
+        title: "KONTRA PATENARYA AFÈ",
+        body: (p) => `Ant moun ki siyen anba yo:
+
+Mesye JACQUES VELOURY ROUSSEAU, kòm pwopriyetè antrepriz NEXUS CASA DE CAMBIO S.R.L., ki anrejistre anba RNC 132854829, ki gen operasyon nan Repiblik Dominikèn ak Ayiti, yo rele l "Pwopriyetè a",
+
+AK
+
+${p.name}, ki gen dokiman idantite nimewo ${p.doc}, ki fèt dat ${p.birth}, yo rele l "Patenaire d'Affaires la",
+
+YO KONVENI SA KI SWIV LA:
+
+Atik 1 - Objè: Patenaire d'Affaires la envesti nan youn oswa plizyè biwo NEXUS CASA DE CAMBIO S.R.L. Detay biwo yo disponib nan espas nimerik Patenaire a.
+
+Atik 2 - Pataj benefis: Apre depans operasyonèl chak mwa chak biwo sa yo soustrè, benefis net ki rete a ap pataje 50% pou Pwopriyetè a e 50% pou Patenaire d'Affaires la.
+
+Atik 3 - Transparans: Patenaire d'Affaires la gen aksè lekti sèlman sou platfòm nimerik NEXUS la pou l ka wè an tan reyèl tranzaksyon yo, anplwaye yo, ak revni biwo kote li envesti yo.
+
+Atik 4 - Peman: Peman pòsyon benefis Patenaire a antre manyèlman pa Pwopriyetè a oswa reprezantan otorize li (CEO, CEO1, Super Admin), e yon resi jenere chak fwa pou tou de pati yo.
+
+Atik 5 - Dire ak Jiridiksyon: Kontra sa a rejim pa lwa Repiblik Dominikèn. Nenpòt konfli ap soumèt bay jiridiksyon konpetan Repiblik Dominikèn.
+
+Atik 6 - Konsantman elektwonik: Tou de pati rekonèt validite siyati elektwonik yo apoze via platfòm nimerik NEXUS nan dat ki make anba a.
+
+Fèt elektwonikman dat ${p.date}.`,
+        sigOwner: "Pwopriyetè a",
+        sigPartner: "Patenaire d'Affaires la"
+    },
+    es: {
+        title: "CONTRATO DE ASOCIACION COMERCIAL",
+        body: (p) => `Entre los suscritos:
+
+El Sr. JACQUES VELOURY ROUSSEAU, actuando como propietario de la empresa NEXUS CASA DE CAMBIO S.R.L., con RNC 132854829, con operaciones en la Republica Dominicana y Haiti, en adelante "el Propietario",
+
+Y
+
+${p.name}, titular del documento de identidad n° ${p.doc}, nacido/a el ${p.birth}, en adelante "el Socio Comercial",
+
+SE HA CONVENIDO LO SIGUIENTE:
+
+Articulo 1 - Objeto: El Socio Comercial invierte en una o mas sucursales de NEXUS CASA DE CAMBIO S.R.L. El detalle de las sucursales esta disponible en el espacio digital del Socio.
+
+Articulo 2 - Reparto de beneficios: Despues de deducir los gastos operativos mensuales de cada sucursal, el beneficio neto restante se repartira en 50% para el Propietario y 50% para el Socio Comercial.
+
+Articulo 3 - Transparencia: El Socio Comercial tiene acceso de solo lectura a la plataforma digital NEXUS para consultar en tiempo real las transacciones, el personal y los ingresos de las sucursales en las que invirtio.
+
+Articulo 4 - Pago: Los pagos de la parte de beneficio del Socio se registran manualmente por el Propietario o su representante autorizado (CEO, CEO1, Super Admin), generandose un recibo en cada pago para ambas partes.
+
+Articulo 5 - Duracion y Jurisdiccion: Este contrato se rige por las leyes de la Republica Dominicana. Cualquier disputa se sometera a los tribunales competentes de la Republica Dominicana.
+
+Articulo 6 - Consentimiento electronico: Ambas partes reconocen la validez de su firma electronica realizada a traves de la plataforma digital NEXUS en la fecha indicada abajo.
+
+Hecho electronicamente el ${p.date}.`,
+        sigOwner: "El Propietario",
+        sigPartner: "El Socio Comercial"
+    },
+    en: {
+        title: "BUSINESS PARTNERSHIP AGREEMENT",
+        body: (p) => `Between the undersigned:
+
+Mr. JACQUES VELOURY ROUSSEAU, acting as owner of the company NEXUS CASA DE CAMBIO S.R.L., registered under RNC 132854829, operating in the Dominican Republic and Haiti, hereinafter "the Owner",
+
+AND
+
+${p.name}, holder of identity document n° ${p.doc}, born on ${p.birth}, hereinafter "the Business Partner",
+
+IT IS AGREED AS FOLLOWS:
+
+Article 1 - Purpose: The Business Partner invests in one or more branches of NEXUS CASA DE CAMBIO S.R.L. Branch details are available in the Partner's digital dashboard.
+
+Article 2 - Profit Sharing: After deducting each branch's monthly operating expenses, the remaining net profit shall be shared 50% to the Owner and 50% to the Business Partner.
+
+Article 3 - Transparency: The Business Partner has read-only access to the NEXUS digital platform to view in real time the transactions, staff, and revenues of the branches in which they invested.
+
+Article 4 - Payment: Payments of the Partner's profit share are recorded manually by the Owner or their authorized representative (CEO, CEO1, Super Admin), and a receipt is generated for both parties at each payment.
+
+Article 5 - Term and Jurisdiction: This agreement is governed by the laws of the Dominican Republic. Any dispute shall be submitted to the competent courts of the Dominican Republic.
+
+Article 6 - Electronic Consent: Both parties acknowledge the validity of their electronic signature made via the NEXUS digital platform on the date indicated below.
+
+Executed electronically on ${p.date}.`,
+        sigOwner: "The Owner",
+        sigPartner: "The Business Partner"
+    },
+    pt: {
+        title: "CONTRATO DE PARCERIA COMERCIAL",
+        body: (p) => `Entre os abaixo assinados:
+
+O Sr. JACQUES VELOURY ROUSSEAU, na qualidade de proprietario da empresa NEXUS CASA DE CAMBIO S.R.L., registrada sob o RNC 132854829, com operacoes na Republica Dominicana e no Haiti, doravante "o Proprietario",
+
+E
+
+${p.name}, portador do documento de identidade n° ${p.doc}, nascido(a) em ${p.birth}, doravante "o Parceiro de Negocios",
+
+FICA ACORDADO O SEGUINTE:
+
+Artigo 1 - Objeto: O Parceiro de Negocios investe em uma ou mais filiais da NEXUS CASA DE CAMBIO S.R.L. Os detalhes das filiais estao disponiveis no painel digital do Parceiro.
+
+Artigo 2 - Divisao de Lucros: Apos a deducao das despesas operacionais mensais de cada filial, o lucro liquido restante sera dividido em 50% para o Proprietario e 50% para o Parceiro de Negocios.
+
+Artigo 3 - Transparencia: O Parceiro de Negocios tem acesso somente leitura a plataforma digital NEXUS para visualizar em tempo real as transacoes, a equipe e as receitas das filiais em que investiu.
+
+Artigo 4 - Pagamento: Os pagamentos da parte de lucro do Parceiro sao registrados manualmente pelo Proprietario ou seu representante autorizado (CEO, CEO1, Super Admin), sendo gerado um recibo a cada pagamento para ambas as partes.
+
+Artigo 5 - Prazo e Jurisdicao: Este contrato e regido pelas leis da Republica Dominicana. Qualquer disputa sera submetida aos tribunais competentes da Republica Dominicana.
+
+Artigo 6 - Consentimento Eletronico: Ambas as partes reconhecem a validade de sua assinatura eletronica feita atraves da plataforma digital NEXUS na data indicada abaixo.
+
+Feito eletronicamente em ${p.date}.`,
+        sigOwner: "O Proprietario",
+        sigPartner: "O Parceiro de Negocios"
+    }
+};
+
+async function initPartnerPage(){
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if(!session){ window.location.href = "login.html"; return; }
+    const { data: profile } = await supabaseClient.from("profiles").select("*").eq("id", session.user.id).maybeSingle();
+    if(!profile || profile.role !== "business_partner"){ window.location.href = "login.html"; return; }
+    currentPartner = profile;
+
+    const { data: contract } = await supabaseClient.from("partner_contracts").select("*").eq("partner_id", profile.id).order("created_at",{ascending:false}).limit(1).maybeSingle();
+
+    document.getElementById("loadingScreen").style.display = "none";
+
+    if(!contract){
+        document.getElementById("contractScreen").style.display = "block";
+        updateContractPreview();
+        document.getElementById("contractLang").addEventListener("change", updateContractPreview);
+    } else {
+        document.getElementById("dashboardScreen").style.display = "block";
+        loadPartnerDashboard(contract);
+    }
+}
+
+function updateContractPreview(){
+    const lang = document.getElementById("contractLang").value;
+    const tpl = CONTRACT_TEXTS[lang];
+    const preview = tpl.body({ name: "[Votre nom]", doc: "[N° document]", birth: "[Date naissance]", date: new Date().toLocaleDateString("fr-FR") });
+    document.getElementById("contractPreviewText").innerHTML = "<strong>" + tpl.title + "</strong><br><br>" + preview.replace(/\n/g,"<br>");
+}
+
+async function signContract(){
+    const lang = document.getElementById("contractLang").value;
+    const name = document.getElementById("sigFullName").value.trim();
+    const doc = document.getElementById("sigDocNumber").value.trim();
+    const birth = document.getElementById("sigBirthDate").value;
+    const agree = document.getElementById("agreeTerms").checked;
+    const robot = document.getElementById("robotCheck").checked;
+    const msg = document.getElementById("contractMsg");
+
+    if(!name || !doc || !birth){ msg.style.display="block"; msg.className="msg-box msg-error"; msg.textContent="Remplissez tous les champs obligatoires."; return; }
+    if(!agree){ msg.style.display="block"; msg.className="msg-box msg-error"; msg.textContent="Vous devez accepter les termes du contrat."; return; }
+    if(!robot){ msg.style.display="block"; msg.className="msg-box msg-error"; msg.textContent="Veuillez confirmer que vous n'etes pas un robot."; return; }
+
+    const todayStr = new Date().toLocaleDateString("fr-FR");
+    const tpl = CONTRACT_TEXTS[lang];
+    const bodyText = tpl.body({ name, doc, birth: new Date(birth).toLocaleDateString("fr-FR"), date: todayStr });
+    const contractHtml = buildContractHtml(tpl.title, bodyText, name, tpl.sigOwner, tpl.sigPartner, todayStr);
+
+    const { error } = await supabaseClient.from("partner_contracts").insert({
+        partner_id: currentPartner.id,
+        language: lang,
+        signature_full_name: name,
+        signature_document_number: doc,
+        signature_birth_date: birth,
+        agreed_terms: true,
+        robot_check: true,
+        contract_html: contractHtml
+    });
+
+    if(error){ msg.style.display="block"; msg.className="msg-box msg-error"; msg.textContent="Erreur: " + error.message; return; }
+
+    msg.style.display="block"; msg.className="msg-box msg-success"; msg.textContent="Contrat signe avec succes! Ouverture du PDF...";
+    const w = window.open("", "_blank");
+    w.document.write(contractHtml);
+    w.document.close();
+    setTimeout(() => location.reload(), 1500);
+}
+
+function buildContractHtml(title, bodyText, partnerName, sigOwnerLabel, sigPartnerLabel, dateStr){
+    return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${title}</title>
+    <style>
+    body{font-family:Georgia,serif;max-width:800px;margin:0 auto;padding:3rem 2.5rem;color:#1a1a2e;line-height:1.7;position:relative}
+    .watermark{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-35deg);font-size:3rem;color:rgba(8,20,64,0.06);font-weight:900;white-space:nowrap;z-index:-1;pointer-events:none}
+    h1{text-align:center;color:#081440;font-size:1.4rem;border-bottom:3px solid #FF7A20;padding-bottom:1rem;margin-bottom:2rem}
+    .body-text{white-space:pre-line;font-size:0.95rem}
+    .sig-grid{display:grid;grid-template-columns:1fr 1fr;gap:2rem;margin-top:4rem}
+    .sig-box{border-top:2px solid #081440;padding-top:0.5rem;text-align:center;font-size:0.85rem}
+    .sig-name{font-weight:700;margin-top:0.5rem}
+    @media print{body{padding:1.5rem}}
+    </style></head>
+    <body>
+    <div class="watermark">LICENCE NEXUS CASA DE CAMBIO</div>
+    <h1>${title}</h1>
+    <div class="body-text">${bodyText}</div>
+    <div class="sig-grid">
+        <div class="sig-box">_______________________<div class="sig-name">JACQUES VELOURY ROUSSEAU</div><div>${sigOwnerLabel}</div></div>
+        <div class="sig-box">_______________________<div class="sig-name">${partnerName}</div><div>${sigPartnerLabel}</div></div>
+    </div>
+    <p style="text-align:center;margin-top:2rem;font-size:0.8rem;color:#666">Document genere electroniquement le ${dateStr} - NEXUS CASA DE CAMBIO S.R.L. - RNC 132854829</p>
+    <script>window.onload=()=>window.print();</script>
+    </body></html>`;
+}
+
+async function loadPartnerDashboard(contract){
+    const { data: assignments } = await supabaseClient.from("partner_branches").select("*, branches(id,name)").eq("partner_id", currentPartner.id);
+    const branches = (assignments||[]).map(a => a.branches).filter(Boolean);
+    document.getElementById("branchCount").textContent = branches.length;
+    document.getElementById("myBranches").innerHTML = branches.length
+        ? branches.map(b => `<span class="branch-chip">🏦 ${b.name}</span>`).join("")
+        : "<p style='color:#94A3B8'>Aucune succursale assignee pour le moment.</p>";
+
+    const { data: entries } = await supabaseClient.from("partner_revenue_entries").select("*, branches(name)").eq("partner_id", currentPartner.id).order("created_at",{ascending:false});
+    const list = entries || [];
+    document.getElementById("entriesCount").textContent = list.length;
+    const walletTotal = list.reduce((s,e) => s + Number(e.partner_share_amount||0), 0);
+    document.getElementById("walletTotal").textContent = walletTotal.toLocaleString("fr-FR",{minimumFractionDigits:2}) + " DOP";
+
+    document.getElementById("revenueHistoryBody").innerHTML = list.length
+        ? list.map(e => `<tr>
+            <td>${e.period_label}</td>
+            <td>${e.branches ? e.branches.name : "-"}</td>
+            <td>${Number(e.gross_revenue).toLocaleString("fr-FR",{minimumFractionDigits:2})}</td>
+            <td>${Number(e.expenses).toLocaleString("fr-FR",{minimumFractionDigits:2})}</td>
+            <td>${Number(e.net_profit).toLocaleString("fr-FR",{minimumFractionDigits:2})}</td>
+            <td>${e.partner_share_percent}%</td>
+            <td style="color:#16A34A;font-weight:700">${Number(e.partner_share_amount).toLocaleString("fr-FR",{minimumFractionDigits:2})}</td>
+            <td>${e.notes || "-"}</td>
+        </tr>`).join("")
+        : `<tr><td colspan="8" style="color:#94A3B8">Aucune entree de revenu pour le moment.</td></tr>`;
+
+    const sorted = [...list].reverse();
+    const ctx = document.getElementById("revenueChart");
+    if(ctx && typeof Chart !== "undefined"){
+        new Chart(ctx, {
+            type: "line",
+            data: {
+                labels: sorted.map(e => e.period_label),
+                datasets: [{
+                    label: "Ma part de benefice (DOP)",
+                    data: sorted.map(e => Number(e.partner_share_amount)),
+                    borderColor: "#FF7A20",
+                    backgroundColor: "rgba(255,122,32,0.1)",
+                    fill: true,
+                    tension: 0.3
+                }]
+            },
+            options: { responsive: true, plugins: { legend: { display: false } } }
+        });
+    }
+
+    document.getElementById("myContractInfo").innerHTML = `
+        <p><strong>Langue:</strong> ${contract.language.toUpperCase()}</p>
+        <p><strong>Signe par:</strong> ${contract.signature_full_name}</p>
+        <p><strong>Date de signature:</strong> ${new Date(contract.created_at).toLocaleDateString("fr-FR")}</p>
+        <button class="print-btn no-print" style="margin-top:0.75rem" onclick="reprintContract()">📄 Revoir / Imprimer le contrat</button>
+    `;
+    window.currentContractHtml = contract.contract_html;
+}
+
+function reprintContract(){
+    const w = window.open("", "_blank");
+    w.document.write(window.currentContractHtml);
+    w.document.close();
+}
+
+async function partnerLogout(){
+    await supabaseClient.auth.signOut();
+    window.location.href = "login.html";
+}
+
+initPartnerPage();
+</script>
+</body>
+</html>
