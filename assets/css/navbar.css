@@ -460,6 +460,10 @@ ul { list-style: none; }
     justify-content: center;
     font-size: 1.5rem;
     margin-bottom: 1.25rem;
+    transition: transform 0.4s ease;
+}
+.service-card:hover .service-icon-wrap {
+    transform: rotate(-8deg) scale(1.12);
 }
 
 .service-icon-wrap.primary  { background: #EEF2FF; }
