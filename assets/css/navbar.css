@@ -26,6 +26,12 @@ ul { list-style: none; }
     background: rgba(8, 20, 64, 1);
     box-shadow: 0 4px 24px rgba(0,0,0,0.3);
 }
+.navbar.scrolled .navbar-container {
+    height: 58px;
+}
+.navbar-container {
+    transition: height 0.3s ease;
+}
 
 .navbar-container {
     max-width: 1280px;
