@@ -90,6 +90,11 @@
 .calc-header button{background:rgba(255,255,255,0.15);border:none;color:#fff;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:1rem;}
 .calc-body{padding:1.5rem;}
 .calc-input-row{display:flex;gap:0.6rem;margin-bottom:1.25rem;}
+.calc-input-row select{max-width:100%;min-width:0;}
+@media(max-width:480px){
+.calc-input-row{flex-direction:column;}
+.calc-input-row select{width:100%;}
+}
 .calc-input-row input{flex:1;padding:0.85rem;border-radius:10px;border:1px solid #CBD5E1;font-size:1.1rem;font-family:inherit;}
 .calc-input-row select{padding:0.85rem;border-radius:10px;border:1px solid #CBD5E1;font-family:inherit;background:#fff;}
 .calc-result{background:#F8FAFC;border-radius:12px;padding:1.25rem;}
