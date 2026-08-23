@@ -157,3 +157,13 @@ img, canvas, table {
 .result-box.success{background:#F0FDF4;border:1px solid #BBF7D0;color:#15803D;}
 .result-box.error{background:#FFF5F5;border:1px solid #FECACA;color:#DC2626;}
 @media(max-width:600px){.form-grid-2{grid-template-columns:1fr;}}
+
+/* ===================================================== */
+/* ===== FIX RESPONSIVE TOPBAR (recherche + badge session) ===== */
+/* ===================================================== */
+@media (max-width: 768px) {
+    .topbar, .client-topbar { flex-wrap: wrap !important; row-gap: 0.5rem; padding: 0.75rem 1rem !important; }
+    .topbar-right { flex-wrap: wrap !important; gap: 0.5rem !important; }
+    #nexusGlobalSearchWrap { display: none !important; }
+    #nexusSessionBadge { font-size: 0.68rem !important; padding: 0.25rem 0.55rem !important; white-space: nowrap; }
+}

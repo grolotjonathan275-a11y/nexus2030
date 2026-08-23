@@ -304,3 +304,14 @@ img, canvas, table {
     .client-content { padding: 0.75rem !important; }
     .topbar-greeting { max-width: 55vw; }
 }
+
+
+/* ===================================================== */
+/* ===== FIX RESPONSIVE TOPBAR (recherche + badge session) ===== */
+/* ===================================================== */
+@media (max-width: 768px) {
+    .topbar, .client-topbar { flex-wrap: wrap !important; row-gap: 0.5rem; padding: 0.75rem 1rem !important; }
+    .topbar-right { flex-wrap: wrap !important; gap: 0.5rem !important; }
+    #nexusGlobalSearchWrap { display: none !important; }
+    #nexusSessionBadge { font-size: 0.68rem !important; padding: 0.25rem 0.55rem !important; white-space: nowrap; }
+}
