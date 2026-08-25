@@ -797,7 +797,7 @@ Equipe</h3><span class="badge" id="usersCount">0</span></div>
 </div>
 <div class="card" style="margin-top:1.25rem">
 <div class="card-header"><h3>Historique des envois manuels</h3><span class="badge" id="ceoDirectCount">0</span></div>
-<div class="table-wrap"><table class="data-table"><thead><tr><th>Heure</th><th>Service</th><th>Caissier</th><th>Client</th><th>Montant</th><th>Statut</th></tr></thead><tbody id="ceoDirectHistList"><tr><td colspan="6">Chargement...</td></tr></tbody></table></div>
+<div class="table-wrap"><table class="data-table"><thead><tr><th>Heure</th><th>Service</th><th>Caissier</th><th>Client</th><th>Montant</th><th>Statut</th><th>Actions</th></tr></thead><tbody id="ceoDirectHistList"><tr><td colspan="6">Chargement...</td></tr></tbody></table></div>
 </div>
 </section>
 
@@ -1524,7 +1524,29 @@ async function loadCeoDirectHistory(){
             <td>${t.sender_full_name}</td>
             <td>${Number(t.total_charged_dop).toLocaleString("fr-FR",{minimumFractionDigits:2})} DOP</td>
             <td>${statusLabels[t.status] || t.status}</td>
-        </tr>`).join("") || "<tr><td colspan='6'>Aucune transaction.</td></tr>";
+            <td>${t.status === "rejected" ? `
+                <button class="btn-ceo-action" style="padding:0.3rem 0.6rem;font-size:0.78rem;background:#16A34A" onclick="resubmitCeoDirectTransaction('${t.id}')">Resoumettre</button>
+                <button class="btn-ceo-action warning" style="padding:0.3rem 0.6rem;font-size:0.78rem" onclick="cancelCeoDirectTransaction('${t.id}')">Annuler</button>
+            ` : "-"}</td>
+        </tr>`).join("") || "<tr><td colspan='7'>Aucune transaction.</td></tr>";
+}
+async function resubmitCeoDirectTransaction(id){
+    if(!confirm("Resoumettre cette transaction pour validation ? Elle reapparaitra dans la liste des validateurs avec sa date de soumission d'origine.")) return;
+    const { error } = await supabaseClient.from("mobile_money_transactions").update({
+        status: "pending_validation",
+        validated_by: null,
+        validated_by_name: null,
+        validated_at: null
+    }).eq("id", id);
+    if(error){ alert("Erreur: " + error.message); return; }
+    alert("Transaction resoumise avec succes! Elle est de nouveau en attente de validation.");
+    loadCeoDirectHistory();
+}
+async function cancelCeoDirectTransaction(id){
+    if(!confirm("Annuler definitivement cette transaction ? Cette action est irreversible.")) return;
+    const { error } = await supabaseClient.from("mobile_money_transactions").update({ status: "cancelled" }).eq("id", id);
+    if(error){ alert("Erreur: " + error.message); return; }
+    loadCeoDirectHistory();
 }
 async function computeDailyProfit(dateStr){
     const start = new Date(dateStr+"T00:00:00").toISOString();
