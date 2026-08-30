@@ -520,12 +520,26 @@ async function loadPending(){
 async function processTransaction(id,newStatus,photoBase64,photoHash){
     const labels={approved:"approuver",rejected:"rejeter",wrong_number:"marquer comme numero faux"};
     if(newStatus !== "approved" && !confirm(`Confirmer: ${labels[newStatus]} cette transaction?`))return;
-    const updateData = {status:newStatus, validated_by: currentValidatorId, validated_at: new Date().toISOString()};
+
     if(newStatus === "approved"){
-        updateData.validated_by_name = currentValidatorName;
-        if(photoBase64) updateData.confirmation_photo = photoBase64;
-        if(photoHash) updateData.confirmation_photo_hash = photoHash;
+        const { data, error } = await supabaseClient.rpc("approve_mobile_money_transaction", {
+            p_transaction_id: id,
+            p_validator_id: currentValidatorId,
+            p_validator_name: currentValidatorName,
+            p_confirmation_photo: photoBase64 || null,
+            p_confirmation_photo_hash: photoHash || null
+        });
+        if(error){
+            alert("⚠️ Operation annulee: " + error.message + "\n\nAucune modification n'a ete effectuee (ni le statut, ni votre balance). Vous pouvez reessayer.");
+            return;
+        }
+        alert("✅ Transaction approuvee et balance mise a jour avec succes.");
+        loadPending();
+        loadOverview();
+        return;
     }
+
+    const updateData = {status:newStatus, validated_by: currentValidatorId, validated_at: new Date().toISOString()};
     const { error } = await supabaseClient
         .from("mobile_money_transactions")
         .update(updateData)
@@ -533,24 +547,6 @@ async function processTransaction(id,newStatus,photoBase64,photoHash){
     if(error){
         alert("Erreur: "+error.message);
         return;
-    }
-    if(newStatus === "approved"){
-        try {
-            const { data: txData } = await supabaseClient.from("mobile_money_transactions").select("service_type,amount_htg").eq("id",id).maybeSingle();
-            if(txData){
-                const { data: bal } = await supabaseClient.from("validateur_envoi_balances").select("*").eq("validator_id", currentValidatorId).eq("service_type", txData.service_type).maybeSingle();
-                const currentBal = bal ? Number(bal.balance_htg) : 0;
-                const newBal = currentBal - Number(txData.amount_htg);
-                if(bal){
-                    await supabaseClient.from("validateur_envoi_balances").update({ balance_htg: newBal, updated_at: new Date().toISOString() }).eq("id", bal.id);
-                } else {
-                    await supabaseClient.from("validateur_envoi_balances").insert({ validator_id: currentValidatorId, validator_name: currentValidatorName, service_type: txData.service_type, balance_htg: newBal });
-                }
-                await supabaseClient.from("validateur_balances_ledger").insert({ validator_id: currentValidatorId, validator_name: currentValidatorName, balance_type: "envoi", service_type: txData.service_type, entree: 0, sortie: Number(txData.amount_htg), motif: `Approuve: ${labels[newStatus]}`, source_table: "mobile_money_transactions", source_id: id });
-            }
-        } catch(balErr){
-            alert("⚠️ ATTENTION: La transaction a ete approuvee, mais la mise a jour de votre balance a echoue (" + balErr.message + "). Contactez le CEO immediatement pour corriger cela manuellement.");
-        }
     }
     alert("✅ Transaction mise a jour.");
     loadPending();
