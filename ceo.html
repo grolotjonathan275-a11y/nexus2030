@@ -40,7 +40,6 @@
         <a href="#reports" class="nav-item" onclick="showSection(this,event)"><span>📋</span>Rapports</a>
         <a href="#cashiers" class="nav-item" onclick="showSection(this,event)"><span>👤</span>Caissiers</a>
         <a href="#gestion-caisses" class="nav-item" onclick="showSection(this,event)"><span>💵</span>Gestion des Caisses</a>
-        <a href="#pointage-ceo" class="nav-item" onclick="showSection(this,event)"><span>📍</span>Pointage Caissiers</a>
         <a href="#login-history" class="nav-item" onclick="showSection(this,event)"><span>🔐</span>Historique Connexions</a>
         <a href="#employees" class="nav-item" onclick="showSection(this,event)"><span>👤</span>Employes</a>
         <a href="#users" class="nav-item" onclick="showSection(this,event)"><span>🧑‍💻</span>Gestion Utilisateurs</a>
@@ -515,18 +514,6 @@
             </div>
         </section>
 
-        <section class="section" id="section-pointage-ceo">
-            <h2 class="section-title">📍 Pointage Caissiers</h2>
-            <div class="kpi-grid">
-                <div class="kpi-card orange"><div class="kpi-icon">⏰</div><div class="kpi-info"><div class="kpi-number" id="pointageCeoLateToday">0</div><div class="kpi-label">En Retard Aujourd'hui</div></div></div>
-                <div class="kpi-card red"><div class="kpi-icon">🚫</div><div class="kpi-info"><div class="kpi-number" id="pointageCeoRejected">0</div><div class="kpi-label">Pointages Rejetes (30j)</div></div></div>
-                <div class="kpi-card red"><div class="kpi-icon">💸</div><div class="kpi-info"><div class="kpi-number" id="pointageCeoDeduction">0</div><div class="kpi-label">Deductions Totales (DOP)</div></div></div>
-            </div>
-            <div class="card" style="margin-top:1.5rem">
-                <div class="card-header"><h3>Historique de Pointage - Tous les Caissiers</h3><span class="badge" id="pointageCeoCount">0</span></div>
-                <div class="table-wrap"><table class="data-table"><thead><tr><th>Caissier</th><th>Succursale</th><th>Date</th><th>Heure</th><th>Distance</th><th>IP</th><th>Statut</th><th>Retard</th><th>Deduction</th><th>Selfie</th><th>Actions</th></tr></thead><tbody id="pointageCeoList"><tr><td colspan="11">Chargement...</td></tr></tbody></table></div>
-            </div>
-        </section>
 
 
         <section class="section" id="section-login-history">
@@ -1639,76 +1626,6 @@ async function deleteUserCeo(id, name) {
     if (error) { if(error.message.includes("foreign key")){ alert("Impossible de supprimer: ce compte a un historique de transactions dans le systeme (protection des donnees). Utilisez le bouton 'Desactiver' a la place pour retirer son acces."); } else { alert("Erreur: " + error.message); } return; }
     loadUsers();
 }
-async function loadLoginHistory(){
-    const rows = await sf("login_history", "GET", null, "?order=created_at.desc&limit=100");
-    if(!Array.isArray(rows)){
-        document.getElementById("loginHistoryList").innerHTML = "<tr><td colspan='5'>Erreur de chargement</td></tr>";
-        return;
-    }
-    document.getElementById("loginHistoryCount").textContent = rows.length;
-    document.getElementById("loginHistoryList").innerHTML = rows.map(x => `
-        <tr>
-            <td>${x.full_name||"-"}</td>
-            <td>${x.role||"-"}</td>
-            <td>${new Date(x.created_at).toLocaleDateString("fr-FR")}</td>
-            <td>${new Date(x.created_at).toLocaleTimeString("fr-FR")}</td>
-            <td style="font-family:monospace;font-size:0.78rem">${x.ip_address||"-"}</td>
-        </tr>
-    `).join("") || "<tr><td colspan='5'>Aucune connexion</td></tr>";
-}
-async function loadPointageCeo(){
-    const rows = await sf("cashier_attendance", "GET", null, "?select=id,cashier_name,branch,check_in_time,distance_meters,within_geofence,ip_address,minutes_late,is_late,deduction_amount&order=check_in_time.desc&limit=100");
-    if(!Array.isArray(rows)){
-        document.getElementById("pointageCeoList").innerHTML = "<tr><td colspan='11'>Erreur de chargement</td></tr>";
-        return;
-    }
-    const today = new Date().toDateString();
-    const lateToday = rows.filter(x => x.is_late && new Date(x.check_in_time).toDateString() === today).length;
-    const rejected = rows.filter(x => !x.within_geofence).length;
-    const totalDeduction = rows.reduce((s,x) => s + Number(x.deduction_amount||0), 0);
-    document.getElementById("pointageCeoLateToday").textContent = lateToday;
-    document.getElementById("pointageCeoRejected").textContent = rejected;
-    document.getElementById("pointageCeoDeduction").textContent = totalDeduction;
-    document.getElementById("pointageCeoCount").textContent = rows.length;
-    document.getElementById("pointageCeoList").innerHTML = rows.map(x => `
-        <tr>
-            <td>${x.cashier_name||"-"}</td>
-            <td>${x.branch||"-"}</td>
-            <td>${new Date(x.check_in_time).toLocaleDateString("fr-FR")}</td>
-            <td>${new Date(x.check_in_time).toLocaleTimeString("fr-FR")}</td>
-            <td>${x.within_geofence ? (x.distance_meters+"m") : "Hors zone"}</td>
-            <td style="font-family:monospace;font-size:0.78rem">${x.ip_address||"-"}</td>
-            <td><span class="status-badge ${x.within_geofence ? "active" : ""}">${x.within_geofence ? "Valide" : "Rejete"}</span></td>
-            <td>${x.is_late ? x.minutes_late+" min" : "-"}</td>
-            <td>${x.deduction_amount > 0 ? x.deduction_amount+" DOP" : "-"}</td>
-            <td><button data-id="${x.id}" onclick="viewAttendanceSelfie(this.dataset.id)" style="border:none;background:none;cursor:pointer;font-size:1.2rem" title="Voir la photo">📷</button></td>
-            <td style="white-space:nowrap"><button data-id="${x.id}" data-min="${x.minutes_late||0}" data-ded="${x.deduction_amount||0}" onclick="editAttendanceCeo(this.dataset.id,this.dataset.min,this.dataset.ded)" style="border:none;background:none;cursor:pointer;font-size:1rem" title="Modifier">✏️</button> <button data-id="${x.id}" onclick="deleteAttendanceCeo(this.dataset.id)" style="border:none;background:none;cursor:pointer;font-size:1rem" title="Supprimer">🗑️</button></td>
-        </tr>
-    `).join("") || "<tr><td colspan='11'>Aucun pointage</td></tr>";
-}
-async function viewAttendanceSelfie(id){
-    const rows = await sf("cashier_attendance", "GET", null, `?id=eq.${id}&select=selfie_photo`);
-    const photo = rows && rows[0] && rows[0].selfie_photo;
-    if(photo){ window.open(photo, "_blank"); } else { alert("Aucune photo disponible."); }
-}
-
-async function editAttendanceCeo(id, minutesLate, deductionAmount){
-    const newMinutes = prompt("Minutes de retard:", minutesLate || 0);
-    if(newMinutes === null) return;
-    const newMinutesNum = Number(newMinutes);
-    if(isNaN(newMinutesNum) || newMinutesNum < 0){ alert("Valeur invalide."); return; }
-    const newDeduction = prompt("Montant deduction (DOP):", deductionAmount || 0);
-    if(newDeduction === null) return;
-    const newDeductionNum = Number(newDeduction);
-    if(isNaN(newDeductionNum) || newDeductionNum < 0){ alert("Valeur invalide."); return; }
-    await sf("cashier_attendance", "PATCH", { minutes_late: newMinutesNum, is_late: newMinutesNum > 0, deduction_amount: newDeductionNum }, `?id=eq.${id}`);
-    loadPointageCeo();
-}
-async function deleteAttendanceCeo(id){
-    if(!confirm("Supprimer cet enregistrement de pointage ? Cette action est irreversible.")) return;
-    await sf("cashier_attendance", "DELETE", null, `?id=eq.${id}`);
-    loadPointageCeo();
-}
 async function loadEmployeeDirectory(){
     const { data: users, error } = await supabaseClient.from("profiles").select("*").order("role", { ascending: true });
     const container = document.getElementById("employeeDirectory");
@@ -1775,7 +1692,6 @@ function showSection(el,e){
     if(id==="currency-distribution")loadAllocationFormCeo();
     if(id==="bank-distribution"){ loadBankCapital(); loadAllocationFormBankCeo(); }
     if(id==="receive-transfers"){ loadRtSettings(); loadRtCapital(); loadAllocationFormRtCeo(); loadValidatorWallets(); loadReceiveWallets(); }
-if(id==="validator-balances") loadValidatorBalances();
             if(id === "ceo-direct-mm"){ loadCeoDirectCashiers(); loadCeoDirectSettings(); loadCeoDirectHistory(); }
             if(id === "benefices-nexus"){ const t=new Date().toISOString().split("T")[0]; const d7=new Date(); d7.setDate(d7.getDate()-6); document.getElementById("benefDateFrom").value=d7.toISOString().split("T")[0]; document.getElementById("benefDateTo").value=t; loadBenefToday(); loadBenefChart(); }
     if(id==="system-rates"){ loadSystemRates(); loadSystemRatesHistory(); }
@@ -1792,7 +1708,6 @@ if(id==="validator-balances") loadValidatorBalances();
     if(id==="contact-info")loadContactInfo();
     if(id==="manage-branches")loadBranchesManagement();
     if(id==="employees")loadEmployeeDirectory();
-    if(id==="pointage-ceo")loadPointageCeo();
     if(id==="login-history")loadLoginHistory();
     if(id==="users"){loadUsers();loadBranchOptionsForNewUser();}
 }
@@ -3422,7 +3337,6 @@ async function loadReceiveWallets(){
     if(!ids.length){ tbody.innerHTML = "<tr><td colspan='6'>Aucune caisse.</td></tr>"; return; }
 
     tbody.innerHTML = ids.map(id => {
-        const svcs = byStaff[id];
         return `<tr>
             <td>${staffMap[id]||id}</td>
             <td>${fmtA(svcs.moncash||0)} DOP</td>
@@ -3439,7 +3353,6 @@ const SYS_RATE_META = {
     withdrawal_fee_percent: {label:"Frais Nexus sur Retrait", desc:"Applique sur tous les retraits de comptes epargne (individuel, epargne, entreprise).", suffix:"%"},
     loan_interest_percent: {label:"Interet sur Prestamo", desc:"Interet applique sur le capital emprunte, du a l'echeance (15 jours).", suffix:"%"},
     loan_mora_percent: {label:"Mora (penalite de retard)", desc:"Penalite calculee sur le montant de l'interet (pas sur le capital), apres le delai de grace de 5 jours.", suffix:"%"},
-    late_deduction_per_hour: {label:"Deduction Retard (par 60 min)", desc:"Montant deduit par tranche de 60 minutes de retard au pointage (calcul proportionnel: 30 min = moitie du montant).", suffix:" DOP"}
 };
 
 async function loadSystemRates(){
