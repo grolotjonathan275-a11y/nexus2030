@@ -574,7 +574,7 @@
                 <div class="card-header"><h3>Comptes de l
 '
 Equipe</h3><span class="badge" id="usersCount">0</span></div>
-                <div class="table-wrap"><table class="data-table"><thead><tr><th>Nom</th><th>Email</th><th>Telephone</th><th>Role</th><th>Superviseur</th><th>Statut</th><th>Action</th></tr></thead><tbody id="allUsers"><tr><td colspan="7">Chargement...</td></tr></tbody></table></div>
+                <div class="table-wrap"><table class="data-table"><thead><tr><th>Nom</th><th>Email</th><th>Telephone</th><th>Role</th><th>Superviseur</th><th>Succursale</th><th>Statut</th><th>Action</th></tr></thead><tbody id="allUsers"><tr><td colspan="8">Chargement...</td></tr></tbody></table></div>
             </div>
         </section>
 
@@ -1348,10 +1348,11 @@ async function createNewUser() {
 async function loadUsers() {
     const { data: users, error } = await supabaseClient.from("profiles").select("*").order("created_at", { ascending: false });
     if (error) {
-        document.getElementById("allUsers").innerHTML = `<tr><td colspan="7">Erreur: ${error.message}</td></tr>`;
+        document.getElementById("allUsers").innerHTML = `<tr><td colspan="8">Erreur: ${error.message}</td></tr>`;
         return;
     }
     const supervisors = users.filter(u => u.role === "superviseur");
+    const { data: branches } = await supabaseClient.from("branches").select("id,name").order("name");
     document.getElementById("usersCount").textContent = users.length;
     document.getElementById("allUsers").innerHTML = users.map(u => `
         <tr>
@@ -1360,6 +1361,7 @@ async function loadUsers() {
             <td>${u.phone || "-"}</td>
             <td>${ROLE_LABELS[u.role] || u.role}</td>
             <td>${renderSupervisorCellCeo(u, supervisors)}</td>
+            <td>${renderBranchCellCeo(u, branches)}</td>
             <td><span class="status-badge ${u.status === "active" ? "active" : ""}">${u.status || "-"}</span></td>
             <td>
                 <button onclick="toggleUserStatusCeo('${u.id}','${u.status}')" class="btn-sm" style="background:${u.status === "active" ? "#F59E0B" : "#10B981"};">${u.status === "active" ? "Desactiver" : "Activer"}</button>
@@ -1368,7 +1370,22 @@ async function loadUsers() {
                 <button onclick="toggleFaceRecognitionCeo('${u.id}','${u.face_recognition_enabled !== false}')" class="btn-sm" style="background:${u.face_recognition_enabled !== false ? '#DC2626' : '#16A34A'};margin-left:0.4rem">${u.face_recognition_enabled !== false ? 'Desactiver Reco Faciale' : 'Activer Reco Faciale'}</button>
             </td>
         </tr>
-    `).join("") || "<tr><td colspan='7'>Aucun utilisateur</td></tr>";
+    `).join("") || "<tr><td colspan='8'>Aucun utilisateur</td></tr>";
+}
+function renderBranchCellCeo(u, branches) {
+    if (!["agent","caissier"].includes(u.role)) return "-";
+    const options = (branches||[]).map(b =>
+        `<option value="${b.name}" ${u.branch === b.name ? "selected" : ""}>${b.name}</option>`
+    ).join("");
+    return `<select onchange="assignBranchCeo('${u.id}', this.value)" style="padding:0.35rem;border-radius:6px;border:1px solid #CBD5E1;font-size:0.85rem;">
+        <option value="">-- Non assigne --</option>
+        ${options}
+    </select>`;
+}
+async function assignBranchCeo(userId, branchName) {
+    const { error } = await supabaseClient.from("profiles").update({ branch: branchName || null }).eq("id", userId);
+    if (error) { alert("Erreur: " + error.message); return; }
+    loadUsers();
 }
 function renderSupervisorCellCeo(u, supervisors) {
     if (!["agent","caissier"].includes(u.role)) return "-";
